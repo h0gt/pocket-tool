@@ -1,6 +1,6 @@
 {
   "name": "pocket-tool-http",
-  "module": "index.ts",
+  "module": "src/bot/index.ts",
   "type": "module",
   "private": true,
   "scripts": {
