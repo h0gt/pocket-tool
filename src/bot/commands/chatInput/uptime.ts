@@ -24,7 +24,7 @@ createApplicationCommand({
       components: [
         {
           type: ComponentType.TextDisplay,
-          content: `Uptime: **${msToReadableTime(process.uptime() * 1000)} (${timestamp(Math.floor(new Date().getTime() - process.uptime() * 1000), TimestampStyle.RelativeTime)})`,
+          content: `Uptime: **${msToReadableTime(process.uptime() * 1000)} (${timestamp(Math.floor(new Date().getTime() - process.uptime() * 1000), TimestampStyle.RelativeTime)})**`,
         },
       ],
       flags: MessageFlags.IsComponentsV2,
