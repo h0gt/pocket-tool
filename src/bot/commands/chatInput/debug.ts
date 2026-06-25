@@ -20,7 +20,6 @@ createApplicationCommand({
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   acknowledge: true,
   async run(interaction, options, api) {
-    // bot stats
     const original = await api.interactions.getOriginalReply(interaction.application_id, interaction.token);
     const received = new Date().getTime();
     const created = getTimestampFromSnowflake(original.id);
@@ -36,7 +35,7 @@ createApplicationCommand({
           components: [
             {
               type: ComponentType.TextDisplay,
-              content: `## Pocket Tool, your lightweight, fast, and versatile Discord bot\n-# Developed by **${hyperlink('https://discord.gg/CAr2YgdtAv', 'Keystone')}**, designed by **${hyperlink('https://merpix.de/', 'Merpix')}**, most emojis are from **${hyperlink('https://discord.gg/icons-859387663093727263', 'Icons')}**`,
+              content: `### Pocket Tool, your lightweight, fast, and versatile Discord bot\n-# Developed by **${hyperlink('https://discord.gg/CAr2YgdtAv', 'Keystone')}**, designed by **${hyperlink('https://merpix.de/', 'Merpix')}**, most emojis are from **${hyperlink('https://discord.gg/icons-859387663093727263', 'Icons')}**`,
             },
             {
               type: ComponentType.Separator,

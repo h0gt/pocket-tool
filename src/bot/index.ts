@@ -10,6 +10,7 @@ import {
   MessageFlags,
   type APIApplicationCommandAutocompleteInteraction,
   type APIApplicationCommandInteraction,
+  type APIApplicationCommandInteractionDataBooleanOption,
   type APIChatInputApplicationCommandInteraction,
   type APIInteraction,
   type APIMessageApplicationCommandInteraction,
@@ -37,7 +38,7 @@ import {
   type UserContextMenuCommand,
 } from '../types/types';
 import { emoji, hyperlink, timestamp } from '../utils/markdown';
-import { localizeCommand, parseCommandOptions, parseComponentArgs, readDirectory } from '../utils/utils';
+import { getChatInputOption, localizeCommand, parseCommandOptions, parseComponentArgs, readDirectory } from '../utils/utils';
 import path from 'path';
 
 process.on('uncaughtException', console.error);
@@ -60,7 +61,7 @@ app.post('/interactions', verifyKeyMiddleware(env.get('discord_public_key', true
   const interaction = req.body as APIInteraction;
 
   console.log(
-    `Received interactionCreate event: ${interaction.id} (${InteractionType[interaction.type]}) from ${interaction.user?.username ?? interaction.member?.user.username} (${interaction.user?.id ?? interaction.member?.user.id})`,
+    `Received interaction: ${interaction.id} (${InteractionType[interaction.type]}) from ${interaction.user?.username ?? interaction.member?.user.username} (${interaction.user?.id ?? interaction.member?.user.id})`,
   );
 
   if (
@@ -199,7 +200,14 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now);
         setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
 
-        if (chatInput.acknowledge === true) await api.interactions.defer(interaction.id, interaction.token);
+        const incognito =
+          (getChatInputOption(interaction.data.options ?? [], 'incognito') as APIApplicationCommandInteractionDataBooleanOption)?.value === true;
+
+        if (chatInput.acknowledge === true) {
+          await api.interactions.defer(interaction.id, interaction.token, {
+            flags: chatInput.ephemeral || incognito ? MessageFlags.Ephemeral : undefined,
+          });
+        }
 
         await chatInput.run(
           interaction as APIChatInputApplicationCommandInteraction,
@@ -233,7 +241,11 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now);
         setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
 
-        if (messageContext.acknowledge === true) await api.interactions.defer(interaction.id, interaction.token);
+        if (messageContext.acknowledge) {
+          await api.interactions.defer(interaction.id, interaction.token, {
+            flags: messageContext.ephemeral ? MessageFlags.Ephemeral : undefined,
+          });
+        }
 
         await messageContext.run(interaction as APIMessageApplicationCommandInteraction, api);
         break;
@@ -263,7 +275,11 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now);
         setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
 
-        if (userContext.acknowledge === true) await api.interactions.defer(interaction.id, interaction.token);
+        if (userContext.acknowledge) {
+          await api.interactions.defer(interaction.id, interaction.token, {
+            flags: userContext.ephemeral ? MessageFlags.Ephemeral : undefined,
+          });
+        }
 
         await userContext.run(interaction as APIUserApplicationCommandInteraction, api);
         break;
