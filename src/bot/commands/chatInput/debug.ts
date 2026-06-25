@@ -20,9 +20,8 @@ createApplicationCommand({
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   acknowledge: true,
   async run(interaction, options, api) {
-    const original = await api.interactions.getOriginalReply(interaction.application_id, interaction.token);
     const received = new Date().getTime();
-    const created = getTimestampFromSnowflake(original.id);
+    const created = getTimestampFromSnowflake(interaction.id);
     const latency = received - created;
     const uptime = process.uptime();
     const memory = process.memoryUsage();
