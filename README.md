@@ -16,6 +16,7 @@ Pocket Tool is a **lightweight, fast, and versatile Discord bot** designed to be
 
 - [Bun](https://bun.com/)
 - A Discord bot token
+- A publicly accessible URL to receive interactions (e.g. via a reverse proxy, [ngrok](https://ngrok.com/), or a hosting provider)
 
 1. Clone the repository:
 
@@ -37,11 +38,12 @@ cp .env.example .env
 ```
 
 4. Edit the `.env` file to add your bot token and other configuration options.
-
 5. Build and run the bot:
 
 ```bash
 bun run start
 ```
+
+6. In the [Discord Developer Portal](https://discord.com/developers/applications), open your application, go to **General Information**, and set the **Interactions Endpoint URL** to your public URL (e.g. `https://yourdomain.com/interactions`). Discord will send a verification request — make sure the bot is running before you save it, or the URL won't validate.
 
 > If you prefer an easier setup, you can simply [add Pocket Tool](https://discord.com/oauth2/authorize?client_id=1489362526880796903)!
