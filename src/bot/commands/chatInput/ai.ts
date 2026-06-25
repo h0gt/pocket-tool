@@ -1,0 +1,90 @@
+import {
+  ApplicationCommandOptionType,
+  ApplicationCommandType,
+  ApplicationIntegrationType,
+  ComponentType,
+  InteractionContextType,
+  MessageFlags,
+} from '@discordjs/core/http-only';
+import createApplicationCommand from '../../../helpers/command';
+import env from '../../../utils/env';
+import { emoji, truncate } from '../../../utils/markdown';
+import { OpenAI } from 'openai';
+import { msToApproxTime } from '../../../utils/utils';
+
+createApplicationCommand({
+  type: ApplicationCommandType.ChatInput,
+  name: 'ai',
+  description: 'Ask AI anything you want!',
+  integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
+  options: [
+    {
+      type: ApplicationCommandOptionType.String,
+      name: 'prompt',
+      description: 'The prompt to send to the AI',
+      required: true,
+    },
+  ],
+  cooldown: 5,
+  acknowledge: true,
+  async run(interaction, options, api) {
+    const { prompt } = options;
+
+    const nvidiaApiKey = env.get('nvidia_api_key').toString();
+
+    if (!nvidiaApiKey) {
+      await api.interactions.editReply(interaction.application_id, interaction.token, {
+        components: [
+          {
+            type: ComponentType.TextDisplay,
+            content: `${emoji('Exclamation')} NVIDIA API key not set`,
+          },
+        ],
+        flags: MessageFlags.IsComponentsV2,
+      });
+
+      return;
+    }
+
+    const start = performance.now();
+
+    const openai = new OpenAI({ apiKey: nvidiaApiKey, baseURL: 'https://integrate.api.nvidia.com/v1' });
+
+    const completion = await openai.chat.completions.create({
+      model: 'meta/llama-3.3-70b-instruct',
+      messages: [
+        {
+          role: 'system',
+          content: `You are a friendly Discord chat bot, called Pocket Tool, designed to help people.\n- Today\'s date is ${new Date().toLocaleDateString('en-us', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n- You should always use gender neutral pronouns when possible.\n- When answering a question, be concise and to the point.\n- Try to answer with short responses. This does not apply to subjects that require more exhaustive or in-depth explanation.\n- Respond in a natural way, using Discord's supported markdown formatting.`,
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      max_completion_tokens: 2000,
+    });
+
+    const end = performance.now();
+    const elapsed = end - start;
+
+    if (!completion.choices || completion.choices.length === 0 || !completion.choices[0]) {
+      await api.interactions.editReply(interaction.application_id, interaction.token, {
+        components: [
+          {
+            type: ComponentType.TextDisplay,
+            content: `${emoji('Exclamation')} No response from AI - please try again`,
+          },
+        ],
+        flags: MessageFlags.IsComponentsV2,
+      });
+
+      return;
+    }
+
+    await api.interactions.editReply(interaction.application_id, interaction.token, {
+      content: `${truncate(completion.choices[0].message.content!, 2000)}\n-# **${completion.model}** - Response may be inaccurate or incomplete - Took **${msToApproxTime(elapsed)}**`,
+    });
+  },
+});

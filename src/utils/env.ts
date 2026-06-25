@@ -1,3 +1,4 @@
+import { Collection } from '@discordjs/collection';
 import fs from 'fs';
 import path from 'path';
 
@@ -35,7 +36,7 @@ class EnvParser {
 }
 
 class Env {
-  #cache = new Map<string, string>();
+  #cache = new Collection<string, string>();
 
   constructor() {
     const envPath = path.resolve(process.cwd(), '.env');

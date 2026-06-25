@@ -18,8 +18,6 @@ import type {
   ApplicationCommandType,
   ApplicationIntegrationType,
   EntryPointCommandHandlerType,
-  GatewayDispatchEvents,
-  GatewayDispatchPayload,
   InteractionContextType,
   LocalizationMap,
   Snowflake,
@@ -33,8 +31,8 @@ export interface BaseNonPrimaryEntryPointCommand<Type extends ApplicationCommand
   integration_types?: ApplicationIntegrationType[];
   contexts?: InteractionContextType[];
   default_member_permissions?: string;
-  rate_limit?: RateLimit;
-  guild?: Snowflake;
+  cooldown?: number;
+  guilds?: Snowflake[];
   dev?: boolean;
   acknowledge?: boolean;
   ephemeral?: boolean;
@@ -188,11 +186,6 @@ export type NonPrimaryEntryPointCommand<Options extends ChatInputOption[] = Chat
 
 export type ApplicationCommand<Options extends ChatInputOption[] = ChatInputOption[]> = NonPrimaryEntryPointCommand<Options> | PrimaryEntryPointCommand;
 
-export interface GatewayEvent<Event extends GatewayDispatchEvents = GatewayDispatchEvents> {
-  name: Event;
-  run: (args: Extract<GatewayDispatchPayload, { t: Event }>['d'], api: API) => Promise<void>;
-}
-
 export enum InteractableComponentType {
   Button = 'button',
   SelectMenu = 'select_menu',
@@ -276,29 +269,6 @@ export type RequestResponse = {
   [ResponseType.JSON]: any;
   [ResponseType.BUFFER]: Buffer;
 };
-
-export enum RateLimitType {
-  Channel = 'channel',
-  Guild = 'guild',
-  User = 'user',
-}
-
-export interface RateLimit {
-  type: RateLimitType;
-  cooldown: number;
-}
-
-export interface ShardInformation {
-  latency?: number;
-  uptime?: number;
-}
-
-export interface Reminder {
-  id: string;
-  user_id: string;
-  time: Date;
-  reason?: string | undefined;
-}
 
 export interface Track {
   buffer: Buffer;

@@ -8,14 +8,14 @@
 
 ## Why use Pocket Tool?
 
-Pocket Tool is a **lightweight, fast, and versatile Discord bot** designed to be your all-in-one utility companion. Whether you're looking to enhance productivity, moderate your server, or add fun features, Pocket Tool has you covered.
+Pocket Tool is a **lightweight, fast, and versatile Discord bot** designed to be your all-in-one utility companion. Whether you're looking to enhance productivity, access handy tools anywhere on Discord, or add fun features, Pocket Tool has you covered.
 
 > _You can also try [Pocket Tool Canary](https://discord.com/oauth2/authorize?client_id=1489363092071518324) to access the latest features early. Note that it may be unstable and occasionally offline._
 
 ## How do I self-host Pocket Tool?
 
-- [Node.js](https://nodejs.org/) (v20+ recommended)
-- A Discord bot token (set as `token` environment variable)
+- [Bun](https://bun.com/)
+- A Discord bot token
 
 1. Clone the repository:
 
@@ -27,7 +27,7 @@ cd pocket-tool
 2. Install dependencies:
 
 ```bash
-npm install
+bun install
 ```
 
 3. Set up environment variables:
@@ -41,8 +41,7 @@ cp .env.example .env
 5. Build and run the bot:
 
 ```bash
-npm run build
-npm run start
+bun run start
 ```
 
 > If you prefer an easier setup, you can simply [add Pocket Tool](https://discord.com/oauth2/authorize?client_id=1489362526880796903)!

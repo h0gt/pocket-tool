@@ -1,0 +1,83 @@
+import { ApplicationCommandType, ApplicationIntegrationType, ComponentType, InteractionContextType, MessageFlags } from '@discordjs/core/http-only';
+import createApplicationCommand from '../../../helpers/command';
+import env from '../../../utils/env';
+import { emoji, truncate } from '../../../utils/markdown';
+import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
+
+createApplicationCommand({
+  type: ApplicationCommandType.Message,
+  name: 'Text to Speech',
+  integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
+  cooldown: 5,
+  acknowledge: true,
+  async run(interaction, api) {
+    const elevenLabsApiKey = env.get('eleven_labs_api_key').toString();
+
+    if (!elevenLabsApiKey) {
+      await api.interactions.editReply(interaction.application_id, interaction.token, {
+        components: [
+          {
+            type: ComponentType.TextDisplay,
+            content: `${emoji('Exclamation')} Eleven Labs API key not set`,
+          },
+        ],
+        flags: MessageFlags.IsComponentsV2,
+      });
+
+      return;
+    }
+
+    const messageId = interaction.data.target_id;
+    const message = interaction.data.resolved.messages[messageId];
+
+    if (!message) return;
+
+    const content = message.content;
+
+    if (!content) {
+      await api.interactions.editReply(interaction.application_id, interaction.token, {
+        components: [
+          {
+            type: ComponentType.TextDisplay,
+            content: `${emoji('Exclamation')} Please select a valid message to convert to speech`,
+          },
+          {
+            type: ComponentType.Separator,
+          },
+        ],
+        flags: MessageFlags.IsComponentsV2,
+      });
+
+      return;
+    }
+
+    const elevenlabs = new ElevenLabsClient({ apiKey: elevenLabsApiKey });
+
+    const audio = await elevenlabs.textToSpeech.convertWithTimestamps('M563YhMmA0S8vEYwkgYa', {
+      text: truncate(content, 500),
+      modelId: 'eleven_flash_v2_5',
+      outputFormat: 'opus_48000_192',
+    });
+
+    const buffer = Buffer.from(audio.audioBase64, 'base64');
+
+    await api.interactions.editReply(interaction.application_id, interaction.token, {
+      attachments: [
+        {
+          id: 0,
+          filename: 'tts.opus',
+          waveform: 'AAAAAA==',
+          duration_secs: 1,
+        },
+      ],
+      files: [
+        {
+          name: 'tts.opus',
+          data: buffer,
+        },
+      ],
+      flags: MessageFlags.IsVoiceMessage,
+    });
+  },
+});
