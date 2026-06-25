@@ -12,11 +12,7 @@ By using the bot, you agree to the practices described in this Privacy Policy.
 
 Pocket Tool may collect and store the following information:
 
-- User IDs
-- Command usage data
-- Event trigger logs
-- Configuration settings
-- Temporary message content required for processing
+- Interaction trigger logs
 
 We only collect data necessary for operating and improving the service.
 
@@ -27,22 +23,14 @@ We only collect data necessary for operating and improving the service.
 Collected information may be used to:
 
 - Provide bot functionality
-- Process commands and automations
+- Process commands and components
 - Improve performance and reliability
 - Prevent abuse and malicious activity
 - Monitor errors and diagnose issues
 
 ---
 
-# 3. Temporary Message Processing
-
-Some message content may be temporarily processed in order to execute commands or provide bot features.
-
-Unless explicitly stated, message content is not permanently stored.
-
----
-
-# 4. Third-Party Services
+# 3. Third-Party Services
 
 Pocket Tool may use third-party providers and APIs, including:
 

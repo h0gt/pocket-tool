@@ -40,10 +40,7 @@ You are fully responsible for how you use the service.
 
 The bot may collect and store:
 
-- User IDs
-- Event trigger logs
-- Configuration data
-- Temporary message content required for processing
+- Interaction trigger logs
 
 This data is used strictly for operating, maintaining, and improving the service.
 
