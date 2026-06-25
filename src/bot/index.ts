@@ -298,12 +298,12 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
 
     if ('acknowledge' in command && command.acknowledge === true) {
       await api.interactions.editReply(interaction.application_id, interaction.token, {
-        content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it to the ${hyperlink('https://discord.gg/V2MxaBJxgd', 'Support Server')}`,
+        content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server')}**`,
         flags: MessageFlags.Ephemeral,
       });
     } else {
       await api.interactions.reply(interaction.id, interaction.token, {
-        content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it to the ${hyperlink('https://discord.gg/V2MxaBJxgd', 'Support Server')}`,
+        content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server')}**`,
         flags: MessageFlags.Ephemeral,
       });
     }
