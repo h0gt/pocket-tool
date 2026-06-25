@@ -1,3 +1,4 @@
+/*
 import { createClient } from 'redis';
 import env from './env';
 
@@ -13,3 +14,4 @@ export const redis = createClient({
 redis.on('error', (e) => console.log('Redis Client Error', e));
 
 await redis.connect();
+*/
