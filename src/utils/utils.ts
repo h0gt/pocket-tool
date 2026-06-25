@@ -2,27 +2,17 @@ import { join } from 'path';
 import { pathToFileURL } from 'url';
 import { readdir } from 'fs/promises';
 import { Emoji } from '../types/emojis';
-import { Collection } from '@discordjs/collection';
-import type { ApplicationCommand, ChatInputOption, Component, Localization, ShardInformation } from '../types/types';
+import type { ApplicationCommand, ChatInputOption, Component, Localization } from '../types/types';
 import {
-  API,
   ApplicationCommandOptionType,
   ApplicationCommandType,
   InteractionType,
-  PermissionFlagsBits,
   type APIApplicationCommandInteractionDataOption,
   type APIChatInputApplicationCommandInteraction,
   type APIEmoji,
-  type APIGuildChannel,
-  type APIGuildMember,
   type APIMessageComponentEmoji,
-  type APIRole,
   type Snowflake,
 } from '@discordjs/core/http-only';
-import { commands } from '../bot';
-import env from './env';
-
-export const shardInfo = new Collection<number, ShardInformation>();
 
 export async function readDirectory(folder: string): Promise<void> {
   const files = await readdir(folder, { recursive: true });
@@ -34,80 +24,6 @@ export async function readDirectory(folder: string): Promise<void> {
 
     await import(pathToFileURL(fullPath).href).catch((error) => console.log(`Cannot import file (${fullPath}) for reason:`, error));
   }
-}
-
-export function hasPermission(permissions: bigint, permission: bigint): boolean {
-  return (permissions & permission) === permission;
-}
-
-export const ALL_PERMISSIONS = Object.values(PermissionFlagsBits).reduce((acc, v) => acc | v, 0n);
-
-export function getPermissionsFor(member: APIGuildMember, channel: APIGuildChannel, roles: APIRole[]): bigint {
-  let permissions: bigint = 0n;
-
-  // Get the everyone role and apply its permissions
-  const everyoneRole = roles.find((role) => role.id === channel.guild_id);
-
-  if (everyoneRole) {
-    permissions |= BigInt(everyoneRole.permissions);
-  }
-
-  // Apply channel permission overwrites for everyone
-  const everyoneOverwrite = channel.permission_overwrites?.find((overwrite) => overwrite.id === channel.guild_id && overwrite.type === 0);
-
-  if (everyoneOverwrite) {
-    permissions &= ~BigInt(everyoneOverwrite.deny);
-    permissions |= BigInt(everyoneOverwrite.allow);
-  }
-
-  // Apply member role permissions
-  for (const roleId of member.roles) {
-    const role = roles.find((role) => role.id === roleId);
-
-    if (!role) continue;
-
-    permissions |= BigInt(role.permissions);
-  }
-
-  // Return all permissions if the member is an administrator
-  if (hasPermission(permissions, PermissionFlagsBits.Administrator)) {
-    return ALL_PERMISSIONS;
-  }
-
-  // Apply member role permission overwrites
-  for (const roleId of member.roles) {
-    const overwrite = channel.permission_overwrites?.find((overwrite) => overwrite.id === roleId && overwrite.type === 0);
-
-    if (!overwrite) continue;
-
-    permissions &= ~BigInt(overwrite.deny);
-    permissions |= BigInt(overwrite.allow);
-  }
-
-  // Apply member permission overwrites
-  const memberOverwrite = channel.permission_overwrites?.find((overwrite) => overwrite.id === member.user.id && overwrite.type === 1);
-
-  if (memberOverwrite) {
-    permissions &= ~BigInt(memberOverwrite.deny);
-    permissions |= BigInt(memberOverwrite.allow);
-  }
-
-  return permissions;
-}
-
-export function getShardIdFromGuildId(guildId: string, totalShards: number): number {
-  return Number((BigInt(guildId) >> 22n) % BigInt(totalShards));
-}
-
-export async function getShardInfoFromGuild(guildId: Snowflake | undefined, totalShards: number): Promise<ShardInformation & { shardId: number }> {
-  const shardId = guildId ? getShardIdFromGuildId(guildId, totalShards) : 0;
-  const info = shardInfo.get(shardId);
-
-  return {
-    shardId,
-    latency: info?.latency ?? -1,
-    uptime: info?.uptime ?? -1,
-  };
 }
 
 const DISCORD_EPOCH = 1420070400000;
