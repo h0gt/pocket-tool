@@ -37,7 +37,7 @@ createApplicationCommand({
         components: [
           {
             type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Please provide a valid sticker`,
+            content: `${emoji('Exclamation')} Please provide a valid sticker to view`,
           },
         ],
         flags: MessageFlags.IsComponentsV2,

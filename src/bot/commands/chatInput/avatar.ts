@@ -65,7 +65,7 @@ createApplicationCommand({
         components: [
           {
             type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Please select a valid user to view their avatar`,
+            content: `${emoji('Exclamation')} Please provide a valid user to view their avatar`,
           },
         ],
         flags: MessageFlags.IsComponentsV2,

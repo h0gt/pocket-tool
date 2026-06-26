@@ -38,7 +38,7 @@ createApplicationCommand({
         components: [
           {
             type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Please provide between 1 and 4 valid emojis`,
+            content: `${emoji('Exclamation')} Please provide between 1 and 4 valid emojis to view`,
           },
         ],
         flags: MessageFlags.IsComponentsV2,

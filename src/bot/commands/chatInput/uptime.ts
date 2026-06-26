@@ -9,7 +9,7 @@ import {
 } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
 import { getTimestampFromSnowflake, msToReadableTime, toEmoji } from '../../../utils/utils';
-import { hyperlink, timestamp } from '../../../utils/markdown';
+import { emoji, hyperlink, timestamp } from '../../../utils/markdown';
 import { TimestampStyle } from '../../../types/types';
 
 createApplicationCommand({
@@ -23,8 +23,13 @@ createApplicationCommand({
     await api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
         {
-          type: ComponentType.TextDisplay,
-          content: `Uptime: **${msToReadableTime(process.uptime() * 1000)} (${timestamp(Math.floor(new Date().getTime() - process.uptime() * 1000), TimestampStyle.RelativeTime)})**`,
+          type: ComponentType.Container,
+          components: [
+            {
+              type: ComponentType.TextDisplay,
+              content: `${emoji('Clock')} Uptime: **${msToReadableTime(process.uptime() * 1000)} (${timestamp(Math.floor(new Date().getTime() - process.uptime() * 1000), TimestampStyle.RelativeTime)})**`,
+            },
+          ],
         },
       ],
       flags: MessageFlags.IsComponentsV2,
