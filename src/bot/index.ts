@@ -21,8 +21,8 @@ import {
   type APIUserApplicationCommandInteraction,
   type Snowflake,
 } from '@discordjs/core/http-only';
-import express from 'express';
-import { verifyKeyMiddleware } from 'discord-interactions';
+import { Hono } from 'hono';
+import nacl from 'tweetnacl';
 import { Collection } from '@discordjs/collection';
 import {
   TimestampStyle,
@@ -55,10 +55,29 @@ await readDirectory(path.join(process.cwd(), 'src', 'bot', 'commands'));
 const rest = new REST().setToken(env.get('token', true).toString());
 const api = new API(rest);
 
-const app = express();
+const app = new Hono();
 
-app.post('/interactions', verifyKeyMiddleware(env.get('discord_public_key', true).toString()), async (req, res) => {
-  const interaction = req.body as APIInteraction;
+app.post('/interactions', async (c) => {
+  const signature = c.req.header('X-Signature-Ed25519');
+  const timestamp = c.req.header('X-Signature-Timestamp');
+  const rawBody = await c.req.text();
+
+  if (!signature || !timestamp) {
+    return c.body('missing signature or timestamp', 400);
+  }
+
+  const isVerified = nacl.sign.detached.verify(
+    Buffer.from(timestamp + rawBody),
+    Buffer.from(signature, 'hex'),
+    Buffer.from(env.get('discord_public_key', true).toString(), 'hex'),
+  );
+
+  if (!isVerified) {
+    return c.body('invalid request signature', 401);
+  }
+
+  const body = JSON.parse(rawBody);
+  const interaction = body as APIInteraction;
 
   console.log(
     `Received interaction: ${interaction.id} (${InteractionType[interaction.type]}) from ${interaction.user?.username ?? interaction.member?.user.username} (${interaction.user?.id ?? interaction.member?.user.id})`,
@@ -81,8 +100,7 @@ app.post('/interactions', verifyKeyMiddleware(env.get('discord_public_key', true
 
   switch (interaction.type) {
     case InteractionType.Ping: {
-      res.send({ type: InteractionResponseType.Pong });
-      break;
+      return c.json({ type: InteractionResponseType.Pong });
     }
     case InteractionType.ApplicationCommand: {
       await handleApplicationCommand(interaction, api);
@@ -104,12 +122,19 @@ app.post('/interactions', verifyKeyMiddleware(env.get('discord_public_key', true
       await handleModalSubmit(interaction as APIModalSubmitInteraction, api);
       break;
     }
+    default: {
+      console.log('unknown interaction type:', (interaction as any).type);
+      break;
+    }
   }
 });
 
-app.listen(env.get('port', true).toString(), () => {
-  console.log(`Pocket Tool listening on port ${env.get('port', true).toString()}`);
+Bun.serve({
+  port: env.get('port', true).toNumber(),
+  fetch: app.fetch,
 });
+
+console.log(`Pocket Tool listening on port ${env.get('port', true).toNumber()}`);
 
 if (env.get('register_commands').toBoolean() === true) {
   console.log('Refreshing application (/) commands');

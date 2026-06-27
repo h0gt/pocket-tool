@@ -92,13 +92,8 @@ createApplicationCommand({
     await api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
         {
-          type: ComponentType.Container,
-          components: [
-            {
-              type: ComponentType.TextDisplay,
-              content: `<t:${Math.floor(date.getTime() / 1000)}:${style}>`,
-            },
-          ],
+          type: ComponentType.TextDisplay,
+          content: `<t:${Math.floor(date.getTime() / 1000)}:${style}>`,
         },
       ],
       flags: MessageFlags.IsComponentsV2,
