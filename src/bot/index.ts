@@ -22,7 +22,6 @@ import {
   type Snowflake,
 } from '@discordjs/core/http-only';
 import { Hono } from 'hono';
-import nacl from 'tweetnacl';
 import { Collection } from '@discordjs/collection';
 import {
   TimestampStyle,
@@ -40,6 +39,7 @@ import {
 import { emoji, hyperlink, timestamp } from '../utils/markdown';
 import { getChatInputOption, localizeCommand, parseCommandOptions, parseComponentArgs, readDirectory } from '../utils/utils';
 import path from 'path';
+import { verify } from 'discord-verify/node';
 
 process.on('uncaughtException', console.error);
 process.on('unhandledRejection', console.error);
@@ -66,13 +66,9 @@ app.post('/interactions', async (c) => {
     return c.body('missing signature or timestamp', 400);
   }
 
-  const isVerified = nacl.sign.detached.verify(
-    Buffer.from(timestamp + rawBody),
-    Buffer.from(signature, 'hex'),
-    Buffer.from(env.get('discord_public_key', true).toString(), 'hex'),
-  );
+  const isValid = await verify(rawBody, signature, timestamp, env.get('discord_public_key', true).toString(), crypto.subtle);
 
-  if (!isVerified) {
+  if (!isValid) {
     return c.body('invalid request signature', 401);
   }
 

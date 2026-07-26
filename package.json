@@ -10,7 +10,6 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/luxon": "^3.7.2",
     "prettier": "^3.8.4",
     "typescript": "^6.0.3"
   },
@@ -21,16 +20,14 @@
     "@elevenlabs/elevenlabs-js": "^2.54.0",
     "@supabase/supabase-js": "^2.108.2",
     "chrono-node": "^2.9.1",
+    "discord-verify": "^1.2.0",
     "hono": "^4.12.27",
     "i18next": "^26.3.2",
     "i18next-fs-backend": "^2.6.6",
-    "linkdave": "^0.2.3",
-    "luxon": "^3.7.2",
     "mathjs": "^15.2.0",
     "node-cron": "^4.5.0",
     "openai": "^6.44.0",
     "redis": "^6.0.0",
-    "sharp": "^0.35.2",
-    "tweetnacl": "^1.0.3"
+    "sharp": "^0.35.2"
   }
 }
