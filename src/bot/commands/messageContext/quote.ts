@@ -1,7 +1,7 @@
 import { ApplicationCommandType, ApplicationIntegrationType, ComponentType, InteractionContextType, MessageFlags } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
 import { emoji } from '../../../utils/markdown';
-import { buildQuoteComponents, createQuoteSession, hasQuoteContent, renderQuoteSession } from '../../../utils/quote';
+import { buildQuoteComponents, createQuoteSession, hasQuoteContent, renderQuoteSession, saveQuoteSession } from '../../../utils/quote';
 
 createApplicationCommand({
   type: ApplicationCommandType.Message,
@@ -41,7 +41,8 @@ createApplicationCommand({
     session.editorInteractionToken = interaction.token;
     const image = await renderQuoteSession(session);
 
-    await api.interactions.editReply(interaction.application_id, interaction.token, {
+    const editorMessage = await api.interactions.editReply(interaction.application_id, interaction.token, {
+      attachments: [{ id: 0, filename: `quote-${message.id}.gif` }],
       files: [
         {
           name: `quote-${message.id}.gif`,
@@ -50,5 +51,8 @@ createApplicationCommand({
       ],
       components: buildQuoteComponents(session),
     });
+    session.editorChannelId = editorMessage.channel_id;
+    session.editorMessageId = editorMessage.id;
+    saveQuoteSession(session);
   },
 });

@@ -12,12 +12,15 @@ import {
   type APIMessageTopLevelComponent,
 } from '@discordjs/core/http-only';
 import { randomBytes } from 'node:crypto';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { cdn, emoji } from './markdown.js';
 import { CARD_COLOURS, CARD_FONTS, CARD_LOOKS, CARD_SIZES, renderQuoteCard, type CardOptions } from './quoteCard.js';
 import { toEmoji } from './utils.js';
 
-const SESSION_LIFETIME = 14 * 60 * 1_000;
+const SESSION_LIFETIME = 24 * 60 * 60 * 1_000;
 const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
+const SESSION_STORE_PATH = resolve(process.cwd(), '.cache', 'quote-sessions.json');
 
 export type QuoteOption = 'font' | 'size' | 'colour' | 'look';
 type CustomTextOption = 'size' | 'colour';
@@ -39,11 +42,69 @@ export type QuoteSession = {
 
 const sessions = new Map<string, QuoteSession>();
 
+type StoredQuoteSession = Omit<QuoteSession, 'primaryImage' | 'avatarImage' | 'busy' | 'editorInteractionToken'> & {
+  primaryImage?: string;
+  avatarImage?: string;
+};
+
+
+function restoreSessions(): void {
+  try {
+    if (!existsSync(SESSION_STORE_PATH)) return;
+
+    const stored = JSON.parse(readFileSync(SESSION_STORE_PATH, 'utf8')) as StoredQuoteSession[];
+    const now = Date.now();
+    for (const item of stored) {
+      if (!item?.id || item.expiresAt <= now) continue;
+      const { primaryImage, avatarImage, ...session } = item;
+      sessions.set(item.id, {
+        ...session,
+        expiresAt: Math.max(session.expiresAt, now + SESSION_LIFETIME),
+        ...(primaryImage && { primaryImage: Buffer.from(primaryImage, 'base64') }),
+        ...(avatarImage && { avatarImage: Buffer.from(avatarImage, 'base64') }),
+        busy: false,
+      });
+    }
+  } catch {
+  }
+}
+
+function persistSessions(): void {
+  try {
+    const stored: StoredQuoteSession[] = [...sessions.values()].map(({ primaryImage, avatarImage, busy: _busy, editorInteractionToken: _token, ...session }) => ({
+      ...session,
+      ...(primaryImage && { primaryImage: primaryImage.toString('base64') }),
+      ...(avatarImage && { avatarImage: avatarImage.toString('base64') }),
+    }));
+
+    if (stored.length === 0) {
+      if (existsSync(SESSION_STORE_PATH)) unlinkSync(SESSION_STORE_PATH);
+      return;
+    }
+
+    mkdirSync(dirname(SESSION_STORE_PATH), { recursive: true });
+    const temporaryPath = `${SESSION_STORE_PATH}.tmp`;
+    writeFileSync(temporaryPath, JSON.stringify(stored));
+    // rename cannot replace an existing file on Windows. Copying the completed
+    // temporary file over the cache keeps new sessions from being silently lost.
+    copyFileSync(temporaryPath, SESSION_STORE_PATH);
+    unlinkSync(temporaryPath);
+  } catch {
+  }
+}
+
+restoreSessions();
+
 setInterval(() => {
   const now = Date.now();
+  let removed = false;
   for (const [id, session] of sessions) {
-    if (session.expiresAt <= now) sessions.delete(id);
+    if (session.expiresAt <= now) {
+      sessions.delete(id);
+      removed = true;
+    }
   }
+  if (removed) persistSessions();
 }, 60_000).unref();
 
 export async function createQuoteSession(message: APIMessage, ownerId: string, displayName?: string, guildId?: string): Promise<QuoteSession> {
@@ -72,7 +133,12 @@ export async function createQuoteSession(message: APIMessage, ownerId: string, d
   };
 
   sessions.set(session.id, session);
+  persistSessions();
   return session;
+}
+
+export function saveQuoteSession(session: QuoteSession): void {
+  if (sessions.has(session.id)) persistSessions();
 }
 
 export function hasQuoteContent(message: APIMessage): boolean {
@@ -200,8 +266,14 @@ export async function handleQuoteAction(interaction: APIMessageComponentButtonIn
   }
 
   if (action === 'close') {
+    try {
+      await api.interactions.deleteReply(interaction.application_id, interaction.token);
+    } catch {
+      if (!session.editorChannelId || !session.editorMessageId) throw new Error('Quote editor message could not be deleted');
+      await api.channels.deleteMessage(session.editorChannelId, session.editorMessageId);
+    }
     sessions.delete(session.id);
-    await api.interactions.deleteReply(interaction.application_id, interaction.token);
+    persistSessions();
   }
 }
 
@@ -295,31 +367,21 @@ export async function handleQuoteCustomTextModal(interaction: APIModalSubmitInte
     return;
   }
 
-  if (!session.editorInteractionToken) {
-    await api.interactions.reply(interaction.id, interaction.token, {
-      content: 'That quote editor is no longer available. Please create it again.',
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
   if (sizeInput) session.options.customSize = Number(sizeInput);
   if (colour) session.options.customColour = colour;
   session.expiresAt = Date.now() + SESSION_LIFETIME;
+  persistSessions();
 
   await api.interactions.defer(interaction.id, interaction.token, { flags: MessageFlags.Ephemeral });
   session.busy = true;
 
   try {
     const image = await renderQuoteSession(session);
-    await api.interactions.editReply(interaction.application_id, session.editorInteractionToken, {
-      attachments: [],
-      files: [{ name: `quote-${session.sourceMessageId}.png`, data: image }],
-      components: buildQuoteComponents(session),
-    });
+    await editQuoteEditor(api, session, image, interaction);
     await api.interactions.editReply(interaction.application_id, interaction.token, { content: 'Custom text settings applied.' });
   } finally {
     session.busy = false;
+    persistSessions();
   }
 }
 
@@ -333,18 +395,10 @@ async function refreshQuote(
 
   try {
     const image = await renderQuoteSession(session);
-    await api.interactions.editReply(interaction.application_id, interaction.token, {
-      attachments: [],
-      files: [
-        {
-          name: `quote-${session.sourceMessageId}.png`,
-          data: image,
-        },
-      ],
-      components: buildQuoteComponents(session),
-    });
+    await editQuoteEditor(api, session, image, interaction);
   } finally {
     session.busy = false;
+    persistSessions();
   }
 }
 
@@ -358,8 +412,11 @@ async function getAvailableSession(
   const userId = interaction.user?.id ?? interaction.member?.user.id;
 
   if (!session || session.expiresAt <= Date.now()) {
-    if (session) sessions.delete(session.id);
-    await reportComponentError(interaction, api, `${emoji('Exclamation')} That quote editor has expired - run **Apps -> Quote Message** again`, canFollowUp);
+    if (session) {
+      sessions.delete(session.id);
+      persistSessions();
+    }
+    await reportComponentError(interaction, api, `${emoji('Exclamation')} That quote editor has expired - run **Apps -> Quote This Message** again`, canFollowUp);
     return undefined;
   }
 
@@ -371,6 +428,13 @@ async function getAvailableSession(
   if (session.busy) {
     await reportComponentError(interaction, api, `${emoji('Exclamation')} The quote is still rendering`, canFollowUp);
     return undefined;
+  }
+
+  if ('message' in interaction && interaction.message) {
+    session.editorChannelId = interaction.message.channel_id;
+    session.editorMessageId = interaction.message.id;
+    session.editorInteractionToken = interaction.token;
+    persistSessions();
   }
 
   return session;
@@ -433,6 +497,39 @@ function setQuoteOption(session: QuoteSession, option: QuoteOption, value: strin
 
 function isQuoteOption(value: string): value is QuoteOption {
   return value === 'font' || value === 'size' || value === 'colour' || value === 'look';
+}
+
+async function editQuoteEditor(
+  api: API,
+  session: QuoteSession,
+  image: Buffer,
+  interaction: APIMessageComponentSelectMenuInteraction | APIMessageComponentButtonInteraction | APIModalSubmitInteraction,
+): Promise<void> {
+  const filename = `quote-${session.sourceMessageId}.gif`;
+  const payload = {
+    // Listing only the new upload removes the previous card attachment instead of appending to it.
+    attachments: [{ id: 0, filename }],
+    files: [{ name: filename, data: image }],
+    components: buildQuoteComponents(session),
+  };
+
+  // Component interactions carry a fresh webhook token, including for user-installed
+  // apps that do not grant the bot channel-level permissions.
+  const editorToken = session.editorInteractionToken ?? ('message' in interaction ? interaction.token : undefined);
+  if (editorToken) {
+    await api.interactions.editReply(interaction.application_id, editorToken, payload);
+    return;
+  }
+
+  if ('message' in interaction && interaction.message) {
+    session.editorChannelId = interaction.message.channel_id;
+    session.editorMessageId = interaction.message.id;
+    persistSessions();
+    await api.channels.editMessage(session.editorChannelId, session.editorMessageId, payload);
+    return;
+  }
+
+  throw new Error(`Quote editor ${session.id} has no editable message reference`);
 }
 
 function extractQuoteText(message: APIMessage): string {
