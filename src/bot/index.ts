@@ -195,6 +195,36 @@ if (env.get('register_commands').toBoolean() === true) {
   console.log('Application (/) commands refreshed');
 }
 
+const reply = api.interactions.reply.bind(api.interactions);
+
+api.interactions.reply = (async (interactionId, interactionToken, body, options) => {
+  if ((body.content || !!((body.flags ?? 0) & MessageFlags.IsComponentsV2)) && !body.allowed_mentions) {
+    body.allowed_mentions = { parse: [] };
+  }
+
+  return reply(interactionId, interactionToken, body, options);
+}) as typeof api.interactions.reply;
+
+const editReply = api.interactions.editReply.bind(api.interactions);
+
+api.interactions.editReply = (async (applicationId, interactionToken, callbackData, messageId, options) => {
+  if ((callbackData.content || !!((callbackData.flags ?? 0) & MessageFlags.IsComponentsV2)) && !callbackData.allowed_mentions) {
+    callbackData.allowed_mentions = { parse: [] };
+  }
+
+  return editReply(applicationId, interactionToken, callbackData, messageId, options);
+}) as typeof api.interactions.editReply;
+
+const followUp = api.interactions.followUp.bind(api.interactions);
+
+api.interactions.followUp = (async (applicationId, interactionToken, body, options) => {
+  if ((body.content || !!((body.flags ?? 0) & MessageFlags.IsComponentsV2)) && !body.allowed_mentions) {
+    body.allowed_mentions = { parse: [] };
+  }
+
+  return followUp(applicationId, interactionToken, body, options);
+}) as typeof api.interactions.followUp;
+
 async function handleApplicationCommand(interaction: APIApplicationCommandInteraction, api: API) {
   const command = commands.get(interaction.data.name) as ApplicationCommand;
 
