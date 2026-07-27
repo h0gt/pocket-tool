@@ -8,7 +8,7 @@ import {
   type APIMessageComponentEmoji,
 } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
-import { emoji, highlight, hyperlink } from '../../../utils/markdown';
+import { highlight } from '../../../utils/markdown';
 import { HighlightStyle } from '../../../types/types';
 import { toEmoji } from '../../../utils/utils';
 

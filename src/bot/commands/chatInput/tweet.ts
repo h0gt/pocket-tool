@@ -67,8 +67,13 @@ createApplicationCommand({
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
-            type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Twitter API key not set`,
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Wrong')} Twitter API key not set`,
+              },
+            ],
           },
         ],
         flags: MessageFlags.IsComponentsV2,
@@ -83,8 +88,13 @@ createApplicationCommand({
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
-            type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Please provide a valid tweet URL or ID to view`,
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Exclamation')} Please provide a valid tweet URL or ID to view`,
+              },
+            ],
           },
         ],
         flags: MessageFlags.IsComponentsV2,
@@ -220,12 +230,18 @@ createApplicationCommand({
   },
 });
 
-const regex = /^(?:https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/(?:#!\/)?\w+\/status\/(\d+)|(\d+))$/;
+function extractTweetId(input: string): string | undefined {
+  const trimmed = input.trim();
 
-function extractTweetId(input: string) {
-  const match = input.match(regex);
+  if (/^\d+$/.test(trimmed)) {
+    return trimmed;
+  }
 
-  if (!match) return null;
-
-  return match[1] || match[2];
+  try {
+    const tweetUrl = new URL(trimmed);
+    const id = tweetUrl.pathname.split('/').pop();
+    return id && /^\d+$/.test(id) ? id : undefined;
+  } catch {
+    return undefined;
+  }
 }

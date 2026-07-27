@@ -1,7 +1,7 @@
 import { ApplicationCommandType, ApplicationIntegrationType, ComponentType, InteractionContextType, MessageFlags } from '@discordjs/core/http-only';
-import createApplicationCommand from '../../../helpers/command.js';
-import { emoji } from '../../../utils/markdown.js';
-import { buildQuoteComponents, createQuoteSession, hasQuoteContent, renderQuoteSession } from '../../../utils/quote.js';
+import createApplicationCommand from '../../../helpers/command';
+import { emoji } from '../../../utils/markdown';
+import { buildQuoteComponents, createQuoteSession, hasQuoteContent, renderQuoteSession } from '../../../utils/quote';
 
 createApplicationCommand({
   type: ApplicationCommandType.Message,
@@ -26,6 +26,7 @@ createApplicationCommand({
         ],
         flags: MessageFlags.IsComponentsV2,
       });
+
       return;
     }
 

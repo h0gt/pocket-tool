@@ -64,8 +64,13 @@ createApplicationCommand({
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
-            type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Please provide a valid user to view their avatar`,
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Exclamation')} Please provide a valid user to view their avatar`,
+              },
+            ],
           },
         ],
         flags: MessageFlags.IsComponentsV2,
@@ -79,8 +84,13 @@ createApplicationCommand({
         await api.interactions.editReply(interaction.application_id, interaction.token, {
           components: [
             {
-              type: ComponentType.TextDisplay,
-              content: `${emoji('Exclamation')} <@${user.id}> doesn't has a guild avatar`,
+              type: ComponentType.Container,
+              components: [
+                {
+                  type: ComponentType.TextDisplay,
+                  content: `${emoji('Exclamation')} <@${user.id}> doesn't have a guild avatar`,
+                },
+              ],
             },
           ],
           flags: MessageFlags.IsComponentsV2,
@@ -150,8 +160,13 @@ createApplicationCommand({
         await api.interactions.editReply(interaction.application_id, interaction.token, {
           components: [
             {
-              type: ComponentType.TextDisplay,
-              content: `${emoji('Exclamation')} <@${user.id}> doesn't has an avatar`,
+              type: ComponentType.Container,
+              components: [
+                {
+                  type: ComponentType.TextDisplay,
+                  content: `${emoji('Exclamation')} <@${user.id}> doesn't have an avatar`,
+                },
+              ],
             },
           ],
           flags: MessageFlags.IsComponentsV2,

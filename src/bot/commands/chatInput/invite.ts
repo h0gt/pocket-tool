@@ -36,8 +36,13 @@ createApplicationCommand({
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
-            type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Please provide a valid invite link to view`,
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Exclamation')} Please provide a valid invite link to view`,
+              },
+            ],
           },
         ],
         flags: MessageFlags.IsComponentsV2,
@@ -52,8 +57,13 @@ createApplicationCommand({
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
-            type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Please provide a valid invite link to view`,
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Exclamation')} Please provide a valid invite link to view`,
+              },
+            ],
           },
         ],
         flags: MessageFlags.IsComponentsV2,
@@ -81,7 +91,7 @@ createApplicationCommand({
               components: [
                 {
                   type: ComponentType.TextDisplay,
-                  content: `${emoji('GeneralInfo')} **${name}**\n-# ${guildId}`,
+                  content: `${emoji('Home')} **${name}** ${highlight(guildId)}`,
                 },
               ],
               accessory: {
@@ -96,7 +106,7 @@ createApplicationCommand({
             },
             {
               type: ComponentType.TextDisplay,
-              content: `${emoji('Calendar')} **Created At:**\n${timestamp(createdAt, TimestampStyle.LongDate)}\n\n${emoji('People')} ${highlight(members, HighlightStyle.Bold)}   ${emoji('Channel')} ${highlight(channels)}   ${emoji('NitroBoost')} ${highlight(boosts)}`,
+              content: `${emoji('Calendar')} **Created At:**\n${timestamp(createdAt, TimestampStyle.LongDate)}\n\n${emoji('People')} ${highlight(members, HighlightStyle.Bold)}   ${emoji('Channel')} ${highlight(channels)}   ${emoji('Boost')} ${highlight(boosts)}`,
             },
           ],
         },

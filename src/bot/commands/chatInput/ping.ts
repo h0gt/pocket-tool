@@ -1,4 +1,4 @@
-import { ApplicationCommandType, ApplicationIntegrationType, InteractionContextType, PermissionFlagsBits } from '@discordjs/core/http-only';
+import { ApplicationCommandType, ApplicationIntegrationType, InteractionContextType } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
 
 createApplicationCommand({

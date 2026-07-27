@@ -203,17 +203,17 @@ async function getAvailableSession(
 
   if (!session || session.expiresAt <= Date.now()) {
     if (session) sessions.delete(session.id);
-    await reportComponentError(interaction, api, 'That quote editor has expired. Run **Apps > Quote Message** again.');
+    await reportComponentError(interaction, api, 'That quote editor has expired - run **Apps -> Quote Message** again');
     return undefined;
   }
 
   if (session.ownerId !== userId) {
-    await reportComponentError(interaction, api, 'Only the person who made this quote can change it.');
+    await reportComponentError(interaction, api, 'Only the person who made this quote can change it');
     return undefined;
   }
 
   if (session.busy) {
-    await reportComponentError(interaction, api, 'The quote is still rendering.');
+    await reportComponentError(interaction, api, 'The quote is still rendering');
     return undefined;
   }
 

@@ -76,8 +76,13 @@ createApplicationCommand({
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
-            type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Eleven Labs API key not set`,
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Wrong')} Eleven Labs API key not set`,
+              },
+            ],
           },
         ],
         flags: MessageFlags.IsComponentsV2,

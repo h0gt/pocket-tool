@@ -79,8 +79,13 @@ createApplicationCommand({
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
-            type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Please provide a valid time to convert`,
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Exclamation')} Please provide a valid time to convert`,
+              },
+            ],
           },
         ],
         flags: MessageFlags.IsComponentsV2,

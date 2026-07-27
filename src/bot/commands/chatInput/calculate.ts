@@ -45,8 +45,13 @@ createApplicationCommand({
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
-            type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Invalid expression provided, use an expression such as 2^10 or sqrt(144)`,
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Exclamation')} Invalid expression provided, use an expression such as 2^10 or sqrt(144)`,
+              },
+            ],
           },
         ],
         flags: MessageFlags.IsComponentsV2,

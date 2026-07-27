@@ -23,8 +23,13 @@ createApplicationCommand({
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
-            type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Please select a valid message to translate`,
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Exclamation')} Please select a valid message to translate`,
+              },
+            ],
           },
         ],
         flags: MessageFlags.IsComponentsV2,

@@ -1,15 +1,7 @@
-import {
-  ApplicationCommandType,
-  ApplicationIntegrationType,
-  ButtonStyle,
-  ComponentType,
-  InteractionContextType,
-  MessageFlags,
-  type APIMessageComponentEmoji,
-} from '@discordjs/core/http-only';
+import { ApplicationCommandType, ApplicationIntegrationType, ComponentType, InteractionContextType, MessageFlags } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
-import { getTimestampFromSnowflake, msToReadableTime, toEmoji } from '../../../utils/utils';
-import { emoji, hyperlink, timestamp } from '../../../utils/markdown';
+import { msToReadableTime } from '../../../utils/utils';
+import { emoji, timestamp } from '../../../utils/markdown';
 import { TimestampStyle } from '../../../types/types';
 
 createApplicationCommand({
@@ -27,7 +19,7 @@ createApplicationCommand({
           components: [
             {
               type: ComponentType.TextDisplay,
-              content: `${emoji('Clock')} Uptime: **${msToReadableTime(process.uptime() * 1000)} (${timestamp(Math.floor(new Date().getTime() - process.uptime() * 1000), TimestampStyle.RelativeTime)})**`,
+              content: `${emoji('Clock')} Uptime: **${msToReadableTime(process.uptime() * 1000)} (${timestamp(Math.floor(new Date().getTime() - process.uptime() * 1000), TimestampStyle.ShortDate)})**`,
             },
           ],
         },

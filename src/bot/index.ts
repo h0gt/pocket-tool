@@ -87,8 +87,18 @@ app.post('/interactions', async (c) => {
       .includes(interaction.user?.id ?? interaction.member?.user.id)
   ) {
     await api.interactions.reply(interaction.id, interaction.token, {
-      content: `${emoji('Exclamation')} The bot is currently under maintenance - please try again later`,
-      flags: MessageFlags.Ephemeral,
+      components: [
+        {
+          type: ComponentType.Container,
+          components: [
+            {
+              type: ComponentType.TextDisplay,
+              content: `${emoji('Exclamation')} The bot is currently under maintenance - please try again later`,
+            },
+          ],
+        },
+      ],
+      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
     });
 
     return;
@@ -210,8 +220,18 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
 
           if (now < expiration) {
             await api.interactions.reply(interaction.id, interaction.token, {
-              content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
-              flags: MessageFlags.Ephemeral,
+              components: [
+                {
+                  type: ComponentType.Container,
+                  components: [
+                    {
+                      type: ComponentType.TextDisplay,
+                      content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                    },
+                  ],
+                },
+              ],
+              flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
             });
 
             return;
@@ -251,8 +271,18 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
 
           if (now < expiration) {
             await api.interactions.reply(interaction.id, interaction.token, {
-              content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}>- you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
-              flags: MessageFlags.Ephemeral,
+              components: [
+                {
+                  type: ComponentType.Container,
+                  components: [
+                    {
+                      type: ComponentType.TextDisplay,
+                      content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                    },
+                  ],
+                },
+              ],
+              flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
             });
 
             return;
@@ -285,8 +315,18 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
 
           if (now < expiration) {
             await api.interactions.reply(interaction.id, interaction.token, {
-              content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}>- you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
-              flags: MessageFlags.Ephemeral,
+              components: [
+                {
+                  type: ComponentType.Container,
+                  components: [
+                    {
+                      type: ComponentType.TextDisplay,
+                      content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                    },
+                  ],
+                },
+              ],
+              flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
             });
 
             return;
@@ -319,13 +359,33 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
 
     if ('acknowledge' in command && command.acknowledge === true) {
       await api.interactions.editReply(interaction.application_id, interaction.token, {
-        content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server')}**`,
-        flags: MessageFlags.Ephemeral,
+        components: [
+          {
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}**`,
+              },
+            ],
+          },
+        ],
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
       });
     } else {
       await api.interactions.reply(interaction.id, interaction.token, {
-        content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server')}**`,
-        flags: MessageFlags.Ephemeral,
+        components: [
+          {
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}**`,
+              },
+            ],
+          },
+        ],
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
       });
     }
   }
