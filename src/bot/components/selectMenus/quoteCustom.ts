@@ -1,15 +1,16 @@
 import createComponent from '../../../helpers/component';
 import { InteractableComponentType } from '../../../types/types';
-import { handleQuoteSelect } from '../../../utils/quote';
+import { handleQuoteCustomSelect } from '../../../utils/quote';
 
 createComponent({
   type: InteractableComponentType.SelectMenu,
-  custom_id: 'quote-select',
+  custom_id: 'quote-custom-select',
   args: ['session_id', 'option'] as const,
-  acknowledge: true,
   async run(interaction, args, api) {
     const { session_id, option } = args;
 
-    await handleQuoteSelect(interaction, session_id, option, api);
+    if (option !== 'size' && option !== 'color') return;
+
+    await handleQuoteCustomSelect(interaction, session_id, option, api);
   },
 });

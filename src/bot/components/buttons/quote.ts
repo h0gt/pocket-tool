@@ -1,6 +1,6 @@
-import createComponent from '../../../helpers/component.js';
-import { InteractableComponentType } from '../../../types/types.js';
-import { handleQuoteAction } from '../../../utils/quote.js';
+import createComponent from '../../../helpers/component';
+import { InteractableComponentType } from '../../../types/types';
+import { handleQuoteAction } from '../../../utils/quote';
 
 createComponent({
   type: InteractableComponentType.Button,
@@ -8,6 +8,8 @@ createComponent({
   args: ['session_id', 'action'] as const,
   acknowledge: true,
   async run(interaction, args, api) {
-    await handleQuoteAction(interaction, args.session_id, args.action, api);
+    const { session_id, action } = args;
+
+    await handleQuoteAction(interaction, session_id, action, api);
   },
 });

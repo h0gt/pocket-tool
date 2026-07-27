@@ -65,7 +65,7 @@ export const CARD_SIZES = {
   },
 } as const;
 
-export const CARD_COLOURS = {
+export const CARD_COLORS = {
   auto: {
     label: 'Automatic',
     description: 'Adapts to the selected look',
@@ -179,7 +179,7 @@ export const CARD_LOOKS = {
 
 type FontKey = keyof typeof CARD_FONTS;
 type SizeKey = keyof typeof CARD_SIZES;
-type ColourKey = keyof typeof CARD_COLOURS;
+type ColorKey = keyof typeof CARD_COLORS;
 type LookKey = keyof typeof CARD_LOOKS;
 type Layout = (typeof CARD_LOOKS)[LookKey]['layout'];
 type Effect = (typeof CARD_LOOKS)[LookKey]['effect'];
@@ -190,8 +190,10 @@ export type CardOptions = {
   handle: string;
   font: FontKey;
   size: SizeKey;
-  colour: ColourKey;
+  color: ColorKey;
   look: LookKey;
+  customSize?: number;
+  customColor?: string;
 };
 
 export type RenderQuoteCardOptions = CardOptions & {
@@ -222,10 +224,10 @@ export async function renderQuoteCard(options: RenderQuoteCardOptions): Promise<
   ctx.imageSmoothingQuality = 'high';
 
   const textArea = drawLayout(ctx, canvas, look.layout, look.effect, image, avatar);
-  const colour = resolveTextColour(options.colour, look.layout);
+  const color = resolveTextColor(options.color, look.layout, options.customColor);
 
-  drawQuote(ctx, options, textArea, colour);
-  drawBrandMark(ctx, look.layout, colour);
+  drawQuote(ctx, options, textArea, color);
+  drawBrandMark(ctx, look.layout, color);
 
   return canvas.encode('gif');
 }
@@ -247,16 +249,10 @@ function drawLayout(
   avatar: Awaited<ReturnType<typeof loadImage>> | undefined,
 ): TextArea {
   if (layout === 'split') {
-    fillGradient(ctx, ['#090b12', '#030305'], 0);
-    const imageWidth = 720;
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+    const imageWidth = 570;
     drawSplitBackdrop(ctx, image, imageWidth, effect);
-
-    const fade = ctx.createLinearGradient(390, 0, 760, 0);
-    fade.addColorStop(0, 'rgba(3, 3, 5, 0)');
-    fade.addColorStop(0.5, 'rgba(3, 3, 5, .28)');
-    fade.addColorStop(1, '#030305');
-    ctx.fillStyle = fade;
-    ctx.fillRect(390, 0, 370, HEIGHT);
 
     return { x: 630, y: 92, width: 490, height: 485, align: 'center', vertical: 'middle' };
   }
@@ -341,9 +337,9 @@ function drawLayout(
   return { x: 145, y: 180, width: 910, height: 360, align: 'center', vertical: 'middle' };
 }
 
-function drawQuote(ctx: SKRSContext2D, options: RenderQuoteCardOptions, area: TextArea, colour: string): void {
+function drawQuote(ctx: SKRSContext2D, options: RenderQuoteCardOptions, area: TextArea, color: string): void {
   const font = CARD_FONTS[options.font];
-  let fontSize = options.size === 'auto' ? smartFontSize(options.quote) : CARD_SIZES[options.size].pixels;
+  let fontSize = options.customSize ?? (options.size === 'auto' ? smartFontSize(options.quote) : CARD_SIZES[options.size].pixels);
 
   const maxLines = 7;
   let lines: string[] = [];
@@ -373,9 +369,9 @@ function drawQuote(ctx: SKRSContext2D, options: RenderQuoteCardOptions, area: Te
 
   ctx.textAlign = area.align;
   ctx.textBaseline = 'top';
-  ctx.fillStyle = colour;
+  ctx.fillStyle = color;
   ctx.font = `${font.weight} ${fontSize}px ${font.family}`;
-  ctx.shadowColor = isLightColour(colour) ? 'rgba(0,0,0,.48)' : 'rgba(255,255,255,.12)';
+  ctx.shadowColor = isLightColor(color) ? 'rgba(0,0,0,.48)' : 'rgba(255,255,255,.12)';
   ctx.shadowBlur = area.align === 'left' ? 12 : 8;
   ctx.shadowOffsetY = 2;
 
@@ -460,8 +456,9 @@ function smartFontSize(quote: string): number {
   return 38;
 }
 
-function resolveTextColour(colour: ColourKey, layout: Layout): string {
-  if (colour !== 'auto') return CARD_COLOURS[colour].value;
+function resolveTextColor(color: ColorKey, layout: Layout, customColor?: string): string {
+  if (customColor) return customColor;
+  if (color !== 'auto') return CARD_COLORS[color].value;
   return layout === 'editorial' || layout === 'paper' ? '#1c1a18' : '#f5f2ec';
 }
 
@@ -471,25 +468,20 @@ function drawSplitBackdrop(ctx: SKRSContext2D, image: Awaited<ReturnType<typeof 
     return;
   }
 
-  // A blurred base carries image colour past the sharp panel, so the split
-  // transitions naturally into the quote rather than ending at a hard edge.
-  ctx.save();
-  ctx.globalAlpha = 0.72;
-  drawImageCover(ctx, image, 0, 0, width, HEIGHT, effect, 24);
-  ctx.restore();
-
   const panel = createCanvas(width, HEIGHT);
   const panelCtx = panel.getContext('2d');
   panelCtx.imageSmoothingEnabled = true;
   panelCtx.imageSmoothingQuality = 'high';
   drawImageCover(panelCtx, image, 0, 0, width, HEIGHT, effect);
 
-  const mask = panelCtx.createLinearGradient(width * 0.55, 0, width, 0);
-  mask.addColorStop(0, 'rgba(255,255,255,1)');
-  mask.addColorStop(0.55, 'rgba(255,255,255,.9)');
-  mask.addColorStop(1, 'rgba(255,255,255,0)');
+  const fade = panelCtx.createLinearGradient(width * 0.1, 0, width, 0);
+  fade.addColorStop(0, 'rgba(255,255,255,1)');
+  fade.addColorStop(0.2, 'rgba(255,255,255,.92)');
+  fade.addColorStop(0.52, 'rgba(255,255,255,.5)');
+  fade.addColorStop(0.78, 'rgba(255,255,255,.1)');
+  fade.addColorStop(1, 'rgba(255,255,255,0)');
   panelCtx.globalCompositeOperation = 'destination-in';
-  panelCtx.fillStyle = mask;
+  panelCtx.fillStyle = fade;
   panelCtx.fillRect(0, 0, width, HEIGHT);
 
   ctx.drawImage(panel, 0, 0);
@@ -503,7 +495,6 @@ function drawImageCover(
   width: number,
   height: number,
   effect: Effect,
-  blurRadius: number = 0,
 ): void {
   const scale = Math.max(width / image.width, height / image.height);
   const sourceWidth = width / scale;
@@ -530,10 +521,9 @@ function drawImageCover(
   if (effect === 'cool') filters.push('saturate(.82)', 'hue-rotate(168deg)', 'contrast(1.08)');
   if (effect === 'blur') filters.push('blur(10px)', 'saturate(.8)');
   if (effect === 'duotone') filters.push('grayscale(1)', 'contrast(1.28)');
-  if (blurRadius) filters.push(`blur(${blurRadius}px)`);
   if (filters.length) ctx.filter = filters.join(' ');
 
-  const overscan = Math.max(effect === 'blur' ? 18 : 0, blurRadius * 2);
+  const overscan = effect === 'blur' ? 18 : 0;
   ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x - overscan, y - overscan, width + overscan * 2, height + overscan * 2);
   ctx.restore();
 
@@ -562,7 +552,7 @@ function drawAvatarMedallion(
   avatar: Awaited<ReturnType<typeof loadImage>> | undefined,
   centerX: number,
   centerY: number,
-  ringColour: string,
+  ringColor: string,
 ): void {
   const radius = 46;
   ctx.save();
@@ -579,15 +569,15 @@ function drawAvatarMedallion(
 
   ctx.beginPath();
   ctx.arc(centerX, centerY, radius + 5, 0, Math.PI * 2);
-  ctx.strokeStyle = ringColour;
+  ctx.strokeStyle = ringColor;
   ctx.lineWidth = 3;
   ctx.stroke();
 }
 
-function fillGradient(ctx: SKRSContext2D, colours: readonly string[], diagonal: number): void {
+function fillGradient(ctx: SKRSContext2D, colors: readonly string[], diagonal: number): void {
   const gradient = ctx.createLinearGradient(WIDTH * diagonal, 0, WIDTH * (1 - diagonal), HEIGHT);
-  colours.forEach((colour, index) => {
-    gradient.addColorStop(index / (colours.length - 1), colour);
+  colors.forEach((color, index) => {
+    gradient.addColorStop(index / (colors.length - 1), color);
   });
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -624,11 +614,11 @@ function addFilmGrain(ctx: SKRSContext2D, opacity: number, x = 0, y = 0, width =
   ctx.restore();
 }
 
-function drawBrandMark(ctx: SKRSContext2D, layout: Layout, textColour: string): void {
+function drawBrandMark(ctx: SKRSContext2D, layout: Layout, textColor: string): void {
   const darkText = layout === 'editorial' || layout === 'paper';
   ctx.save();
   ctx.globalAlpha = 0.45;
-  ctx.fillStyle = darkText ? '#201d19' : textColour;
+  ctx.fillStyle = darkText ? '#201d19' : textColor;
   ctx.textAlign = 'right';
   ctx.textBaseline = 'alphabetic';
   ctx.font = `600 16px ${CARD_FONTS.modern.family}`;
@@ -647,10 +637,10 @@ function roundedRect(ctx: SKRSContext2D, x: number, y: number, width: number, he
   ctx.closePath();
 }
 
-function isLightColour(colour: string): boolean {
-  if (!colour.startsWith('#') || colour.length !== 7) return true;
-  const red = Number.parseInt(colour.slice(1, 3), 16);
-  const green = Number.parseInt(colour.slice(3, 5), 16);
-  const blue = Number.parseInt(colour.slice(5, 7), 16);
+function isLightColor(color: string): boolean {
+  if (!color.startsWith('#') || color.length !== 7) return true;
+  const red = Number.parseInt(color.slice(1, 3), 16);
+  const green = Number.parseInt(color.slice(3, 5), 16);
+  const blue = Number.parseInt(color.slice(5, 7), 16);
   return red * 0.299 + green * 0.587 + blue * 0.114 > 150;
 }
