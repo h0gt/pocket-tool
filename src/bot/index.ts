@@ -50,7 +50,7 @@ export const components = new Collection<string, Component>();
 export const cooldowns = new Collection<string, Collection<Snowflake, number>>();
 
 await readDirectory(path.join(process.cwd(), 'src', 'bot', 'commands'));
-// await readDirectory(path.join(process.cwd(), 'src', 'bot', 'components'));
+await readDirectory(path.join(process.cwd(), 'src', 'bot', 'components'));
 
 const rest = new REST().setToken(env.get('token', true).toString());
 const api = new API(rest);
