@@ -15,7 +15,7 @@ import { CARD_COLOURS, CARD_FONTS, CARD_LOOKS, CARD_SIZES, renderQuoteCard, type
 import { toEmoji } from './utils.js';
 
 const SESSION_LIFETIME = 14 * 60 * 1_000;
-const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
 
 export type QuoteOption = 'font' | 'size' | 'colour' | 'look';
 
@@ -282,18 +282,39 @@ function findPrimaryImage(message: APIMessage): string | undefined {
   const attachment = Object.values(message.attachments).find(
     (item) => item.content_type?.startsWith('image/') || /\.(?:png|jpe?g|webp|gif)$/i.test(item.filename),
   );
-  if (attachment) return attachment.proxy_url || attachment.url;
+  if (attachment) return preferredImageUrl(attachment.url, attachment.proxy_url);
 
   for (const embed of message.embeds) {
     if (embed.image?.proxy_url || embed.image?.url) {
-      return embed.image.proxy_url || embed.image.url;
+      return preferredImageUrl(embed.image.url, embed.image.proxy_url);
     }
     if (embed.thumbnail?.proxy_url || embed.thumbnail?.url) {
-      return embed.thumbnail.proxy_url || embed.thumbnail.url;
+      return preferredImageUrl(embed.thumbnail.url, embed.thumbnail.proxy_url);
     }
   }
 
   return undefined;
+}
+
+/** Prefer Discord's original CDN asset; embedded external images use Discord's safe proxy. */
+function preferredImageUrl(original?: string, proxy?: string): string | undefined {
+  if (original && isTrustedDiscordUrl(original)) return original;
+  return proxy || original;
+}
+
+function isTrustedDiscordUrl(url: string): boolean {
+  try {
+    const parsedUrl = new URL(url);
+    return (
+      parsedUrl.protocol === 'https:' &&
+      (parsedUrl.hostname === 'discordapp.com' ||
+        parsedUrl.hostname.endsWith('.discordapp.com') ||
+        parsedUrl.hostname === 'discordapp.net' ||
+        parsedUrl.hostname.endsWith('.discordapp.net'))
+    );
+  } catch {
+    return false;
+  }
 }
 
 function getAvatarUrl(message: APIMessage): string {
@@ -308,13 +329,7 @@ function getAvatarUrl(message: APIMessage): string {
 async function downloadImage(url: string): Promise<Buffer | undefined> {
   try {
     const parsedUrl = new URL(url);
-    const trustedHost =
-      parsedUrl.protocol === 'https:' &&
-      (parsedUrl.hostname === 'discordapp.com' ||
-        parsedUrl.hostname.endsWith('.discordapp.com') ||
-        parsedUrl.hostname === 'discordapp.net' ||
-        parsedUrl.hostname.endsWith('.discordapp.net'));
-    if (!trustedHost) return undefined;
+    if (!isTrustedDiscordUrl(parsedUrl.toString())) return undefined;
 
     const response = await fetch(parsedUrl, {
       signal: AbortSignal.timeout(8_000),

@@ -248,17 +248,17 @@ function drawLayout(
 ): TextArea {
   if (layout === 'split') {
     fillGradient(ctx, ['#090b12', '#030305'], 0);
-    const imageWidth = 590;
-    if (image) drawImageCover(ctx, image, 0, 0, imageWidth, HEIGHT, effect);
-    else drawAbstractBackdrop(ctx, 0, 0, imageWidth, HEIGHT);
+    const imageWidth = 720;
+    drawSplitBackdrop(ctx, image, imageWidth, effect);
 
-    const fade = ctx.createLinearGradient(330, 0, 640, 0);
+    const fade = ctx.createLinearGradient(390, 0, 760, 0);
     fade.addColorStop(0, 'rgba(3, 3, 5, 0)');
+    fade.addColorStop(0.5, 'rgba(3, 3, 5, .28)');
     fade.addColorStop(1, '#030305');
     ctx.fillStyle = fade;
-    ctx.fillRect(330, 0, 310, HEIGHT);
+    ctx.fillRect(390, 0, 370, HEIGHT);
 
-    return { x: 570, y: 92, width: 550, height: 485, align: 'center', vertical: 'middle' };
+    return { x: 630, y: 92, width: 490, height: 485, align: 'center', vertical: 'middle' };
   }
 
   if (layout === 'spotlight') {
@@ -465,6 +465,36 @@ function resolveTextColour(colour: ColourKey, layout: Layout): string {
   return layout === 'editorial' || layout === 'paper' ? '#1c1a18' : '#f5f2ec';
 }
 
+function drawSplitBackdrop(ctx: SKRSContext2D, image: Awaited<ReturnType<typeof loadImage>> | undefined, width: number, effect: Effect): void {
+  if (!image) {
+    drawAbstractBackdrop(ctx, 0, 0, width, HEIGHT);
+    return;
+  }
+
+  // A blurred base carries image colour past the sharp panel, so the split
+  // transitions naturally into the quote rather than ending at a hard edge.
+  ctx.save();
+  ctx.globalAlpha = 0.72;
+  drawImageCover(ctx, image, 0, 0, width, HEIGHT, effect, 24);
+  ctx.restore();
+
+  const panel = createCanvas(width, HEIGHT);
+  const panelCtx = panel.getContext('2d');
+  panelCtx.imageSmoothingEnabled = true;
+  panelCtx.imageSmoothingQuality = 'high';
+  drawImageCover(panelCtx, image, 0, 0, width, HEIGHT, effect);
+
+  const mask = panelCtx.createLinearGradient(width * 0.55, 0, width, 0);
+  mask.addColorStop(0, 'rgba(255,255,255,1)');
+  mask.addColorStop(0.55, 'rgba(255,255,255,.9)');
+  mask.addColorStop(1, 'rgba(255,255,255,0)');
+  panelCtx.globalCompositeOperation = 'destination-in';
+  panelCtx.fillStyle = mask;
+  panelCtx.fillRect(0, 0, width, HEIGHT);
+
+  ctx.drawImage(panel, 0, 0);
+}
+
 function drawImageCover(
   ctx: SKRSContext2D,
   image: Awaited<ReturnType<typeof loadImage>>,
@@ -473,6 +503,7 @@ function drawImageCover(
   width: number,
   height: number,
   effect: Effect,
+  blurRadius: number = 0,
 ): void {
   const scale = Math.max(width / image.width, height / image.height);
   const sourceWidth = width / scale;
@@ -493,13 +524,16 @@ function drawImageCover(
   }
 
   ctx.save();
-  if (effect === 'grayscale') ctx.filter = 'grayscale(1) contrast(1.06)';
-  if (effect === 'warm') ctx.filter = 'sepia(.32) saturate(1.22) contrast(1.04)';
-  if (effect === 'cool') ctx.filter = 'saturate(.82) hue-rotate(168deg) contrast(1.08)';
-  if (effect === 'blur') ctx.filter = 'blur(10px) saturate(.8)';
-  if (effect === 'duotone') ctx.filter = 'grayscale(1) contrast(1.28)';
+  const filters: string[] = [];
+  if (effect === 'grayscale') filters.push('grayscale(1)', 'contrast(1.06)');
+  if (effect === 'warm') filters.push('sepia(.32)', 'saturate(1.22)', 'contrast(1.04)');
+  if (effect === 'cool') filters.push('saturate(.82)', 'hue-rotate(168deg)', 'contrast(1.08)');
+  if (effect === 'blur') filters.push('blur(10px)', 'saturate(.8)');
+  if (effect === 'duotone') filters.push('grayscale(1)', 'contrast(1.28)');
+  if (blurRadius) filters.push(`blur(${blurRadius}px)`);
+  if (filters.length) ctx.filter = filters.join(' ');
 
-  const overscan = effect === 'blur' ? 18 : 0;
+  const overscan = Math.max(effect === 'blur' ? 18 : 0, blurRadius * 2);
   ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x - overscan, y - overscan, width + overscan * 2, height + overscan * 2);
   ctx.restore();
 
