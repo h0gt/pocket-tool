@@ -12,12 +12,15 @@ import {
   type APIMessageTopLevelComponent,
 } from '@discordjs/core/http-only';
 import { randomBytes } from 'node:crypto';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { cdn, emoji } from './markdown.js';
 import { CARD_COLORS, CARD_FONTS, CARD_LOOKS, CARD_SIZES, renderQuoteCard, type CardOptions } from './quoteCard.js';
 import { toEmoji } from './utils.js';
 
 const SESSION_LIFETIME = 15 * 60 * 1_000;
 const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
+const SESSION_STORE_PATH = resolve(process.cwd(), '.cache', 'quote-sessions.json');
 
 export type QuoteOption = 'font' | 'size' | 'color' | 'look';
 type CustomTextOption = 'size' | 'color';
@@ -39,11 +42,88 @@ export type QuoteSession = {
 
 const sessions = new Map<string, QuoteSession>();
 
+type StoredQuoteSession = Omit<QuoteSession, 'primaryImage' | 'avatarImage' | 'busy' | 'editorInteractionToken'> & {
+  primaryImage?: string;
+  avatarImage?: string;
+};
+
+function restoreSessions(): void {
+  try {
+    if (!existsSync(SESSION_STORE_PATH)) return;
+
+    const stored = JSON.parse(readFileSync(SESSION_STORE_PATH, 'utf8')) as StoredQuoteSession[];
+    const now = Date.now();
+    for (const item of stored) {
+      if (!item?.id || item.expiresAt <= now) continue;
+      const { primaryImage, avatarImage, ...session } = item;
+      sessions.set(item.id, {
+        ...session,
+        expiresAt: Math.max(session.expiresAt, now + SESSION_LIFETIME),
+        ...(primaryImage && { primaryImage: Buffer.from(primaryImage, 'base64') }),
+        ...(avatarImage && { avatarImage: Buffer.from(avatarImage, 'base64') }),
+        busy: false,
+      });
+    }
+  } catch {}
+}
+
+function restoreSession(sessionId: string): QuoteSession | undefined {
+  try {
+    if (!existsSync(SESSION_STORE_PATH)) return undefined;
+
+    const item = (JSON.parse(readFileSync(SESSION_STORE_PATH, 'utf8')) as StoredQuoteSession[]).find((stored) => stored.id === sessionId);
+    if (!item || item.expiresAt <= Date.now()) return undefined;
+
+    const { primaryImage, avatarImage, ...session } = item;
+    const restored: QuoteSession = {
+      ...session,
+      ...(primaryImage && { primaryImage: Buffer.from(primaryImage, 'base64') }),
+      ...(avatarImage && { avatarImage: Buffer.from(avatarImage, 'base64') }),
+      busy: false,
+    };
+    sessions.set(restored.id, restored);
+    return restored;
+  } catch (error) {
+    console.error(`Could not restore quote editor ${sessionId}:`, error);
+    return undefined;
+  }
+}
+
+function persistSessions(): void {
+  try {
+    const stored: StoredQuoteSession[] = [...sessions.values()].map(
+      ({ primaryImage, avatarImage, busy: _busy, editorInteractionToken: _token, ...session }) => ({
+        ...session,
+        ...(primaryImage && { primaryImage: primaryImage.toString('base64') }),
+        ...(avatarImage && { avatarImage: avatarImage.toString('base64') }),
+      }),
+    );
+
+    if (stored.length === 0) {
+      if (existsSync(SESSION_STORE_PATH)) unlinkSync(SESSION_STORE_PATH);
+      return;
+    }
+
+    mkdirSync(dirname(SESSION_STORE_PATH), { recursive: true });
+    const temporaryPath = `${SESSION_STORE_PATH}.tmp`;
+    writeFileSync(temporaryPath, JSON.stringify(stored));
+    copyFileSync(temporaryPath, SESSION_STORE_PATH);
+    unlinkSync(temporaryPath);
+  } catch {}
+}
+
+restoreSessions();
+
 setInterval(() => {
   const now = Date.now();
+  let removed = false;
   for (const [id, session] of sessions) {
-    if (session.expiresAt <= now) sessions.delete(id);
+    if (session.expiresAt <= now) {
+      sessions.delete(id);
+      removed = true;
+    }
   }
+  if (removed) persistSessions();
 }, 60_000).unref();
 
 export async function createQuoteSession(message: APIMessage, ownerId: string, displayName?: string, guildId?: string): Promise<QuoteSession> {
@@ -52,7 +132,7 @@ export async function createQuoteSession(message: APIMessage, ownerId: string, d
   const [primaryImage, avatarImage] = await Promise.all([primaryUrl ? downloadImage(primaryUrl) : Promise.resolve(undefined), downloadImage(avatarUrl)]);
 
   const session: QuoteSession = {
-    id: randomBytes(6).toString('base64url'),
+    id: randomBytes(8).toString('hex'),
     ownerId,
     sourceMessageId: message.id,
     sourceUrl: `https://discord.com/channels/${guildId ?? '@me'}/${message.channel_id}/${message.id}`,
@@ -72,7 +152,12 @@ export async function createQuoteSession(message: APIMessage, ownerId: string, d
   };
 
   sessions.set(session.id, session);
+  persistSessions();
   return session;
+}
+
+export function saveQuoteSession(session: QuoteSession): void {
+  if (sessions.has(session.id)) persistSessions();
 }
 
 export function hasQuoteContent(message: APIMessage): boolean {
@@ -200,8 +285,112 @@ export async function handleQuoteAction(interaction: APIMessageComponentButtonIn
   }
 
   if (action === 'close') {
+    try {
+      await api.interactions.deleteReply(interaction.application_id, interaction.token);
+    } catch {
+      if (!session.editorChannelId || !session.editorMessageId) throw new Error('Quote editor message could not be deleted');
+      await api.channels.deleteMessage(session.editorChannelId, session.editorMessageId);
+    }
     sessions.delete(session.id);
-    await api.interactions.deleteReply(interaction.application_id, interaction.token);
+    persistSessions();
+  }
+}
+
+export async function openQuoteCustomTextModal(
+  interaction: APIMessageComponentSelectMenuInteraction,
+  sessionId: string,
+  option: CustomTextOption,
+  api: API,
+): Promise<void> {
+  const session = await getAvailableSession(interaction, sessionId, api, false);
+  if (!session) return;
+
+  const isSize = option === 'size';
+  await api.interactions.createModal(interaction.id, interaction.token, {
+    custom_id: `quote-custom-modal_${session.id}_${option}`,
+    title: isSize ? 'Custom font size' : 'Custom text colour',
+    components: [
+      {
+        type: ComponentType.ActionRow,
+        components: [
+          {
+            type: ComponentType.TextInput,
+            custom_id: isSize ? 'font-size' : 'colour',
+            label: isSize ? 'Font size (30-140 px)' : 'Text colour (hex)',
+            style: TextInputStyle.Short,
+            value: isSize ? (session.options.customSize ? String(session.options.customSize) : undefined) : session.options.customColour,
+            placeholder: isSize ? '30 to 140' : 'Example: #f7f3ec',
+            required: true,
+            max_length: isSize ? 3 : 7,
+          },
+        ],
+      },
+    ],
+  });
+}
+
+export async function handleQuoteCustomSelect(
+  interaction: APIMessageComponentSelectMenuInteraction,
+  sessionId: string,
+  option: CustomTextOption,
+  api: API,
+): Promise<void> {
+  const session = await getAvailableSession(interaction, sessionId, api, false);
+  if (!session || !('values' in interaction.data)) return;
+
+  const value = interaction.data.values[0];
+  if (value === 'custom') {
+    await openQuoteCustomTextModal(interaction, sessionId, option, api);
+    return;
+  }
+
+  if (!value || !setQuoteOption(session, option, value)) {
+    await reportComponentError(interaction, api, 'That quote option is no longer available.', false);
+    return;
+  }
+
+  await api.interactions.deferMessageUpdate(interaction.id, interaction.token);
+  await refreshQuote(interaction, session, api);
+}
+
+export async function handleQuoteCustomTextModal(interaction: APIModalSubmitInteraction, sessionId: string, option: CustomTextOption, api: API): Promise<void> {
+  const session = await getAvailableSession(interaction, sessionId, api, false);
+  if (!session) return;
+
+  const value = modalInputValue(interaction, option === 'size' ? 'font-size' : 'colour').trim();
+
+  if (option === 'size' && (!/^\d+$/.test(value) || Number(value) < 30 || Number(value) > 140)) {
+    await api.interactions.reply(interaction.id, interaction.token, {
+      content: 'Font size must be a whole number from 30 to 140.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  if (option === 'colour' && !/^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(value)) {
+    await api.interactions.reply(interaction.id, interaction.token, {
+      content: 'Colour must be a hex value such as #f7f3ec.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  if (option === 'size') session.options.customSize = Number(value);
+  else session.options.customColour = value;
+  session.expiresAt = Date.now() + SESSION_LIFETIME;
+  persistSessions();
+  await api.interactions.defer(interaction.id, interaction.token, { flags: MessageFlags.Ephemeral });
+  session.busy = true;
+
+  try {
+    const image = await renderQuoteSession(session);
+    await editQuoteEditor(api, session, image, interaction);
+    await api.interactions.editReply(interaction.application_id, interaction.token, {
+      content: option === 'size' ? 'Custom font size applied.' : 'Custom text colour applied.',
+    });
+  } finally {
+    session.busy = false;
+    persistSessions();
   }
 }
 
@@ -370,18 +559,10 @@ async function refreshQuote(
 
   try {
     const image = await renderQuoteSession(session);
-    await api.interactions.editReply(interaction.application_id, interaction.token, {
-      attachments: [],
-      files: [
-        {
-          name: `quote-${session.sourceMessageId}.gif`,
-          data: image,
-        },
-      ],
-      components: buildQuoteComponents(session),
-    });
+    await editQuoteEditor(api, session, image, interaction);
   } finally {
     session.busy = false;
+    persistSessions();
   }
 }
 
@@ -391,11 +572,15 @@ async function getAvailableSession(
   api: API,
   canFollowUp: boolean = true,
 ): Promise<QuoteSession | undefined> {
-  const session = sessions.get(sessionId);
+  const session = sessions.get(sessionId) ?? restoreSession(sessionId);
   const userId = interaction.user?.id ?? interaction.member?.user.id;
 
   if (!session || session.expiresAt <= Date.now()) {
-    if (session) sessions.delete(session.id);
+    if (session) {
+      sessions.delete(session.id);
+      persistSessions();
+    }
+    console.warn(`Quote editor unavailable: ${sessionId} (active sessions: ${sessions.size})`);
     await reportComponentError(
       interaction,
       api,
@@ -413,6 +598,12 @@ async function getAvailableSession(
   if (session.busy) {
     await reportComponentError(interaction, api, `${emoji('Exclamation')} The quote is still rendering`, canFollowUp);
     return undefined;
+  }
+  if ('component_type' in interaction.data && 'message' in interaction && interaction.message) {
+    session.editorChannelId = interaction.message.channel_id;
+    session.editorMessageId = interaction.message.id;
+    session.editorInteractionToken = interaction.token;
+    persistSessions();
   }
 
   return session;
@@ -475,6 +666,36 @@ function setQuoteOption(session: QuoteSession, option: QuoteOption, value: strin
 
 function isQuoteOption(value: string): value is QuoteOption {
   return value === 'font' || value === 'size' || value === 'color' || value === 'look';
+}
+
+async function editQuoteEditor(
+  api: API,
+  session: QuoteSession,
+  image: Buffer,
+  interaction: APIMessageComponentSelectMenuInteraction | APIMessageComponentButtonInteraction | APIModalSubmitInteraction,
+): Promise<void> {
+  const filename = `quote-${session.sourceMessageId}-${Date.now()}.gif`;
+  const payload = {
+    attachments: [{ id: 0, filename }],
+    files: [{ name: filename, data: image }],
+    components: buildQuoteComponents(session),
+  };
+
+  const editorToken = session.editorInteractionToken;
+  if (editorToken) {
+    await api.interactions.editReply(interaction.application_id, editorToken, payload);
+    return;
+  }
+
+  if ('message' in interaction && interaction.message) {
+    session.editorChannelId = interaction.message.channel_id;
+    session.editorMessageId = interaction.message.id;
+    persistSessions();
+    await api.channels.editMessage(session.editorChannelId, session.editorMessageId, payload);
+    return;
+  }
+
+  throw new Error(`Quote editor ${session.id} has no editable message reference`);
 }
 
 function extractQuoteText(message: APIMessage): string {
