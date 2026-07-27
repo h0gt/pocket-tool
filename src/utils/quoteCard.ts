@@ -111,37 +111,37 @@ export const CARD_COLOURS = {
 export const CARD_LOOKS = {
   'split-original': {
     label: 'Cinematic Split',
-    description: 'Image left, quote right · original',
+    description: 'Image left, quote right - original',
     layout: 'split',
     effect: 'original',
   },
   'split-mono': {
     label: 'Noir Split',
-    description: 'Image left, quote right · grayscale',
+    description: 'Image left, quote right - grayscale',
     layout: 'split',
     effect: 'grayscale',
   },
   'split-warm': {
     label: 'Golden Hour',
-    description: 'Cinematic split · warm film',
+    description: 'Cinematic split - warm film',
     layout: 'split',
     effect: 'warm',
   },
   'spotlight-original': {
     label: 'Full-Bleed Spotlight',
-    description: 'Immersive background · original',
+    description: 'Immersive background - original',
     layout: 'spotlight',
     effect: 'original',
   },
   'spotlight-dream': {
     label: 'Dream Sequence',
-    description: 'Immersive background · soft blur',
+    description: 'Immersive background - soft blur',
     layout: 'spotlight',
     effect: 'blur',
   },
   'spotlight-cool': {
     label: 'Midnight Blue',
-    description: 'Immersive background · cool grade',
+    description: 'Immersive background - cool grade',
     layout: 'spotlight',
     effect: 'cool',
   },
