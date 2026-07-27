@@ -598,7 +598,7 @@ function drawBrandMark(ctx: SKRSContext2D, layout: Layout, textColour: string): 
   ctx.textAlign = 'right';
   ctx.textBaseline = 'alphabetic';
   ctx.font = `600 16px ${CARD_FONTS.modern.family}`;
-  ctx.fillText('QUOTED', WIDTH - 34, HEIGHT - 28);
+  ctx.fillText('Pocket Tool', WIDTH - 34, HEIGHT - 28);
   ctx.restore();
 }
 

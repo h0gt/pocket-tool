@@ -127,7 +127,7 @@ export function buildQuoteComponents(session: QuoteSession): APIMessageTopLevelC
           type: ComponentType.Button as const,
           custom_id: `quote-action_${session.id}_close`,
           emoji: toEmoji('Trash') as APIMessageComponentEmoji,
-          style: ButtonStyle.Danger as ButtonStyle.Danger,
+          style: ButtonStyle.Secondary as ButtonStyle.Secondary,
         },
       ],
     },
