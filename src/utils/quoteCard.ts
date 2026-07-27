@@ -192,6 +192,8 @@ export type CardOptions = {
   size: SizeKey;
   colour: ColourKey;
   look: LookKey;
+  customSize?: number;
+  customColour?: string;
 };
 
 export type RenderQuoteCardOptions = CardOptions & {
@@ -222,7 +224,7 @@ export async function renderQuoteCard(options: RenderQuoteCardOptions): Promise<
   ctx.imageSmoothingQuality = 'high';
 
   const textArea = drawLayout(ctx, canvas, look.layout, look.effect, image, avatar);
-  const colour = resolveTextColour(options.colour, look.layout);
+  const colour = resolveTextColour(options.colour, look.layout, options.customColour);
 
   drawQuote(ctx, options, textArea, colour);
   drawBrandMark(ctx, look.layout, colour);
@@ -247,16 +249,10 @@ function drawLayout(
   avatar: Awaited<ReturnType<typeof loadImage>> | undefined,
 ): TextArea {
   if (layout === 'split') {
-    fillGradient(ctx, ['#090b12', '#030305'], 0);
-    const imageWidth = 720;
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+    const imageWidth = 570;
     drawSplitBackdrop(ctx, image, imageWidth, effect);
-
-    const fade = ctx.createLinearGradient(390, 0, 760, 0);
-    fade.addColorStop(0, 'rgba(3, 3, 5, 0)');
-    fade.addColorStop(0.5, 'rgba(3, 3, 5, .28)');
-    fade.addColorStop(1, '#030305');
-    ctx.fillStyle = fade;
-    ctx.fillRect(390, 0, 370, HEIGHT);
 
     return { x: 630, y: 92, width: 490, height: 485, align: 'center', vertical: 'middle' };
   }
@@ -343,7 +339,7 @@ function drawLayout(
 
 function drawQuote(ctx: SKRSContext2D, options: RenderQuoteCardOptions, area: TextArea, colour: string): void {
   const font = CARD_FONTS[options.font];
-  let fontSize = options.size === 'auto' ? smartFontSize(options.quote) : CARD_SIZES[options.size].pixels;
+  let fontSize = options.customSize ?? (options.size === 'auto' ? smartFontSize(options.quote) : CARD_SIZES[options.size].pixels);
 
   const maxLines = 7;
   let lines: string[] = [];
@@ -460,7 +456,8 @@ function smartFontSize(quote: string): number {
   return 38;
 }
 
-function resolveTextColour(colour: ColourKey, layout: Layout): string {
+function resolveTextColour(colour: ColourKey, layout: Layout, customColour?: string): string {
+  if (customColour) return customColour;
   if (colour !== 'auto') return CARD_COLOURS[colour].value;
   return layout === 'editorial' || layout === 'paper' ? '#1c1a18' : '#f5f2ec';
 }
@@ -471,25 +468,21 @@ function drawSplitBackdrop(ctx: SKRSContext2D, image: Awaited<ReturnType<typeof 
     return;
   }
 
-  // A blurred base carries image colour past the sharp panel, so the split
-  // transitions naturally into the quote rather than ending at a hard edge.
-  ctx.save();
-  ctx.globalAlpha = 0.72;
-  drawImageCover(ctx, image, 0, 0, width, HEIGHT, effect, 24);
-  ctx.restore();
-
+  
   const panel = createCanvas(width, HEIGHT);
   const panelCtx = panel.getContext('2d');
   panelCtx.imageSmoothingEnabled = true;
   panelCtx.imageSmoothingQuality = 'high';
   drawImageCover(panelCtx, image, 0, 0, width, HEIGHT, effect);
 
-  const mask = panelCtx.createLinearGradient(width * 0.55, 0, width, 0);
-  mask.addColorStop(0, 'rgba(255,255,255,1)');
-  mask.addColorStop(0.55, 'rgba(255,255,255,.9)');
-  mask.addColorStop(1, 'rgba(255,255,255,0)');
+  const fade = panelCtx.createLinearGradient(width * 0.1, 0, width, 0);
+  fade.addColorStop(0, 'rgba(255,255,255,1)');
+  fade.addColorStop(0.2, 'rgba(255,255,255,.92)');
+  fade.addColorStop(0.52, 'rgba(255,255,255,.5)');
+  fade.addColorStop(0.78, 'rgba(255,255,255,.1)');
+  fade.addColorStop(1, 'rgba(255,255,255,0)');
   panelCtx.globalCompositeOperation = 'destination-in';
-  panelCtx.fillStyle = mask;
+  panelCtx.fillStyle = fade;
   panelCtx.fillRect(0, 0, width, HEIGHT);
 
   ctx.drawImage(panel, 0, 0);
@@ -503,7 +496,6 @@ function drawImageCover(
   width: number,
   height: number,
   effect: Effect,
-  blurRadius: number = 0,
 ): void {
   const scale = Math.max(width / image.width, height / image.height);
   const sourceWidth = width / scale;
@@ -530,10 +522,9 @@ function drawImageCover(
   if (effect === 'cool') filters.push('saturate(.82)', 'hue-rotate(168deg)', 'contrast(1.08)');
   if (effect === 'blur') filters.push('blur(10px)', 'saturate(.8)');
   if (effect === 'duotone') filters.push('grayscale(1)', 'contrast(1.28)');
-  if (blurRadius) filters.push(`blur(${blurRadius}px)`);
   if (filters.length) ctx.filter = filters.join(' ');
 
-  const overscan = Math.max(effect === 'blur' ? 18 : 0, blurRadius * 2);
+  const overscan = effect === 'blur' ? 18 : 0;
   ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x - overscan, y - overscan, width + overscan * 2, height + overscan * 2);
   ctx.restore();
 
