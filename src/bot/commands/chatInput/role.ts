@@ -31,8 +31,6 @@ createApplicationCommand({
   async run(interaction, options, api) {
     const { role } = options;
 
-    const roles = await api.guilds.getRoles(interaction.guild_id!);
-
     const permissions = formatPermissions(role.permissions);
 
     const shownPermissions = permissions.slice(0, 5);
@@ -72,7 +70,7 @@ createApplicationCommand({
             },
             {
               type: ComponentType.TextDisplay,
-              content: `> Hoisted: **${role.hoist ? 'Yes' : 'No'}**\n> Position: **${role.position}/${roles.length}**\n> Colors: **#${role.colors.primary_color.toString(16).padStart(6, '0')}${role.colors.secondary_color ? `, #${role.colors.secondary_color.toString(16).padStart(6, '0')}` : ''}${role.colors.tertiary_color ? `, #${role.colors.tertiary_color.toString(16).padStart(6, '0')}` : ''}**\n> Permissions: **${shownPermissions.join(', ')}**${extraPermissions > 0 ? ` +${extraPermissions}` : ''}`,
+              content: `> Hoisted: **${role.hoist ? 'Yes' : 'No'}**\n> Mentionable: **${role.mentionable ? 'Yes' : 'No'}**\n> Managed: **${role.managed ? 'Yes' : 'No'}**\n> Position: **${role.position}**\n> Colors: **#${role.colors.primary_color.toString(16).padStart(6, '0')}${role.colors.secondary_color ? `, #${role.colors.secondary_color.toString(16).padStart(6, '0')}` : ''}${role.colors.tertiary_color ? `, #${role.colors.tertiary_color.toString(16).padStart(6, '0')}` : ''}**\n> Permissions: **${shownPermissions.join(', ')}**${extraPermissions > 0 ? ` +${extraPermissions}` : ''}`,
             },
           ],
         },
