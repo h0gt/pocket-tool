@@ -6,7 +6,7 @@ import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 
 createApplicationCommand({
   type: ApplicationCommandType.Message,
-  name: 'Text to Speech',
+  name: 'Text To Speech',
   integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   cooldown: 5,

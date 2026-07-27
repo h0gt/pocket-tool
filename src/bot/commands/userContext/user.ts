@@ -6,7 +6,7 @@ import { TimestampStyle } from '../../../types/types';
 
 createApplicationCommand({
   type: ApplicationCommandType.User,
-  name: 'View User',
+  name: 'View User Profile',
   cooldown: 3,
   acknowledge: true,
   async run(interaction, api) {

@@ -6,7 +6,7 @@ import { RequestMethod, ResponseType } from '../../../types/types';
 
 createApplicationCommand({
   type: ApplicationCommandType.Message,
-  name: 'Translate',
+  name: 'Translate This Message',
   integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   cooldown: 5,
