@@ -5,8 +5,9 @@ import { handleQuoteCustomTextModal } from '../../../utils/quote.js';
 createComponent({
   type: InteractableComponentType.Modal,
   custom_id: 'quote-custom-modal',
-  args: ['session_id'] as const,
+  args: ['session_id', 'option'] as const,
   async run(interaction, args, api) {
-    await handleQuoteCustomTextModal(interaction, args.session_id, api);
+    if (args.option !== 'size' && args.option !== 'colour') return;
+    await handleQuoteCustomTextModal(interaction, args.session_id, args.option, api);
   },
 });
