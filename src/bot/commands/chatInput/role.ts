@@ -4,6 +4,7 @@ import {
   ApplicationIntegrationType,
   ComponentType,
   InteractionContextType,
+  MessageFlags,
   PermissionFlagsBits,
   type APIMessageTopLevelComponent,
 } from '@discordjs/core/http-only';
@@ -75,6 +76,7 @@ createApplicationCommand({
           ],
         },
       ],
+      flags: MessageFlags.IsComponentsV2,
     });
   },
 });
