@@ -17,11 +17,13 @@ createApplicationCommand({
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
-            type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Please select a message with text to quote`,
-          },
-          {
-            type: ComponentType.Separator,
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Exclamation')} Please select a message with text to quote`,
+              },
+            ],
           },
         ],
         flags: MessageFlags.IsComponentsV2,
