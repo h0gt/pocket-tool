@@ -46,7 +46,7 @@ export async function createQuoteSession(message: APIMessage, ownerId: string, d
   const [primaryImage, avatarImage] = await Promise.all([primaryUrl ? downloadImage(primaryUrl) : Promise.resolve(undefined), downloadImage(avatarUrl)]);
 
   const session: QuoteSession = {
-    id: randomBytes(6).toString('base64url'),
+    id: randomBytes(6).toString('hex'),
     ownerId,
     sourceMessageId: message.id,
     sourceUrl: `https://discord.com/channels/${guildId ?? '@me'}/${message.channel_id}/${message.id}`,

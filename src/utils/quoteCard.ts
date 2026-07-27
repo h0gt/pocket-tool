@@ -44,22 +44,22 @@ export const CARD_SIZES = {
     pixels: 66,
   },
   compact: {
-    label: 'Compact · 44px',
+    label: 'Compact - 44px',
     description: 'Best for longer messages',
     pixels: 44,
   },
   medium: {
-    label: 'Medium · 58px',
+    label: 'Medium - 58px',
     description: 'A balanced everyday size',
     pixels: 58,
   },
   large: {
-    label: 'Large · 76px',
+    label: 'Large - 76px',
     description: 'Strong and expressive',
     pixels: 76,
   },
   huge: {
-    label: 'Huge · 96px',
+    label: 'Huge - 96px',
     description: 'For very short quotes',
     pixels: 96,
   },
