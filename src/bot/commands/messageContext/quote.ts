@@ -43,7 +43,7 @@ createApplicationCommand({
     await api.interactions.editReply(interaction.application_id, interaction.token, {
       files: [
         {
-          name: `quote-${message.id}.png`,
+          name: `quote-${message.id}.gif`,
           data: image,
         },
       ],

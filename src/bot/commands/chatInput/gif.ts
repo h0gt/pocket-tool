@@ -58,7 +58,7 @@ createApplicationCommand({
     const gif = await sharp(buffer).gif().toBuffer();
 
     await api.interactions.editReply(interaction.application_id, interaction.token, {
-      content: '-# Hover over the GIF to add it to your favorites',
+      content: `-# ${emoji('GIF')} Hover over the GIF to add it to your favorites`,
       files: [
         {
           name: 'output.gif',

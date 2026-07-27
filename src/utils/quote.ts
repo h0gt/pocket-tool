@@ -10,7 +10,7 @@ import {
   type APIMessageTopLevelComponent,
 } from '@discordjs/core/http-only';
 import { randomBytes } from 'node:crypto';
-import { cdn } from './markdown.js';
+import { cdn, emoji } from './markdown.js';
 import { CARD_COLOURS, CARD_FONTS, CARD_LOOKS, CARD_SIZES, renderQuoteCard, type CardOptions } from './quoteCard.js';
 import { toEmoji } from './utils.js';
 
@@ -206,17 +206,17 @@ async function getAvailableSession(
 
   if (!session || session.expiresAt <= Date.now()) {
     if (session) sessions.delete(session.id);
-    await reportComponentError(interaction, api, 'That quote editor has expired - run **Apps -> Quote Message** again');
+    await reportComponentError(interaction, api, `${emoji('Exclamation')} That quote editor has expired - run **Apps -> Quote Message** again`);
     return undefined;
   }
 
   if (session.ownerId !== userId) {
-    await reportComponentError(interaction, api, 'Only the person who made this quote can change it');
+    await reportComponentError(interaction, api, `${emoji('Exclamation')} Only the person who made this quote can change it`);
     return undefined;
   }
 
   if (session.busy) {
-    await reportComponentError(interaction, api, 'The quote is still rendering');
+    await reportComponentError(interaction, api, `${emoji('Exclamation')} The quote is still rendering`);
     return undefined;
   }
 
@@ -229,8 +229,18 @@ async function reportComponentError(
   content: string,
 ): Promise<void> {
   await api.interactions.followUp(interaction.application_id, interaction.token, {
-    content,
-    flags: MessageFlags.Ephemeral,
+    components: [
+      {
+        type: ComponentType.Container,
+        components: [
+          {
+            type: ComponentType.TextDisplay,
+            content,
+          },
+        ],
+      },
+    ],
+    flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
   });
 }
 

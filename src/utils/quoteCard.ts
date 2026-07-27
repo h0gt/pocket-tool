@@ -227,7 +227,7 @@ export async function renderQuoteCard(options: RenderQuoteCardOptions): Promise<
   drawQuote(ctx, options, textArea, colour);
   drawBrandMark(ctx, look.layout, colour);
 
-  return canvas.encode('png');
+  return canvas.encode('gif');
 }
 
 async function safeLoadImage(data: Buffer) {
