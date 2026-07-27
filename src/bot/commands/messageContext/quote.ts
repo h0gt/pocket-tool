@@ -5,7 +5,7 @@ import { buildQuoteComponents, createQuoteSession, hasQuoteContent, renderQuoteS
 
 createApplicationCommand({
   type: ApplicationCommandType.Message,
-  name: 'Quote Message',
+  name: 'Quote This Message',
   integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   cooldown: 3,
