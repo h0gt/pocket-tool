@@ -5,7 +5,6 @@
   "private": true,
   "scripts": {
     "start": "bun src/bot/index.ts",
-    "register": "bun src/bot/register.ts",
     "format": "prettier . --write"
   },
   "devDependencies": {
