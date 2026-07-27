@@ -225,7 +225,7 @@ api.interactions.followUp = (async (applicationId, interactionToken, body, optio
   return followUp(applicationId, interactionToken, body, options);
 }) as typeof api.interactions.followUp;
 
-async function handleApplicationCommand(interaction: APIApplicationCommandInteraction, api: API) {
+async function handleApplicationCommand(interaction: APIApplicationCommandInteraction, api: API): Promise<void> {
   const command = commands.get(interaction.data.name) as ApplicationCommand;
 
   if (!command) return;
@@ -421,7 +421,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
   }
 }
 
-async function handleChatInputCommandAutocomplete(interaction: APIApplicationCommandAutocompleteInteraction, api: API) {
+async function handleChatInputCommandAutocomplete(interaction: APIApplicationCommandAutocompleteInteraction, api: API): Promise<void> {
   const command = commands.get(interaction.data.name) as ChatInputCommand;
 
   if (!command || !command.autocomplete) return;
@@ -433,7 +433,7 @@ async function handleChatInputCommandAutocomplete(interaction: APIApplicationCom
   }
 }
 
-async function handleButtonComponent(interaction: APIMessageComponentButtonInteraction, api: API) {
+async function handleButtonComponent(interaction: APIMessageComponentButtonInteraction, api: API): Promise<void> {
   const args = interaction.data.custom_id?.split('_') ?? [];
   const customId = args.shift();
 
@@ -454,7 +454,7 @@ async function handleButtonComponent(interaction: APIMessageComponentButtonInter
   }
 }
 
-async function handleSelectMenuComponent(interaction: APIMessageComponentSelectMenuInteraction, api: API) {
+async function handleSelectMenuComponent(interaction: APIMessageComponentSelectMenuInteraction, api: API): Promise<void> {
   const args = interaction.data.custom_id?.split('_') ?? [];
   const customId = args.shift();
 
@@ -475,7 +475,7 @@ async function handleSelectMenuComponent(interaction: APIMessageComponentSelectM
   }
 }
 
-async function handleModalSubmit(interaction: APIModalSubmitInteraction, api: API) {
+async function handleModalSubmit(interaction: APIModalSubmitInteraction, api: API): Promise<void> {
   const args = interaction.data.custom_id?.split('_') ?? [];
   const customId = args.shift();
 

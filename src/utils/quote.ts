@@ -376,6 +376,7 @@ export async function handleQuoteCustomTextModal(interaction: APIModalSubmitInte
       ],
       flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
     });
+
     return;
   }
 
@@ -394,6 +395,7 @@ export async function handleQuoteCustomTextModal(interaction: APIModalSubmitInte
       ],
       flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
     });
+
     return;
   }
 
