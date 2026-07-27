@@ -15,15 +15,15 @@ import { randomBytes } from 'node:crypto';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { cdn, emoji } from './markdown.js';
-import { CARD_COLOURS, CARD_FONTS, CARD_LOOKS, CARD_SIZES, renderQuoteCard, type CardOptions } from './quoteCard.js';
+import { CARD_COLORS, CARD_FONTS, CARD_LOOKS, CARD_SIZES, renderQuoteCard, type CardOptions } from './quoteCard.js';
 import { toEmoji } from './utils.js';
 
-const SESSION_LIFETIME = 24 * 60 * 60 * 1_000;
+const SESSION_LIFETIME = 15 * 60 * 1_000;
 const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
 const SESSION_STORE_PATH = resolve(process.cwd(), '.cache', 'quote-sessions.json');
 
-export type QuoteOption = 'font' | 'size' | 'colour' | 'look';
-type CustomTextOption = 'size' | 'colour';
+export type QuoteOption = 'font' | 'size' | 'color' | 'look';
+type CustomTextOption = 'size' | 'color';
 
 export type QuoteSession = {
   id: string;
@@ -142,7 +142,7 @@ export async function createQuoteSession(message: APIMessage, ownerId: string, d
       handle: `@${message.author.username}`,
       font: 'modern',
       size: 'auto',
-      colour: 'auto',
+      color: 'auto',
       look: 'spotlight-original',
     },
     ...(primaryImage !== undefined && { primaryImage }),
@@ -223,7 +223,7 @@ export function buildQuoteComponents(session: QuoteSession): APIMessageTopLevelC
   return [
     select('font', 'Choose a font', CARD_FONTS),
     customSelect('size', 'Choose a text size', CARD_SIZES, 'Custom font size'),
-    customSelect('colour', 'Choose a text colour', CARD_COLOURS, 'Custom text colour'),
+    customSelect('color', 'Choose a text color', CARD_COLORS, 'Custom text color'),
     select('look', 'Choose a layout and image effect', CARD_LOOKS),
     {
       type: ComponentType.ActionRow as const,
@@ -276,10 +276,10 @@ export async function handleQuoteAction(interaction: APIMessageComponentButtonIn
   if (action === 'shuffle') {
     session.options.font = randomKey(CARD_FONTS);
     session.options.size = randomKey(CARD_SIZES);
-    session.options.colour = randomKey(CARD_COLOURS);
+    session.options.color = randomKey(CARD_COLORS);
     session.options.look = randomKey(CARD_LOOKS);
     delete session.options.customSize;
-    delete session.options.customColour;
+    delete session.options.customColor;
     await refreshQuote(interaction, session, api);
     return;
   }
@@ -394,6 +394,161 @@ export async function handleQuoteCustomTextModal(interaction: APIModalSubmitInte
   }
 }
 
+export async function openQuoteCustomTextModal(interaction: APIMessageComponentSelectMenuInteraction, sessionId: string, api: API): Promise<void> {
+  const session = await getAvailableSession(interaction, sessionId, api, false);
+  if (!session) return;
+
+  await api.interactions.createModal(interaction.id, interaction.token, {
+    custom_id: `quote-custom-modal_${session.id}`,
+    title: 'Custom text settings',
+    components: [
+      {
+        type: ComponentType.ActionRow,
+        components: [
+          {
+            type: ComponentType.TextInput,
+            custom_id: 'font-size',
+            label: 'Font size (30–140 px)',
+            style: TextInputStyle.Short,
+            value: session.options.customSize ? String(session.options.customSize) : undefined,
+            placeholder: 'Leave blank to keep the selected preset',
+            required: false,
+            max_length: 3,
+          },
+        ],
+      },
+      {
+        type: ComponentType.ActionRow,
+        components: [
+          {
+            type: ComponentType.TextInput,
+            custom_id: 'color',
+            label: 'Text color',
+            style: TextInputStyle.Short,
+            value: session.options.customColor,
+            placeholder: 'Use a color code in hex such as #f7f3ec',
+            required: false,
+            max_length: 7,
+          },
+        ],
+      },
+    ],
+  });
+}
+
+export async function handleQuoteCustomSelect(
+  interaction: APIMessageComponentSelectMenuInteraction,
+  sessionId: string,
+  option: CustomTextOption,
+  api: API,
+): Promise<void> {
+  const session = await getAvailableSession(interaction, sessionId, api, false);
+  if (!session || !('values' in interaction.data)) return;
+
+  const value = interaction.data.values[0];
+  if (value === 'custom') {
+    await openQuoteCustomTextModal(interaction, sessionId, api);
+    return;
+  }
+
+  if (!value || !setQuoteOption(session, option, value)) {
+    await reportComponentError(interaction, api, 'That quote option is no longer available.', false);
+    return;
+  }
+
+  await api.interactions.deferMessageUpdate(interaction.id, interaction.token);
+  await refreshQuote(interaction, session, api);
+}
+
+export async function handleQuoteCustomTextModal(interaction: APIModalSubmitInteraction, sessionId: string, api: API): Promise<void> {
+  const session = await getAvailableSession(interaction, sessionId, api, false);
+  if (!session) return;
+
+  const sizeInput = modalInputValue(interaction, 'font-size').trim();
+  const colorInput = modalInputValue(interaction, 'color').trim();
+
+  if (sizeInput && (!/^\d+$/.test(sizeInput) || Number(sizeInput) < 30 || Number(sizeInput) > 140)) {
+    await api.interactions.reply(interaction.id, interaction.token, {
+      content: 'Font size must be a whole number from 30 to 140.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const color = colorInput && /^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(colorInput) ? colorInput : undefined;
+  if (colorInput && !color) {
+    await api.interactions.reply(interaction.id, interaction.token, {
+      components: [
+        {
+          type: ComponentType.Container,
+          components: [
+            {
+              type: ComponentType.TextDisplay,
+              content: `${emoji('Exclamation')} Color must be a hex value such as #f7f3ec`,
+            },
+          ],
+        },
+      ],
+      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+    });
+
+    return;
+  }
+
+  if (!session.editorInteractionToken) {
+    await api.interactions.reply(interaction.id, interaction.token, {
+      components: [
+        {
+          type: ComponentType.Container,
+          components: [
+            {
+              type: ComponentType.TextDisplay,
+              content: `${emoji('Exclamation')} That quote editor has expired - run **Apps -> Quote This Message** again`,
+            },
+          ],
+        },
+      ],
+      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+    });
+
+    return;
+  }
+
+  if (sizeInput) session.options.customSize = Number(sizeInput);
+  if (color) session.options.customColor = color;
+  session.expiresAt = Date.now() + SESSION_LIFETIME;
+
+  await api.interactions.defer(interaction.id, interaction.token, { flags: MessageFlags.Ephemeral });
+  session.busy = true;
+
+  try {
+    const image = await renderQuoteSession(session);
+
+    await api.interactions.editReply(interaction.application_id, session.editorInteractionToken, {
+      attachments: [],
+      files: [{ name: `quote-${session.sourceMessageId}.gif`, data: image }],
+      components: buildQuoteComponents(session),
+    });
+
+    await api.interactions.editReply(interaction.application_id, interaction.token, {
+      components: [
+        {
+          type: ComponentType.Container,
+          components: [
+            {
+              type: ComponentType.TextDisplay,
+              content: `${emoji('Correct')} Custom text settings applied`,
+            },
+          ],
+        },
+      ],
+      flags: MessageFlags.IsComponentsV2,
+    });
+  } finally {
+    session.busy = false;
+  }
+}
+
 async function refreshQuote(
   interaction: APIMessageComponentSelectMenuInteraction | APIMessageComponentButtonInteraction,
   session: QuoteSession,
@@ -436,7 +591,7 @@ async function getAvailableSession(
   }
 
   if (session.ownerId !== userId) {
-    await reportComponentError(interaction, api, `${emoji('Exclamation')} Only the person who made this quote can change it`, canFollowUp);
+    await reportComponentError(interaction, api, `${emoji('Exclamation')} Only the person who made this quote can edit it`, canFollowUp);
     return undefined;
   }
 
@@ -497,9 +652,9 @@ function setQuoteOption(session: QuoteSession, option: QuoteOption, value: strin
   } else if (option === 'size' && value in CARD_SIZES) {
     session.options.size = value as CardOptions['size'];
     delete session.options.customSize;
-  } else if (option === 'colour' && value in CARD_COLOURS) {
-    session.options.colour = value as CardOptions['colour'];
-    delete session.options.customColour;
+  } else if (option === 'color' && value in CARD_COLORS) {
+    session.options.color = value as CardOptions['color'];
+    delete session.options.customColor;
   } else if (option === 'look' && value in CARD_LOOKS) {
     session.options.look = value as CardOptions['look'];
   } else {
@@ -510,7 +665,7 @@ function setQuoteOption(session: QuoteSession, option: QuoteOption, value: strin
 }
 
 function isQuoteOption(value: string): value is QuoteOption {
-  return value === 'font' || value === 'size' || value === 'colour' || value === 'look';
+  return value === 'font' || value === 'size' || value === 'color' || value === 'look';
 }
 
 async function editQuoteEditor(

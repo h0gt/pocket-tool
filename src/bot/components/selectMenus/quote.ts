@@ -1,6 +1,6 @@
-import createComponent from '../../../helpers/component.js';
-import { InteractableComponentType } from '../../../types/types.js';
-import { handleQuoteSelect } from '../../../utils/quote.js';
+import createComponent from '../../../helpers/component';
+import { InteractableComponentType } from '../../../types/types';
+import { handleQuoteSelect } from '../../../utils/quote';
 
 createComponent({
   type: InteractableComponentType.SelectMenu,
@@ -8,6 +8,8 @@ createComponent({
   args: ['session_id', 'option'] as const,
   acknowledge: true,
   async run(interaction, args, api) {
-    await handleQuoteSelect(interaction, args.session_id, args.option, api);
+    const { session_id, option } = args;
+
+    await handleQuoteSelect(interaction, session_id, option, api);
   },
 });

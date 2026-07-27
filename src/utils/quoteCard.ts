@@ -44,28 +44,28 @@ export const CARD_SIZES = {
     pixels: 66,
   },
   compact: {
-    label: 'Compact · 44px',
+    label: 'Compact - 44px',
     description: 'Best for longer messages',
     pixels: 44,
   },
   medium: {
-    label: 'Medium · 58px',
+    label: 'Medium - 58px',
     description: 'A balanced everyday size',
     pixels: 58,
   },
   large: {
-    label: 'Large · 76px',
+    label: 'Large - 76px',
     description: 'Strong and expressive',
     pixels: 76,
   },
   huge: {
-    label: 'Huge · 96px',
+    label: 'Huge - 96px',
     description: 'For very short quotes',
     pixels: 96,
   },
 } as const;
 
-export const CARD_COLOURS = {
+export const CARD_COLORS = {
   auto: {
     label: 'Automatic',
     description: 'Adapts to the selected look',
@@ -179,7 +179,7 @@ export const CARD_LOOKS = {
 
 type FontKey = keyof typeof CARD_FONTS;
 type SizeKey = keyof typeof CARD_SIZES;
-type ColourKey = keyof typeof CARD_COLOURS;
+type ColorKey = keyof typeof CARD_COLORS;
 type LookKey = keyof typeof CARD_LOOKS;
 type Layout = (typeof CARD_LOOKS)[LookKey]['layout'];
 type Effect = (typeof CARD_LOOKS)[LookKey]['effect'];
@@ -190,10 +190,10 @@ export type CardOptions = {
   handle: string;
   font: FontKey;
   size: SizeKey;
-  colour: ColourKey;
+  color: ColorKey;
   look: LookKey;
   customSize?: number;
-  customColour?: string;
+  customColor?: string;
 };
 
 export type RenderQuoteCardOptions = CardOptions & {
@@ -224,10 +224,10 @@ export async function renderQuoteCard(options: RenderQuoteCardOptions): Promise<
   ctx.imageSmoothingQuality = 'high';
 
   const textArea = drawLayout(ctx, canvas, look.layout, look.effect, image, avatar);
-  const colour = resolveTextColour(options.colour, look.layout, options.customColour);
+  const color = resolveTextColor(options.color, look.layout, options.customColor);
 
-  drawQuote(ctx, options, textArea, colour);
-  drawBrandMark(ctx, look.layout, colour);
+  drawQuote(ctx, options, textArea, color);
+  drawBrandMark(ctx, look.layout, color);
 
   return canvas.encode('gif');
 }
@@ -337,7 +337,7 @@ function drawLayout(
   return { x: 145, y: 180, width: 910, height: 360, align: 'center', vertical: 'middle' };
 }
 
-function drawQuote(ctx: SKRSContext2D, options: RenderQuoteCardOptions, area: TextArea, colour: string): void {
+function drawQuote(ctx: SKRSContext2D, options: RenderQuoteCardOptions, area: TextArea, color: string): void {
   const font = CARD_FONTS[options.font];
   let fontSize = options.customSize ?? (options.size === 'auto' ? smartFontSize(options.quote) : CARD_SIZES[options.size].pixels);
 
@@ -369,9 +369,9 @@ function drawQuote(ctx: SKRSContext2D, options: RenderQuoteCardOptions, area: Te
 
   ctx.textAlign = area.align;
   ctx.textBaseline = 'top';
-  ctx.fillStyle = colour;
+  ctx.fillStyle = color;
   ctx.font = `${font.weight} ${fontSize}px ${font.family}`;
-  ctx.shadowColor = isLightColour(colour) ? 'rgba(0,0,0,.48)' : 'rgba(255,255,255,.12)';
+  ctx.shadowColor = isLightColor(color) ? 'rgba(0,0,0,.48)' : 'rgba(255,255,255,.12)';
   ctx.shadowBlur = area.align === 'left' ? 12 : 8;
   ctx.shadowOffsetY = 2;
 
@@ -456,9 +456,9 @@ function smartFontSize(quote: string): number {
   return 38;
 }
 
-function resolveTextColour(colour: ColourKey, layout: Layout, customColour?: string): string {
-  if (customColour) return customColour;
-  if (colour !== 'auto') return CARD_COLOURS[colour].value;
+function resolveTextColor(color: ColorKey, layout: Layout, customColor?: string): string {
+  if (customColor) return customColor;
+  if (color !== 'auto') return CARD_COLORS[color].value;
   return layout === 'editorial' || layout === 'paper' ? '#1c1a18' : '#f5f2ec';
 }
 
@@ -468,7 +468,6 @@ function drawSplitBackdrop(ctx: SKRSContext2D, image: Awaited<ReturnType<typeof 
     return;
   }
 
-  
   const panel = createCanvas(width, HEIGHT);
   const panelCtx = panel.getContext('2d');
   panelCtx.imageSmoothingEnabled = true;
@@ -553,7 +552,7 @@ function drawAvatarMedallion(
   avatar: Awaited<ReturnType<typeof loadImage>> | undefined,
   centerX: number,
   centerY: number,
-  ringColour: string,
+  ringColor: string,
 ): void {
   const radius = 46;
   ctx.save();
@@ -570,15 +569,15 @@ function drawAvatarMedallion(
 
   ctx.beginPath();
   ctx.arc(centerX, centerY, radius + 5, 0, Math.PI * 2);
-  ctx.strokeStyle = ringColour;
+  ctx.strokeStyle = ringColor;
   ctx.lineWidth = 3;
   ctx.stroke();
 }
 
-function fillGradient(ctx: SKRSContext2D, colours: readonly string[], diagonal: number): void {
+function fillGradient(ctx: SKRSContext2D, colors: readonly string[], diagonal: number): void {
   const gradient = ctx.createLinearGradient(WIDTH * diagonal, 0, WIDTH * (1 - diagonal), HEIGHT);
-  colours.forEach((colour, index) => {
-    gradient.addColorStop(index / (colours.length - 1), colour);
+  colors.forEach((color, index) => {
+    gradient.addColorStop(index / (colors.length - 1), color);
   });
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -615,11 +614,11 @@ function addFilmGrain(ctx: SKRSContext2D, opacity: number, x = 0, y = 0, width =
   ctx.restore();
 }
 
-function drawBrandMark(ctx: SKRSContext2D, layout: Layout, textColour: string): void {
+function drawBrandMark(ctx: SKRSContext2D, layout: Layout, textColor: string): void {
   const darkText = layout === 'editorial' || layout === 'paper';
   ctx.save();
   ctx.globalAlpha = 0.45;
-  ctx.fillStyle = darkText ? '#201d19' : textColour;
+  ctx.fillStyle = darkText ? '#201d19' : textColor;
   ctx.textAlign = 'right';
   ctx.textBaseline = 'alphabetic';
   ctx.font = `600 16px ${CARD_FONTS.modern.family}`;
@@ -638,10 +637,10 @@ function roundedRect(ctx: SKRSContext2D, x: number, y: number, width: number, he
   ctx.closePath();
 }
 
-function isLightColour(colour: string): boolean {
-  if (!colour.startsWith('#') || colour.length !== 7) return true;
-  const red = Number.parseInt(colour.slice(1, 3), 16);
-  const green = Number.parseInt(colour.slice(3, 5), 16);
-  const blue = Number.parseInt(colour.slice(5, 7), 16);
+function isLightColor(color: string): boolean {
+  if (!color.startsWith('#') || color.length !== 7) return true;
+  const red = Number.parseInt(color.slice(1, 3), 16);
+  const green = Number.parseInt(color.slice(3, 5), 16);
+  const blue = Number.parseInt(color.slice(5, 7), 16);
   return red * 0.299 + green * 0.587 + blue * 0.114 > 150;
 }
