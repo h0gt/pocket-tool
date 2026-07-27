@@ -5,12 +5,14 @@ import {
   type API,
   type APIMessage,
   type APIMessageComponentButtonInteraction,
+  type APIMessageComponentEmoji,
   type APIMessageComponentSelectMenuInteraction,
   type APIMessageTopLevelComponent,
 } from '@discordjs/core/http-only';
 import { randomBytes } from 'node:crypto';
 import { cdn } from './markdown.js';
 import { CARD_COLOURS, CARD_FONTS, CARD_LOOKS, CARD_SIZES, renderQuoteCard, type CardOptions } from './quoteCard.js';
+import { toEmoji } from './utils.js';
 
 const SESSION_LIFETIME = 14 * 60 * 1_000;
 const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
@@ -89,6 +91,7 @@ export function buildQuoteComponents(session: QuoteSession): APIMessageTopLevelC
       {
         type: ComponentType.StringSelect as const,
         custom_id: `quote-select_${session.id}_${option}`,
+        title: placeholder,
         placeholder,
         options: Object.entries(values).map(([value, item]) => ({
           label: item.label,
@@ -116,15 +119,15 @@ export function buildQuoteComponents(session: QuoteSession): APIMessageTopLevelC
         },
         {
           type: ComponentType.Button as const,
-          custom_id: `quote-action_${session.id}_close`,
-          label: 'Close',
-          style: ButtonStyle.Danger as ButtonStyle.Danger,
-        },
-        {
-          type: ComponentType.Button as const,
           url: session.sourceUrl,
           label: 'View original',
           style: ButtonStyle.Link as ButtonStyle.Link,
+        },
+        {
+          type: ComponentType.Button as const,
+          custom_id: `quote-action_${session.id}_close`,
+          emoji: toEmoji('Trash') as APIMessageComponentEmoji,
+          style: ButtonStyle.Danger as ButtonStyle.Danger,
         },
       ],
     },
