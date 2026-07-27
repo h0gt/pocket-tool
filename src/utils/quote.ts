@@ -16,7 +16,7 @@ import { cdn, emoji } from './markdown.js';
 import { CARD_COLORS, CARD_FONTS, CARD_LOOKS, CARD_SIZES, renderQuoteCard, type CardOptions } from './quoteCard.js';
 import { toEmoji } from './utils.js';
 
-const SESSION_LIFETIME = 14 * 60 * 1_000;
+const SESSION_LIFETIME = 15 * 60 * 1_000;
 const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
 
 export type QuoteOption = 'font' | 'size' | 'color' | 'look';
