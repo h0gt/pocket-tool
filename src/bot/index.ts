@@ -395,7 +395,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **__${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}__**`,
+                content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', '__support server__', '', false)}**`,
               },
             ],
           },
@@ -410,7 +410,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **__${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}__**`,
+                content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', '__support server__', '', false)}**`,
               },
             ],
           },
