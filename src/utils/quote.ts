@@ -177,14 +177,13 @@ export async function renderQuoteSession(session: QuoteSession): Promise<Buffer>
 }
 
 export function buildQuoteComponents(session: QuoteSession): APIMessageTopLevelComponent[] {
-  const select = (option: QuoteOption, placeholder: string, values: Record<string, { label: string; description: string }>) => ({
+  const select = (option: QuoteOption, title: string, values: Record<string, { label: string; description: string }>) => ({
     type: ComponentType.ActionRow as const,
     components: [
       {
         type: ComponentType.StringSelect as const,
         custom_id: `quote-select_${session.id}_${option}`,
-        title: placeholder,
-        placeholder,
+        title,
         options: Object.entries(values).map(([value, item]) => ({
           label: item.label,
           description: item.description,
@@ -195,19 +194,13 @@ export function buildQuoteComponents(session: QuoteSession): APIMessageTopLevelC
     ],
   });
 
-  const customSelect = (
-    option: CustomTextOption,
-    placeholder: string,
-    values: Record<string, { label: string; description: string }>,
-    customLabel: string,
-  ) => ({
+  const customSelect = (option: CustomTextOption, title: string, values: Record<string, { label: string; description: string }>, customLabel: string) => ({
     type: ComponentType.ActionRow as const,
     components: [
       {
         type: ComponentType.StringSelect as const,
         custom_id: `quote-custom-select_${session.id}_${option}`,
-        title: placeholder,
-        placeholder,
+        title,
         options: [
           ...Object.entries(values).map(([value, item]) => ({
             label: item.label,
