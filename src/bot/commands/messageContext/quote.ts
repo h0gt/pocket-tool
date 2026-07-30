@@ -42,7 +42,7 @@ createApplicationCommand({
     session.editorInteractionToken = interaction.token;
     const image = await renderQuoteSession(session);
 
-    const editorMessage = await api.interactions.editReply(interaction.application_id, interaction.token, {
+    await api.interactions.editReply(interaction.application_id, interaction.token, {
       attachments: [{ id: 0, filename: `quote-${message.id}-${session.id}.gif` }],
       files: [
         {
@@ -52,8 +52,11 @@ createApplicationCommand({
       ],
       components: buildQuoteComponents(session),
     });
-    session.editorChannelId = editorMessage.channel_id;
-    session.editorMessageId = editorMessage.id;
-    saveQuoteSession(session, api);
+
+    const editor = await api.interactions.getOriginalReply(interaction.application_id, interaction.token);
+    session.editorChannelId = editor.channel_id;
+    session.editorMessageId = editor.id;
+
+    saveQuoteSession(session);
   },
 });

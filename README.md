@@ -4,7 +4,7 @@
   </a>
 </h1>
 
-> A lightweight multi-purpose Discord bot made to be used anywhere at any time!
+> A lightweight utility Discord bot made to be used anywhere at any time!
 
 ## Why use Pocket Tool?
 

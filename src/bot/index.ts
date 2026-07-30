@@ -197,7 +197,37 @@ if (env.get('register_commands').toBoolean() === true) {
   console.log('Application (/) commands refreshed');
 }
 
-async function handleApplicationCommand(interaction: APIApplicationCommandInteraction, api: API) {
+const reply = api.interactions.reply.bind(api.interactions);
+
+api.interactions.reply = (async (interactionId, interactionToken, body, options) => {
+  if ((body.content || !!((body.flags ?? 0) & MessageFlags.IsComponentsV2)) && !body.allowed_mentions) {
+    body.allowed_mentions = { parse: [] };
+  }
+
+  return reply(interactionId, interactionToken, body, options);
+}) as typeof api.interactions.reply;
+
+const editReply = api.interactions.editReply.bind(api.interactions);
+
+api.interactions.editReply = (async (applicationId, interactionToken, callbackData, messageId, options) => {
+  if ((callbackData.content || !!((callbackData.flags ?? 0) & MessageFlags.IsComponentsV2)) && !callbackData.allowed_mentions) {
+    callbackData.allowed_mentions = { parse: [] };
+  }
+
+  return editReply(applicationId, interactionToken, callbackData, messageId, options);
+}) as typeof api.interactions.editReply;
+
+const followUp = api.interactions.followUp.bind(api.interactions);
+
+api.interactions.followUp = (async (applicationId, interactionToken, body, options) => {
+  if ((body.content || !!((body.flags ?? 0) & MessageFlags.IsComponentsV2)) && !body.allowed_mentions) {
+    body.allowed_mentions = { parse: [] };
+  }
+
+  return followUp(applicationId, interactionToken, body, options);
+}) as typeof api.interactions.followUp;
+
+async function handleApplicationCommand(interaction: APIApplicationCommandInteraction, api: API): Promise<void> {
   const command = commands.get(interaction.data.name) as ApplicationCommand;
 
   if (!command) return;
@@ -367,7 +397,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}**`,
+                content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', '__support server__', '', false)}**`,
               },
             ],
           },
@@ -382,7 +412,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}**`,
+                content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', '__support server__', '', false)}**`,
               },
             ],
           },
@@ -393,7 +423,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
   }
 }
 
-async function handleChatInputCommandAutocomplete(interaction: APIApplicationCommandAutocompleteInteraction, api: API) {
+async function handleChatInputCommandAutocomplete(interaction: APIApplicationCommandAutocompleteInteraction, api: API): Promise<void> {
   const command = commands.get(interaction.data.name) as ChatInputCommand;
 
   if (!command || !command.autocomplete) return;
@@ -405,7 +435,7 @@ async function handleChatInputCommandAutocomplete(interaction: APIApplicationCom
   }
 }
 
-async function handleButtonComponent(interaction: APIMessageComponentButtonInteraction, api: API) {
+async function handleButtonComponent(interaction: APIMessageComponentButtonInteraction, api: API): Promise<void> {
   const args = interaction.data.custom_id?.split('_') ?? [];
   const customId = args.shift();
 
@@ -426,7 +456,7 @@ async function handleButtonComponent(interaction: APIMessageComponentButtonInter
   }
 }
 
-async function handleSelectMenuComponent(interaction: APIMessageComponentSelectMenuInteraction, api: API) {
+async function handleSelectMenuComponent(interaction: APIMessageComponentSelectMenuInteraction, api: API): Promise<void> {
   const args = interaction.data.custom_id?.split('_') ?? [];
   const customId = args.shift();
 
@@ -447,7 +477,7 @@ async function handleSelectMenuComponent(interaction: APIMessageComponentSelectM
   }
 }
 
-async function handleModalSubmit(interaction: APIModalSubmitInteraction, api: API) {
+async function handleModalSubmit(interaction: APIModalSubmitInteraction, api: API): Promise<void> {
   const args = interaction.data.custom_id?.split('_') ?? [];
   const customId = args.shift();
 

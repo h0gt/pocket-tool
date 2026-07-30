@@ -1,6 +1,4 @@
-import { createCanvas, loadImage } from '@napi-rs/canvas';
-import type { SKRSContext2D } from '@napi-rs/canvas';
-import sharp from 'sharp';
+import { createCanvas, loadImage, type Canvas, type SKRSContext2D } from '@napi-rs/canvas';
 
 const WIDTH = 850;
 const HEIGHT = 450;

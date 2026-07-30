@@ -1,7 +1,6 @@
 export enum Emoji {
   Trash = '<:trash:1531099136714084474>',
   Boost = '<:boost:1531099150144503909>',
-  BugHunter = '<:bug_hunter:1531099162509312081>',
   Correct = '<:correct:1531099215155957821>',
   Wrong = '<:wrong:1531099231400624128>',
   Exclamation = '<:exclamation:1531099263000645683>',
@@ -10,7 +9,6 @@ export enum Emoji {
   Wumpus = '<:wumpus:1531099321490084051>',
   Ping = '<:ping:1531099403043995749>',
   Calendar = '<:calendar:1531099451660177468>',
-  Channel = '<:channel:1531099467242143774>',
   Clock = '<:clock:1531099479355166861>',
   Discord = '<:discord:1531099504370253986>',
   Home = '<:home:1531099522581794837>',
@@ -19,11 +17,7 @@ export enum Emoji {
   People = '<:people:1531099590080729218>',
   Person = '<:person:1531099603682988095>',
   Role = '<:role:1531099618346008666>',
-  Expression = '<:expression:1531099630308425911>',
   Translate = '<:translate:1531099667587268608>',
-  // pagination
-  Left = '<:arrow_left:1531099350086717481>',
-  Right = '<:arrow_right:1531099364154409050>',
   // Twitter
   Bookmark = '<:twitter_bookmark:1504947779548479669>',
   Like = '<:twitter_like:1504947769717162076>',

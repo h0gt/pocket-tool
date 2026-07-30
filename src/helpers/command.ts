@@ -1,4 +1,4 @@
-import { commands } from '../bot/index.js';
+import { commands } from '../bot/index';
 import type { ApplicationCommand, ChatInputOption } from '../types/types';
 
 export default function createApplicationCommand<const Options extends ChatInputOption[] = ChatInputOption[]>(command: ApplicationCommand<Options>): void {

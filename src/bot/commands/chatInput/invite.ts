@@ -72,15 +72,6 @@ createApplicationCommand({
       return;
     }
 
-    // guild info we will be displaying
-    const guildIcon = cdn(`/icons/${invite.guild.id}/${invite.guild.icon}`, 4096, 'webp', true);
-    const name = invite.guild.name;
-    const members = invite.approximate_member_count;
-    const channels = (await api.guilds.getChannels(invite.guild.id)).length;
-    const boosts = invite.guild.premium_subscription_count;
-    const guildId = invite.guild.id;
-    const createdAt = getTimestampFromSnowflake(invite.guild.id);
-
     await api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
         {
@@ -91,13 +82,13 @@ createApplicationCommand({
               components: [
                 {
                   type: ComponentType.TextDisplay,
-                  content: `${emoji('Home')} **${name}** ${highlight(guildId)}`,
+                  content: `${emoji('Home')} **${invite.guild.name}** ${highlight(invite.guild.id)}\n${invite.guild.description ? `*${invite.guild.description}*` : ''}`,
                 },
               ],
               accessory: {
                 type: ComponentType.Thumbnail,
                 media: {
-                  url: guildIcon,
+                  url: cdn(`/icons/${invite.guild.id}/${invite.guild.icon}`, 4096, 'webp', true),
                 },
               },
             },
@@ -106,7 +97,7 @@ createApplicationCommand({
             },
             {
               type: ComponentType.TextDisplay,
-              content: `${emoji('Calendar')} **Created At:**\n${timestamp(createdAt, TimestampStyle.LongDate)}\n\n${emoji('People')} ${highlight(members, HighlightStyle.Bold)}   ${emoji('Channel')} ${highlight(channels)}   ${emoji('Boost')} ${highlight(boosts)}`,
+              content: `${emoji('Calendar')} **Created At:**\n${timestamp(getTimestampFromSnowflake(invite.guild.id), TimestampStyle.LongDate)}\n\n${emoji('People')} ${highlight(invite.approximate_member_count?.toLocaleString('en-US'), HighlightStyle.Bold)}   ${emoji('Boost')} ${highlight(invite.guild.premium_subscription_count?.toLocaleString('en-US'))}`,
             },
           ],
         },
