@@ -49,7 +49,7 @@ createApplicationCommand({
                     components: [
                       {
                         type: ComponentType.TextDisplay,
-                        content: `${emoji('Role')} **${role.name}** ${highlight(role.id)}\n\n${emoji('Calendar')} **Created At:**\n${timestamp(getTimestampFromSnowflake(role.id), TimestampStyle.LongDate)} (${timestamp(getTimestampFromSnowflake(role.id), TimestampStyle.RelativeTime)})`,
+                        content: `${emoji('Role')} **${role.name}** ${highlight(role.id)}`,
                       },
                     ],
                     accessory: {
