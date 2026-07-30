@@ -18,7 +18,7 @@ import { cdn, emoji } from './markdown.js';
 import { CARD_COLORS, CARD_FONTS, CARD_LOOKS, CARD_SIZES, renderQuoteCard, type CardOptions } from './quoteCard.js';
 import { toEmoji } from './utils.js';
 
-const SESSION_LIFETIME = 15 * 60 * 1_000;
+const SESSION_LIFETIME = 3 * 60 * 1_000;
 const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
 const SESSION_STORE_PATH = resolve(process.cwd(), '.cache', 'quote-sessions.json');
 
@@ -31,75 +31,67 @@ export type QuoteSession = {
   sourceMessageId: string;
   sourceUrl: string;
   options: CardOptions;
-  primaryImage?: Buffer;
   avatarImage?: Buffer;
+  emojiImages?: Record<string, Buffer>;
   expiresAt: number;
   busy: boolean;
   editorChannelId?: string;
   editorMessageId?: string;
+  editorApplicationId?: string;
   editorInteractionToken?: string;
 };
 
-const sessions = new Map<string, QuoteSession>();
-
-type StoredQuoteSession = Omit<QuoteSession, 'primaryImage' | 'avatarImage' | 'busy' | 'editorInteractionToken'> & {
-  primaryImage?: string;
+type StoredQuoteSession = Omit<QuoteSession, 'avatarImage' | 'emojiImages' | 'busy' | 'editorInteractionToken'> & {
   avatarImage?: string;
+  emojiImages?: Record<string, string>;
 };
+
+const sessions = new Map<string, QuoteSession>();
+const expiryTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
 function restoreSessions(): void {
   try {
     if (!existsSync(SESSION_STORE_PATH)) return;
-
-    const stored = JSON.parse(readFileSync(SESSION_STORE_PATH, 'utf8')) as StoredQuoteSession[];
     const now = Date.now();
+    const stored = JSON.parse(readFileSync(SESSION_STORE_PATH, 'utf8')) as StoredQuoteSession[];
     for (const item of stored) {
       if (!item?.id || item.expiresAt <= now) continue;
-      const { primaryImage, avatarImage, ...session } = item;
+      const { avatarImage, emojiImages, ...session } = item;
       sessions.set(item.id, {
         ...session,
-        expiresAt: Math.max(session.expiresAt, now + SESSION_LIFETIME),
-        ...(primaryImage && { primaryImage: Buffer.from(primaryImage, 'base64') }),
+        options: {
+          ...session.options,
+          font: session.options.font in CARD_FONTS ? session.options.font : 'modern',
+          size: session.options.size in CARD_SIZES ? session.options.size : 'auto',
+          color: session.options.color in CARD_COLORS ? session.options.color : 'auto',
+          look: session.options.look in CARD_LOOKS ? session.options.look : 'cinematic',
+        },
+        expiresAt: Math.min(session.expiresAt, now + SESSION_LIFETIME),
         ...(avatarImage && { avatarImage: Buffer.from(avatarImage, 'base64') }),
+        ...(emojiImages && {
+          emojiImages: Object.fromEntries(Object.entries(emojiImages).map(([id, data]) => [id, Buffer.from(data, 'base64')])),
+        }),
         busy: false,
       });
     }
-  } catch {}
-}
-
-function restoreSession(sessionId: string): QuoteSession | undefined {
-  try {
-    if (!existsSync(SESSION_STORE_PATH)) return undefined;
-
-    const item = (JSON.parse(readFileSync(SESSION_STORE_PATH, 'utf8')) as StoredQuoteSession[]).find((stored) => stored.id === sessionId);
-    if (!item || item.expiresAt <= Date.now()) return undefined;
-
-    const { primaryImage, avatarImage, ...session } = item;
-    const restored: QuoteSession = {
-      ...session,
-      ...(primaryImage && { primaryImage: Buffer.from(primaryImage, 'base64') }),
-      ...(avatarImage && { avatarImage: Buffer.from(avatarImage, 'base64') }),
-      busy: false,
-    };
-    sessions.set(restored.id, restored);
-    return restored;
   } catch (error) {
-    console.error(`Could not restore quote editor ${sessionId}:`, error);
-    return undefined;
+    console.error('Could not restore quote editors:', error);
   }
 }
 
 function persistSessions(): void {
   try {
     const stored: StoredQuoteSession[] = [...sessions.values()].map(
-      ({ primaryImage, avatarImage, busy: _busy, editorInteractionToken: _token, ...session }) => ({
+      ({ avatarImage, emojiImages, busy: _busy, editorInteractionToken: _token, ...session }) => ({
         ...session,
-        ...(primaryImage && { primaryImage: primaryImage.toString('base64') }),
         ...(avatarImage && { avatarImage: avatarImage.toString('base64') }),
+        ...(emojiImages && {
+          emojiImages: Object.fromEntries(Object.entries(emojiImages).map(([id, data]) => [id, data.toString('base64')])),
+        }),
       }),
     );
 
-    if (stored.length === 0) {
+    if (!stored.length) {
       if (existsSync(SESSION_STORE_PATH)) unlinkSync(SESSION_STORE_PATH);
       return;
     }
@@ -109,28 +101,19 @@ function persistSessions(): void {
     writeFileSync(temporaryPath, JSON.stringify(stored));
     copyFileSync(temporaryPath, SESSION_STORE_PATH);
     unlinkSync(temporaryPath);
-  } catch {}
+  } catch (error) {
+    console.error('Could not persist quote editors:', error);
+  }
 }
 
 restoreSessions();
 
-setInterval(() => {
-  const now = Date.now();
-  let removed = false;
-  for (const [id, session] of sessions) {
-    if (session.expiresAt <= now) {
-      sessions.delete(id);
-      removed = true;
-    }
-  }
-  if (removed) persistSessions();
-}, 60_000).unref();
+export function initializeQuoteSessions(api: API): void {
+  for (const session of sessions.values()) armSessionExpiry(session, api);
+}
 
 export async function createQuoteSession(message: APIMessage, ownerId: string, displayName?: string, guildId?: string): Promise<QuoteSession> {
-  const primaryUrl = findPrimaryImage(message);
-  const avatarUrl = getAvatarUrl(message);
-  const [primaryImage, avatarImage] = await Promise.all([primaryUrl ? downloadImage(primaryUrl) : Promise.resolve(undefined), downloadImage(avatarUrl)]);
-
+  const [avatarImage, emojiImages] = await Promise.all([downloadImage(getAvatarUrl(message)), downloadCustomEmojis(message.content)]);
   const session: QuoteSession = {
     id: randomBytes(8).toString('hex'),
     ownerId,
@@ -143,10 +126,11 @@ export async function createQuoteSession(message: APIMessage, ownerId: string, d
       font: 'modern',
       size: 'auto',
       color: 'auto',
-      look: 'spotlight-original',
+      look: 'cinematic',
+      effects: [],
     },
-    ...(primaryImage !== undefined && { primaryImage }),
-    ...(avatarImage !== undefined && { avatarImage }),
+    ...(avatarImage && { avatarImage }),
+    ...(Object.keys(emojiImages).length && { emojiImages }),
     expiresAt: Date.now() + SESSION_LIFETIME,
     busy: false,
   };
@@ -156,22 +140,21 @@ export async function createQuoteSession(message: APIMessage, ownerId: string, d
   return session;
 }
 
-export function saveQuoteSession(session: QuoteSession): void {
-  if (sessions.has(session.id)) persistSessions();
+export function saveQuoteSession(session: QuoteSession, api?: API): void {
+  if (!sessions.has(session.id)) return;
+  persistSessions();
+  if (api) armSessionExpiry(session, api);
 }
 
 export function hasQuoteContent(message: APIMessage): boolean {
-  return Boolean(message.content.trim() || message.embeds.some((embed) => embed.description?.trim() || embed.title?.trim()));
+  return Boolean(message.content.trim());
 }
+
 export async function renderQuoteSession(session: QuoteSession): Promise<Buffer> {
   return renderQuoteCard({
     ...session.options,
-    ...(session.primaryImage !== undefined && {
-      primaryImage: session.primaryImage,
-    }),
-    ...(session.avatarImage !== undefined && {
-      avatarImage: session.avatarImage,
-    }),
+    ...(session.avatarImage && { avatarImage: session.avatarImage }),
+    ...(session.emojiImages && { emojiImages: session.emojiImages }),
   });
 }
 
@@ -182,7 +165,6 @@ export function buildQuoteComponents(session: QuoteSession): APIMessageTopLevelC
       {
         type: ComponentType.StringSelect as const,
         custom_id: `quote-select_${session.id}_${option}`,
-        title: placeholder,
         placeholder,
         options: Object.entries(values).map(([value, item]) => ({
           label: item.label,
@@ -205,7 +187,6 @@ export function buildQuoteComponents(session: QuoteSession): APIMessageTopLevelC
       {
         type: ComponentType.StringSelect as const,
         custom_id: `quote-custom-select_${session.id}_${option}`,
-        title: placeholder,
         placeholder,
         options: [
           ...Object.entries(values).map(([value, item]) => ({
@@ -220,11 +201,35 @@ export function buildQuoteComponents(session: QuoteSession): APIMessageTopLevelC
     ],
   });
 
+  const selectedEffects =
+    session.options.effects ??
+    (session.options.look !== 'cinematic' && session.options.look in CARD_LOOKS ? [session.options.look as keyof typeof CARD_LOOKS] : []);
+  const effectSelect = {
+    type: ComponentType.ActionRow as const,
+    components: [
+      {
+        type: ComponentType.StringSelect as const,
+        custom_id: `quote-select_${session.id}_look`,
+        placeholder: selectedEffects.length
+          ? `${selectedEffects.length} effect${selectedEffects.length === 1 ? '' : 's'} selected`
+          : 'Cinematic Split (default)',
+        min_values: 0,
+        max_values: Object.keys(CARD_LOOKS).length,
+        options: Object.entries(CARD_LOOKS).map(([value, item]) => ({
+          label: item.label,
+          description: item.description,
+          value,
+          default: selectedEffects.includes(value as keyof typeof CARD_LOOKS),
+        })),
+      },
+    ],
+  };
+
   return [
     select('font', 'Choose a font', CARD_FONTS),
     customSelect('size', 'Choose a text size', CARD_SIZES, 'Custom font size'),
     customSelect('color', 'Choose a text color', CARD_COLORS, 'Custom text color'),
-    select('look', 'Choose a layout and image effect', CARD_LOOKS),
+    effectSelect,
     {
       type: ComponentType.ActionRow as const,
       components: [
@@ -232,54 +237,77 @@ export function buildQuoteComponents(session: QuoteSession): APIMessageTopLevelC
           type: ComponentType.Button as const,
           custom_id: `quote-action_${session.id}_shuffle`,
           label: 'Surprise me',
-          style: ButtonStyle.Secondary as ButtonStyle.Secondary,
+          style: ButtonStyle.Secondary,
         },
-        {
-          type: ComponentType.Button as const,
-          url: session.sourceUrl,
-          label: 'View original',
-          style: ButtonStyle.Link as ButtonStyle.Link,
-        },
+        ...viewOriginalButton(session),
         {
           type: ComponentType.Button as const,
           custom_id: `quote-action_${session.id}_close`,
           emoji: toEmoji('Trash') as APIMessageComponentEmoji,
-          style: ButtonStyle.Secondary as ButtonStyle.Secondary,
+          style: ButtonStyle.Secondary,
         },
       ],
     },
   ];
 }
 
+function buildExpiredQuoteComponents(session: QuoteSession): APIMessageTopLevelComponent[] {
+  return [
+    {
+      type: ComponentType.ActionRow,
+      components: viewOriginalButton(session),
+    },
+  ];
+}
+
+function viewOriginalButton(session: QuoteSession) {
+  return [
+    {
+      type: ComponentType.Button as const,
+      url: session.sourceUrl,
+      label: 'View original',
+      style: ButtonStyle.Link as const,
+    },
+  ];
+}
+
 export async function handleQuoteSelect(interaction: APIMessageComponentSelectMenuInteraction, sessionId: string, option: string, api: API): Promise<void> {
   const session = await getAvailableSession(interaction, sessionId, api);
-  if (!session || session.busy) return;
+  if (!session || !isQuoteOption(option) || !('values' in interaction.data)) return;
 
-  if (!isQuoteOption(option) || !('values' in interaction.data)) {
-    await reportComponentError(interaction, api, 'That quote option is no longer available.');
-    return;
+  if (option === 'look') {
+    const effects = interaction.data.values.filter((value): value is keyof typeof CARD_LOOKS => value in CARD_LOOKS);
+    if (effects.length !== interaction.data.values.length) {
+      await reportComponentError(interaction, api, 'That quote effect is no longer available.');
+      return;
+    }
+    session.options.look = 'cinematic';
+    session.options.effects = effects;
+  } else {
+    const value = interaction.data.values[0];
+    if (!value || !setQuoteOption(session, option, value)) {
+      await reportComponentError(interaction, api, 'That quote option is no longer available.');
+      return;
+    }
   }
 
-  const value = interaction.data.values[0];
-  if (!value || !setQuoteOption(session, option, value)) {
-    await reportComponentError(interaction, api, 'That quote option is no longer available.');
-    return;
-  }
-
+  rememberEditorInteraction(session, interaction);
   await refreshQuote(interaction, session, api);
 }
 
 export async function handleQuoteAction(interaction: APIMessageComponentButtonInteraction, sessionId: string, action: string, api: API): Promise<void> {
   const session = await getAvailableSession(interaction, sessionId, api);
-  if (!session || session.busy) return;
+  if (!session) return;
 
   if (action === 'shuffle') {
     session.options.font = randomKey(CARD_FONTS);
     session.options.size = randomKey(CARD_SIZES);
     session.options.color = randomKey(CARD_COLORS);
-    session.options.look = randomKey(CARD_LOOKS);
+    session.options.look = 'cinematic';
+    session.options.effects = randomEffectCombination();
     delete session.options.customSize;
     delete session.options.customColor;
+    rememberEditorInteraction(session, interaction);
     await refreshQuote(interaction, session, api);
     return;
   }
@@ -291,106 +319,7 @@ export async function handleQuoteAction(interaction: APIMessageComponentButtonIn
       if (!session.editorChannelId || !session.editorMessageId) throw new Error('Quote editor message could not be deleted');
       await api.channels.deleteMessage(session.editorChannelId, session.editorMessageId);
     }
-    sessions.delete(session.id);
-    persistSessions();
-  }
-}
-
-export async function openQuoteCustomTextModal(
-  interaction: APIMessageComponentSelectMenuInteraction,
-  sessionId: string,
-  option: CustomTextOption,
-  api: API,
-): Promise<void> {
-  const session = await getAvailableSession(interaction, sessionId, api, false);
-  if (!session) return;
-
-  const isSize = option === 'size';
-  await api.interactions.createModal(interaction.id, interaction.token, {
-    custom_id: `quote-custom-modal_${session.id}_${option}`,
-    title: isSize ? 'Custom font size' : 'Custom text colour',
-    components: [
-      {
-        type: ComponentType.ActionRow,
-        components: [
-          {
-            type: ComponentType.TextInput,
-            custom_id: isSize ? 'font-size' : 'colour',
-            label: isSize ? 'Font size (30-140 px)' : 'Text colour (hex)',
-            style: TextInputStyle.Short,
-            value: isSize ? (session.options.customSize ? String(session.options.customSize) : undefined) : session.options.customColour,
-            placeholder: isSize ? '30 to 140' : 'Example: #f7f3ec',
-            required: true,
-            max_length: isSize ? 3 : 7,
-          },
-        ],
-      },
-    ],
-  });
-}
-
-export async function handleQuoteCustomSelect(
-  interaction: APIMessageComponentSelectMenuInteraction,
-  sessionId: string,
-  option: CustomTextOption,
-  api: API,
-): Promise<void> {
-  const session = await getAvailableSession(interaction, sessionId, api, false);
-  if (!session || !('values' in interaction.data)) return;
-
-  const value = interaction.data.values[0];
-  if (value === 'custom') {
-    await openQuoteCustomTextModal(interaction, sessionId, option, api);
-    return;
-  }
-
-  if (!value || !setQuoteOption(session, option, value)) {
-    await reportComponentError(interaction, api, 'That quote option is no longer available.', false);
-    return;
-  }
-
-  await api.interactions.deferMessageUpdate(interaction.id, interaction.token);
-  await refreshQuote(interaction, session, api);
-}
-
-export async function handleQuoteCustomTextModal(interaction: APIModalSubmitInteraction, sessionId: string, option: CustomTextOption, api: API): Promise<void> {
-  const session = await getAvailableSession(interaction, sessionId, api, false);
-  if (!session) return;
-
-  const value = modalInputValue(interaction, option === 'size' ? 'font-size' : 'colour').trim();
-
-  if (option === 'size' && (!/^\d+$/.test(value) || Number(value) < 30 || Number(value) > 140)) {
-    await api.interactions.reply(interaction.id, interaction.token, {
-      content: 'Font size must be a whole number from 30 to 140.',
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
-  if (option === 'colour' && !/^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(value)) {
-    await api.interactions.reply(interaction.id, interaction.token, {
-      content: 'Colour must be a hex value such as #f7f3ec.',
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
-  if (option === 'size') session.options.customSize = Number(value);
-  else session.options.customColour = value;
-  session.expiresAt = Date.now() + SESSION_LIFETIME;
-  persistSessions();
-  await api.interactions.defer(interaction.id, interaction.token, { flags: MessageFlags.Ephemeral });
-  session.busy = true;
-
-  try {
-    const image = await renderQuoteSession(session);
-    await editQuoteEditor(api, session, image, interaction);
-    await api.interactions.editReply(interaction.application_id, interaction.token, {
-      content: option === 'size' ? 'Custom font size applied.' : 'Custom text colour applied.',
-    });
-  } finally {
-    session.busy = false;
-    persistSessions();
+    removeSession(session.id);
   }
 }
 
@@ -408,7 +337,7 @@ export async function openQuoteCustomTextModal(interaction: APIMessageComponentS
           {
             type: ComponentType.TextInput,
             custom_id: 'font-size',
-            label: 'Font size (30–140 px)',
+            label: 'Font size (20–100 px)',
             style: TextInputStyle.Short,
             value: session.options.customSize ? String(session.options.customSize) : undefined,
             placeholder: 'Leave blank to keep the selected preset',
@@ -426,7 +355,7 @@ export async function openQuoteCustomTextModal(interaction: APIMessageComponentS
             label: 'Text color',
             style: TextInputStyle.Short,
             value: session.options.customColor,
-            placeholder: 'Use a color code in hex such as #f7f3ec',
+            placeholder: 'Example: #f7f3ec',
             required: false,
             max_length: 7,
           },
@@ -450,12 +379,12 @@ export async function handleQuoteCustomSelect(
     await openQuoteCustomTextModal(interaction, sessionId, api);
     return;
   }
-
   if (!value || !setQuoteOption(session, option, value)) {
     await reportComponentError(interaction, api, 'That quote option is no longer available.', false);
     return;
   }
 
+  rememberEditorInteraction(session, interaction);
   await api.interactions.deferMessageUpdate(interaction.id, interaction.token);
   await refreshQuote(interaction, session, api);
 }
@@ -466,86 +395,35 @@ export async function handleQuoteCustomTextModal(interaction: APIModalSubmitInte
 
   const sizeInput = modalInputValue(interaction, 'font-size').trim();
   const colorInput = modalInputValue(interaction, 'color').trim();
-
-  if (sizeInput && (!/^\d+$/.test(sizeInput) || Number(sizeInput) < 30 || Number(sizeInput) > 140)) {
+  if (sizeInput && (!/^\d+$/.test(sizeInput) || Number(sizeInput) < 20 || Number(sizeInput) > 100)) {
     await api.interactions.reply(interaction.id, interaction.token, {
-      content: 'Font size must be a whole number from 30 to 140.',
+      content: 'Font size must be a whole number from 20 to 100.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+  if (colorInput && !/^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(colorInput)) {
+    await api.interactions.reply(interaction.id, interaction.token, {
+      content: 'Color must be a hex value such as #f7f3ec.',
       flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
-  const color = colorInput && /^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(colorInput) ? colorInput : undefined;
-  if (colorInput && !color) {
-    await api.interactions.reply(interaction.id, interaction.token, {
-      components: [
-        {
-          type: ComponentType.Container,
-          components: [
-            {
-              type: ComponentType.TextDisplay,
-              content: `${emoji('Exclamation')} Color must be a hex value such as #f7f3ec`,
-            },
-          ],
-        },
-      ],
-      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-    });
-
-    return;
-  }
-
-  if (!session.editorInteractionToken) {
-    await api.interactions.reply(interaction.id, interaction.token, {
-      components: [
-        {
-          type: ComponentType.Container,
-          components: [
-            {
-              type: ComponentType.TextDisplay,
-              content: `${emoji('Exclamation')} That quote editor has expired - run **Apps -> Quote This Message** again`,
-            },
-          ],
-        },
-      ],
-      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-    });
-
-    return;
-  }
-
   if (sizeInput) session.options.customSize = Number(sizeInput);
-  if (color) session.options.customColor = color;
-  session.expiresAt = Date.now() + SESSION_LIFETIME;
-
+  if (colorInput) session.options.customColor = colorInput;
   await api.interactions.defer(interaction.id, interaction.token, { flags: MessageFlags.Ephemeral });
   session.busy = true;
 
   try {
     const image = await renderQuoteSession(session);
-
-    await api.interactions.editReply(interaction.application_id, session.editorInteractionToken, {
-      attachments: [],
-      files: [{ name: `quote-${session.sourceMessageId}.gif`, data: image }],
-      components: buildQuoteComponents(session),
-    });
-
+    await editQuoteEditor(api, session, image, interaction);
     await api.interactions.editReply(interaction.application_id, interaction.token, {
-      components: [
-        {
-          type: ComponentType.Container,
-          components: [
-            {
-              type: ComponentType.TextDisplay,
-              content: `${emoji('Correct')} Custom text settings applied`,
-            },
-          ],
-        },
-      ],
-      flags: MessageFlags.IsComponentsV2,
+      content: 'Custom text settings applied.',
     });
   } finally {
     session.busy = false;
+    touchSession(session, api);
   }
 }
 
@@ -555,14 +433,12 @@ async function refreshQuote(
   api: API,
 ): Promise<void> {
   session.busy = true;
-  session.expiresAt = Date.now() + SESSION_LIFETIME;
-
   try {
     const image = await renderQuoteSession(session);
     await editQuoteEditor(api, session, image, interaction);
   } finally {
     session.busy = false;
-    persistSessions();
+    touchSession(session, api);
   }
 }
 
@@ -570,17 +446,13 @@ async function getAvailableSession(
   interaction: APIMessageComponentSelectMenuInteraction | APIMessageComponentButtonInteraction | APIModalSubmitInteraction,
   sessionId: string,
   api: API,
-  canFollowUp: boolean = true,
+  canFollowUp = true,
 ): Promise<QuoteSession | undefined> {
-  const session = sessions.get(sessionId) ?? restoreSession(sessionId);
+  const session = sessions.get(sessionId);
   const userId = interaction.user?.id ?? interaction.member?.user.id;
 
   if (!session || session.expiresAt <= Date.now()) {
-    if (session) {
-      sessions.delete(session.id);
-      persistSessions();
-    }
-    console.warn(`Quote editor unavailable: ${sessionId} (active sessions: ${sessions.size})`);
+    if (session) await expireSession(session, api);
     await reportComponentError(
       interaction,
       api,
@@ -594,19 +466,78 @@ async function getAvailableSession(
     await reportComponentError(interaction, api, `${emoji('Exclamation')} Only the person who made this quote can edit it`, canFollowUp);
     return undefined;
   }
-
   if (session.busy) {
     await reportComponentError(interaction, api, `${emoji('Exclamation')} The quote is still rendering`, canFollowUp);
     return undefined;
   }
-  if ('component_type' in interaction.data && 'message' in interaction && interaction.message) {
+
+  if ('message' in interaction && interaction.message) {
     session.editorChannelId = interaction.message.channel_id;
     session.editorMessageId = interaction.message.id;
-    session.editorInteractionToken = interaction.token;
-    persistSessions();
   }
-
+  session.editorApplicationId = interaction.application_id;
+  touchSession(session, api);
   return session;
+}
+
+function rememberEditorInteraction(session: QuoteSession, interaction: APIMessageComponentSelectMenuInteraction | APIMessageComponentButtonInteraction): void {
+  session.editorApplicationId = interaction.application_id;
+  session.editorInteractionToken = interaction.token;
+}
+
+function touchSession(session: QuoteSession, api: API): void {
+  session.expiresAt = Date.now() + SESSION_LIFETIME;
+  persistSessions();
+  armSessionExpiry(session, api);
+}
+
+function armSessionExpiry(session: QuoteSession, api: API): void {
+  const existing = expiryTimers.get(session.id);
+  if (existing) clearTimeout(existing);
+  const expectedExpiry = session.expiresAt;
+  const timer = setTimeout(
+    () => {
+      if (session.expiresAt !== expectedExpiry) {
+        armSessionExpiry(session, api);
+        return;
+      }
+      if (session.busy) {
+        session.expiresAt = Date.now() + 1_000;
+        armSessionExpiry(session, api);
+        return;
+      }
+      void expireSession(session, api);
+    },
+    Math.max(0, expectedExpiry - Date.now()),
+  );
+  timer.unref();
+  expiryTimers.set(session.id, timer);
+}
+
+async function expireSession(session: QuoteSession, api: API): Promise<void> {
+  const components = buildExpiredQuoteComponents(session);
+  try {
+    if (session.editorApplicationId && session.editorInteractionToken) {
+      try {
+        await api.interactions.editReply(session.editorApplicationId, session.editorInteractionToken, { components });
+        return;
+      } catch {
+      }
+    }
+    if (session.editorChannelId && session.editorMessageId) await api.channels.editMessage(session.editorChannelId, session.editorMessageId, { components });
+  } catch (error) {
+    console.warn(`Could not remove controls from expired quote editor ${session.id}:`, error);
+  } finally {
+    removeSession(session.id);
+  }
+}
+
+function removeSession(sessionId: string): void {
+  const timer = expiryTimers.get(sessionId);
+  if (timer) clearTimeout(timer);
+  expiryTimers.delete(sessionId);
+  sessions.delete(sessionId);
+  persistSessions();
 }
 
 function modalInputValue(interaction: APIModalSubmitInteraction, customId: string): string {
@@ -622,28 +553,20 @@ async function reportComponentError(
   interaction: APIMessageComponentSelectMenuInteraction | APIMessageComponentButtonInteraction | APIModalSubmitInteraction,
   api: API,
   content: string,
-  canFollowUp: boolean = true,
+  _canFollowUp = true,
 ): Promise<void> {
   const response = {
     components: [
       {
         type: ComponentType.Container,
-        components: [
-          {
-            type: ComponentType.TextDisplay,
-            content,
-          },
-        ],
+        components: [{ type: ComponentType.TextDisplay, content }],
       },
     ] as APIMessageTopLevelComponent[],
     flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
   };
 
-  if (canFollowUp && 'message' in interaction) {
-    await api.interactions.followUp(interaction.application_id, interaction.token, response);
-  } else {
-    await api.interactions.reply(interaction.id, interaction.token, response);
-  }
+  if (_canFollowUp && 'message' in interaction) await api.interactions.followUp(interaction.application_id, interaction.token, response);
+  else await api.interactions.reply(interaction.id, interaction.token, response);
 }
 
 function setQuoteOption(session: QuoteSession, option: QuoteOption, value: string): boolean {
@@ -660,7 +583,6 @@ function setQuoteOption(session: QuoteSession, option: QuoteOption, value: strin
   } else {
     return false;
   }
-
   return true;
 }
 
@@ -681,28 +603,20 @@ async function editQuoteEditor(
     components: buildQuoteComponents(session),
   };
 
-  const editorToken = session.editorInteractionToken;
-  if (editorToken) {
-    await api.interactions.editReply(interaction.application_id, editorToken, payload);
+  if (session.editorApplicationId && session.editorInteractionToken) {
+    await api.interactions.editReply(session.editorApplicationId, session.editorInteractionToken, payload);
     return;
   }
-
   if ('message' in interaction && interaction.message) {
-    session.editorChannelId = interaction.message.channel_id;
-    session.editorMessageId = interaction.message.id;
-    persistSessions();
-    await api.channels.editMessage(session.editorChannelId, session.editorMessageId, payload);
+    await api.channels.editMessage(interaction.message.channel_id, interaction.message.id, payload);
     return;
   }
-
   throw new Error(`Quote editor ${session.id} has no editable message reference`);
 }
 
 function extractQuoteText(message: APIMessage): string {
-  const fromEmbed = message.embeds.map((embed) => embed.description || embed.title).find((value): value is string => Boolean(value?.trim()));
-
-  return (message.content.trim() || fromEmbed || 'Shared a moment worth remembering')
-    .replace(/<a?:([a-zA-Z0-9_]+):\d+>/g, ':$1:')
+  return message.content
+    .trim()
     .replace(/\s{3,}/g, '\n\n')
     .trim()
     .slice(0, 600);
@@ -712,28 +626,12 @@ function displayNameFor(message: APIMessage): string {
   return message.author.global_name || message.author.username;
 }
 
-function findPrimaryImage(message: APIMessage): string | undefined {
-  const attachment = Object.values(message.attachments).find(
-    (item) => item.content_type?.startsWith('image/') || /\.(?:png|jpe?g|webp|gif)$/i.test(item.filename),
-  );
-  if (attachment) return preferredImageUrl(attachment.url, attachment.proxy_url);
-
-  for (const embed of message.embeds) {
-    if (embed.image?.proxy_url || embed.image?.url) {
-      return preferredImageUrl(embed.image.url, embed.image.proxy_url);
-    }
-    if (embed.thumbnail?.proxy_url || embed.thumbnail?.url) {
-      return preferredImageUrl(embed.thumbnail.url, embed.thumbnail.proxy_url);
-    }
+function getAvatarUrl(message: APIMessage): string {
+  if (message.author.avatar) {
+    return cdn(`/avatars/${message.author.id}/${message.author.avatar}`, 2048, 'png', message.author.avatar.startsWith('a_'));
   }
-
-  return undefined;
-}
-
-/** Prefer Discord's original CDN asset; embedded external images use Discord's safe proxy. */
-function preferredImageUrl(original?: string, proxy?: string): string | undefined {
-  if (original && isTrustedDiscordUrl(original)) return original;
-  return proxy || original;
+  const index = message.author.discriminator === '0' ? Number((BigInt(message.author.id) >> 22n) % 6n) : Number(message.author.discriminator) % 5;
+  return cdn(`/embed/avatars/${index}`, 2048, 'png');
 }
 
 function isTrustedDiscordUrl(url: string): boolean {
@@ -751,21 +649,26 @@ function isTrustedDiscordUrl(url: string): boolean {
   }
 }
 
-function getAvatarUrl(message: APIMessage): string {
-  if (message.author.avatar) {
-    return cdn(`/avatars/${message.author.id}/${message.author.avatar}`, 1024, 'png', message.author.avatar.startsWith('a_'));
+async function downloadCustomEmojis(content: string): Promise<Record<string, Buffer>> {
+  const emojis = new Map<string, { animated: boolean }>();
+  for (const match of content.matchAll(/<(a?):[a-zA-Z0-9_]+:(\d+)>/g)) {
+    if (emojis.size >= 20) break;
+    emojis.set(match[2]!, { animated: match[1] === 'a' });
   }
 
-  const index = message.author.discriminator === '0' ? Number((BigInt(message.author.id) >> 22n) % 6n) : Number(message.author.discriminator) % 5;
-  return cdn(`/embed/avatars/${index}`, 1024, 'png');
+  const entries = await Promise.all(
+    [...emojis].map(async ([id, { animated }]) => {
+      const image = await downloadImage(cdn(`/emojis/${id}`, 128, animated ? 'gif' : 'png', animated));
+      return [id, image] as const;
+    }),
+  );
+  return Object.fromEntries(entries.filter((entry): entry is readonly [string, Buffer] => Boolean(entry[1])));
 }
 
 async function downloadImage(url: string): Promise<Buffer | undefined> {
   try {
-    const parsedUrl = new URL(url);
-    if (!isTrustedDiscordUrl(parsedUrl.toString())) return undefined;
-
-    const response = await fetch(parsedUrl, {
+    if (!isTrustedDiscordUrl(url)) return undefined;
+    const response = await fetch(url, {
       signal: AbortSignal.timeout(8_000),
       headers: { 'User-Agent': 'PocketToolQuote/1.0' },
     });
@@ -773,15 +676,12 @@ async function downloadImage(url: string): Promise<Buffer | undefined> {
 
     const declaredLength = Number(response.headers.get('content-length') || 0);
     if (declaredLength > MAX_IMAGE_BYTES) return undefined;
-
     const reader = response.body.getReader();
     const chunks: Uint8Array[] = [];
     let totalBytes = 0;
-
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-
       totalBytes += value.byteLength;
       if (totalBytes > MAX_IMAGE_BYTES) {
         await reader.cancel();
@@ -789,10 +689,9 @@ async function downloadImage(url: string): Promise<Buffer | undefined> {
       }
       chunks.push(value);
     }
-
     return Buffer.concat(chunks, totalBytes);
   } catch (error) {
-    console.warn(`Could not download quote image: ${String(error)}`);
+    console.warn(`Could not download quote avatar: ${String(error)}`);
     return undefined;
   }
 }
@@ -800,4 +699,13 @@ async function downloadImage(url: string): Promise<Buffer | undefined> {
 function randomKey<T extends Record<string, unknown>>(record: T): keyof T {
   const keys = Object.keys(record) as Array<keyof T>;
   return keys[Math.floor(Math.random() * keys.length)]!;
+}
+
+function randomEffectCombination(): Array<keyof typeof CARD_LOOKS> {
+  const effects = Object.keys(CARD_LOOKS) as Array<keyof typeof CARD_LOOKS>;
+  for (let index = effects.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [effects[index], effects[swapIndex]] = [effects[swapIndex]!, effects[index]!];
+  }
+  return effects.slice(0, 1 + Math.floor(Math.random() * Math.min(3, effects.length)));
 }

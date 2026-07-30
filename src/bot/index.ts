@@ -40,6 +40,7 @@ import { emoji, hyperlink, timestamp } from '../utils/markdown';
 import { getChatInputOption, localizeCommand, parseCommandOptions, parseComponentArgs, readDirectory } from '../utils/utils';
 import path from 'path';
 import { verify } from 'discord-verify/node';
+import { initializeQuoteSessions } from '../utils/quote';
 
 process.on('uncaughtException', console.error);
 process.on('unhandledRejection', console.error);
@@ -54,6 +55,7 @@ await readDirectory(path.join(process.cwd(), 'src', 'bot', 'components'));
 
 const rest = new REST().setToken(env.get('token', true).toString());
 const api = new API(rest);
+initializeQuoteSessions(api);
 
 const app = new Hono();
 
