@@ -43,10 +43,10 @@ createApplicationCommand({
     const image = await renderQuoteSession(session);
 
     await api.interactions.editReply(interaction.application_id, interaction.token, {
-      attachments: [{ id: 0, filename: `quote-${message.id}-${session.id}.gif` }],
+      //  attachments: [{ id: 0, filename: `quote-${message.id}-${session.id}.gif` }],
       files: [
         {
-          name: `quote-${message.id}-${session.id}.gif`,
+          name: `quote.gif`,
           data: image,
         },
       ],

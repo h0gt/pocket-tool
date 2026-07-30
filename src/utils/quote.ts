@@ -53,11 +53,16 @@ const expiryTimers = new Collection<string, ReturnType<typeof setTimeout>>();
 function restoreSessions(): void {
   try {
     if (!existsSync(SESSION_STORE_PATH)) return;
+
     const now = Date.now();
+
     const stored = JSON.parse(readFileSync(SESSION_STORE_PATH, 'utf8')) as StoredQuoteSession[];
+
     for (const item of stored) {
       if (!item?.id || item.expiresAt <= now) continue;
+
       const { avatarImage, emojiImages, ...session } = item;
+
       sessions.set(item.id, {
         ...session,
         options: {
@@ -636,10 +641,11 @@ async function editQuoteEditor(
   image: Buffer,
   interaction: APIMessageComponentSelectMenuInteraction | APIMessageComponentButtonInteraction | APIModalSubmitInteraction,
 ): Promise<void> {
-  const filename = `quote-${session.sourceMessageId}-${Date.now()}.gif`;
+  // const filename = `quote-${session.sourceMessageId}-${Date.now()}.gif`;
+
   const payload = {
-    attachments: [{ id: 0, filename }],
-    files: [{ name: filename, data: image }],
+    // attachments: [{ id: 0, filename }],
+    files: [{ name: 'quote.gif', data: image }],
     components: buildQuoteComponents(session),
   };
 
