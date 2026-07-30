@@ -10,7 +10,7 @@ import {
   type APIMessageComponentEmoji,
 } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
-import { cdn, emoji, highlight, timestamp } from '../../../utils/markdown';
+import { cdn, emoji, highlight, hyperlink, timestamp } from '../../../utils/markdown';
 import { getTimestampFromSnowflake, toEmoji } from '../../../utils/utils';
 import { TimestampStyle } from '../../../types/types';
 
@@ -100,18 +100,6 @@ createApplicationCommand({
                 },
               },
               {
-                type: ComponentType.ActionRow,
-                components: [
-                  {
-                    type: ComponentType.Button,
-                    url: `discord://-/users/${user.id}`,
-                    label: 'View User',
-                    emoji: toEmoji('Person') as APIMessageComponentEmoji,
-                    style: ButtonStyle.Link,
-                  },
-                ],
-              },
-              {
                 type: ComponentType.Separator,
               },
               {
@@ -123,7 +111,7 @@ createApplicationCommand({
                         .map((id) => `<@&${id}>`)
                         .join(', ')}`
                     : ''
-                }${member.roles.length > 5 ? ` ${highlight(`+${(member.roles.length - 5).toLocaleString('en-US')}`)}` : ``}`,
+                }${member.roles.length > 5 ? ` ${highlight(`+${(member.roles.length - 5).toLocaleString('en-US')}`)}` : ``}\n\n-# ${emoji('Exclamation')} Due to Discord API limitations this command is unable to display the whole profile, ${hyperlink(`discord://-/users/${user.id}`, 'click here')} to view it through Discord instead!`,
               },
             ],
           },
@@ -152,23 +140,11 @@ createApplicationCommand({
                 },
               },
               {
-                type: ComponentType.ActionRow,
-                components: [
-                  {
-                    type: ComponentType.Button,
-                    url: `discord://-/users/${user.id}`,
-                    label: 'View User',
-                    emoji: toEmoji('Person') as APIMessageComponentEmoji,
-                    style: ButtonStyle.Link,
-                  },
-                ],
-              },
-              {
                 type: ComponentType.Separator,
               },
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Calendar')} **Created At:**\n${timestamp(getTimestampFromSnowflake(user.id), TimestampStyle.LongDate)} (${timestamp(getTimestampFromSnowflake(user.id), TimestampStyle.RelativeTime)})`,
+                content: `${emoji('Calendar')} **Created At:**\n${timestamp(getTimestampFromSnowflake(user.id), TimestampStyle.LongDate)} (${timestamp(getTimestampFromSnowflake(user.id), TimestampStyle.RelativeTime)})\n\n-# ${emoji('Exclamation')} Due to Discord API limitations this command is unable to display the whole profile, ${hyperlink(`discord://-/users/${user.id}`, 'click here')} to view it through Discord instead!`,
               },
             ],
           },
