@@ -56,7 +56,6 @@ createApplicationCommand({
     const editor = await api.interactions.getOriginalReply(interaction.application_id, interaction.token);
     session.editorChannelId = editor.channel_id;
     session.editorMessageId = editor.id;
-
-    saveQuoteSession(session);
+    saveQuoteSession(session, api);
   },
 });

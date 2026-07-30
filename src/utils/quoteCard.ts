@@ -1,4 +1,6 @@
-import { createCanvas, loadImage, type Canvas, type SKRSContext2D } from '@napi-rs/canvas';
+import { createCanvas, loadImage } from '@napi-rs/canvas';
+import type { SKRSContext2D } from '@napi-rs/canvas';
+import sharp from 'sharp';
 
 const WIDTH = 850;
 const HEIGHT = 450;
@@ -48,7 +50,7 @@ export const CARD_FONTS = {
 
 export const CARD_SIZES = {
   auto: {
-    label: 'Smart fit',
+    label: 'Smart Fit',
     description: 'Fits the text to the card',
     pixels: 42,
   },

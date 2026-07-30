@@ -14,9 +14,9 @@ import {
 import { randomBytes } from 'node:crypto';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { cdn, emoji } from './markdown';
-import { CARD_COLORS, CARD_FONTS, CARD_LOOKS, CARD_SIZES, renderQuoteCard, type CardOptions } from './quoteCard';
-import { toEmoji } from './utils';
+import { cdn, emoji } from './markdown.js';
+import { CARD_COLORS, CARD_FONTS, CARD_LOOKS, CARD_SIZES, renderQuoteCard, type CardOptions } from './quoteCard.js';
+import { toEmoji } from './utils.js';
 import { Collection } from '@discordjs/collection';
 
 const SESSION_LIFETIME = 3 * 60 * 1_000;
@@ -162,13 +162,13 @@ export async function renderQuoteSession(session: QuoteSession): Promise<Buffer>
 }
 
 export function buildQuoteComponents(session: QuoteSession): APIMessageTopLevelComponent[] {
-  const select = (option: QuoteOption, title: string, values: Record<string, { label: string; description: string }>) => ({
+  const select = (option: QuoteOption, placeholder: string, values: Record<string, { label: string; description: string }>) => ({
     type: ComponentType.ActionRow as const,
     components: [
       {
         type: ComponentType.StringSelect as const,
         custom_id: `quote-select_${session.id}_${option}`,
-        title,
+        placeholder,
         options: Object.entries(values).map(([value, item]) => ({
           label: item.label,
           description: item.description,
@@ -179,13 +179,18 @@ export function buildQuoteComponents(session: QuoteSession): APIMessageTopLevelC
     ],
   });
 
-  const customSelect = (option: CustomTextOption, title: string, values: Record<string, { label: string; description: string }>, customLabel: string) => ({
+  const customSelect = (
+    option: CustomTextOption,
+    placeholder: string,
+    values: Record<string, { label: string; description: string }>,
+    customLabel: string,
+  ) => ({
     type: ComponentType.ActionRow as const,
     components: [
       {
         type: ComponentType.StringSelect as const,
         custom_id: `quote-custom-select_${session.id}_${option}`,
-        title,
+        placeholder,
         options: [
           ...Object.entries(values).map(([value, item]) => ({
             label: item.label,
@@ -208,9 +213,7 @@ export function buildQuoteComponents(session: QuoteSession): APIMessageTopLevelC
       {
         type: ComponentType.StringSelect as const,
         custom_id: `quote-select_${session.id}_look`,
-        placeholder: selectedEffects.length
-          ? `${selectedEffects.length} effect${selectedEffects.length === 1 ? '' : 's'} selected`
-          : 'Cinematic Split (default)',
+        placeholder: selectedEffects.length ? `${selectedEffects.length} effect${selectedEffects.length === 1 ? '' : 's'} selected` : 'Image Effects',
         min_values: 0,
         max_values: Object.keys(CARD_LOOKS).length,
         options: Object.entries(CARD_LOOKS).map(([value, item]) => ({
@@ -275,16 +278,19 @@ export async function handleQuoteSelect(interaction: APIMessageComponentSelectMe
 
   if (option === 'look') {
     const effects = interaction.data.values.filter((value): value is keyof typeof CARD_LOOKS => value in CARD_LOOKS);
+
     if (effects.length !== interaction.data.values.length) {
-      await reportComponentError(interaction, api, 'That quote effect is no longer available.');
+      await reportComponentError(interaction, api, `${emoji('Exclamation')} That quote option is no longer available`);
       return;
     }
+
     session.options.look = 'cinematic';
     session.options.effects = effects;
   } else {
     const value = interaction.data.values[0];
+
     if (!value || !setQuoteOption(session, option, value)) {
-      await reportComponentError(interaction, api, 'That quote option is no longer available.');
+      await reportComponentError(interaction, api, `${emoji('Exclamation')} That quote option is no longer available`);
       return;
     }
   }
@@ -315,40 +321,48 @@ export async function handleQuoteAction(interaction: APIMessageComponentButtonIn
       await api.interactions.deleteReply(interaction.application_id, interaction.token);
     } catch {
       if (!session.editorChannelId || !session.editorMessageId) throw new Error('Quote editor message could not be deleted');
-
       await api.channels.deleteMessage(session.editorChannelId, session.editorMessageId);
     }
-    sessions.delete(session.id);
-    persistSessions();
+
+    removeSession(session.id);
   }
 }
 
-export async function openQuoteCustomTextModal(
-  interaction: APIMessageComponentSelectMenuInteraction,
-  sessionId: string,
-  option: CustomTextOption,
-  api: API,
-): Promise<void> {
+export async function openQuoteCustomTextModal(interaction: APIMessageComponentSelectMenuInteraction, sessionId: string, api: API): Promise<void> {
   const session = await getAvailableSession(interaction, sessionId, api, false);
   if (!session) return;
 
-  const isSize = option === 'size';
   await api.interactions.createModal(interaction.id, interaction.token, {
-    custom_id: `quote-custom-modal_${session.id}_${option}`,
-    title: isSize ? 'Custom font size' : 'Custom text color',
+    custom_id: `quote-custom-modal_${session.id}`,
+    title: 'Custom text settings',
     components: [
       {
         type: ComponentType.ActionRow,
         components: [
           {
             type: ComponentType.TextInput,
-            custom_id: isSize ? 'font-size' : 'color',
-            label: isSize ? 'Font size (30-140 px)' : 'Text color (hex)',
+            custom_id: 'font-size',
+            label: 'Custom Font Size',
             style: TextInputStyle.Short,
-            value: isSize ? (session.options.customSize ? String(session.options.customSize) : undefined) : session.options.customColor,
-            placeholder: isSize ? '30 to 140' : 'Example: #f7f3ec',
-            required: true,
-            max_length: isSize ? 3 : 7,
+            value: session.options.customSize ? String(session.options.customSize) : undefined,
+            placeholder: 'Leave blank to keep the selected preset - use whole numbers from 20px to 100px',
+            required: false,
+            max_length: 3,
+          },
+        ],
+      },
+      {
+        type: ComponentType.ActionRow,
+        components: [
+          {
+            type: ComponentType.TextInput,
+            custom_id: 'color',
+            label: 'Custom Text Color',
+            style: TextInputStyle.Short,
+            value: session.options.customColor,
+            placeholder: 'Use a hex color code (e.g. #f7f3ec)',
+            required: false,
+            max_length: 7,
           },
         ],
       },
@@ -367,26 +381,28 @@ export async function handleQuoteCustomSelect(
 
   const value = interaction.data.values[0];
   if (value === 'custom') {
-    await openQuoteCustomTextModal(interaction, sessionId, option, api);
+    await openQuoteCustomTextModal(interaction, sessionId, api);
     return;
   }
 
   if (!value || !setQuoteOption(session, option, value)) {
-    await reportComponentError(interaction, api, 'That quote option is no longer available.', false);
+    await reportComponentError(interaction, api, `${emoji('Exclamation')} That quote option is no longer available`, false);
     return;
   }
 
+  rememberEditorInteraction(session, interaction);
   await api.interactions.deferMessageUpdate(interaction.id, interaction.token);
   await refreshQuote(interaction, session, api);
 }
 
-export async function handleQuoteCustomTextModal(interaction: APIModalSubmitInteraction, sessionId: string, option: CustomTextOption, api: API): Promise<void> {
+export async function handleQuoteCustomTextModal(interaction: APIModalSubmitInteraction, sessionId: string, api: API): Promise<void> {
   const session = await getAvailableSession(interaction, sessionId, api, false);
   if (!session) return;
 
-  const value = modalInputValue(interaction, option === 'size' ? 'font-size' : 'color').trim();
+  const sizeInput = modalInputValue(interaction, 'font-size').trim();
+  const colorInput = modalInputValue(interaction, 'color').trim();
 
-  if (option === 'size' && (!/^\d+$/.test(value) || Number(value) < 30 || Number(value) > 140)) {
+  if (sizeInput && (!/^\d+$/.test(sizeInput) || Number(sizeInput) < 20 || Number(sizeInput) > 100)) {
     await api.interactions.reply(interaction.id, interaction.token, {
       components: [
         {
@@ -394,7 +410,25 @@ export async function handleQuoteCustomTextModal(interaction: APIModalSubmitInte
           components: [
             {
               type: ComponentType.TextDisplay,
-              content: `${emoji('Exclamation')} Font size must be a whole number from 30 to 140`,
+              content: `${emoji('Exclamation')} Font size must be a whole number from 20px to 100px`,
+            },
+          ],
+        },
+      ],
+      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+    });
+
+    return;
+  }
+  if (colorInput && !/^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(colorInput)) {
+    await api.interactions.reply(interaction.id, interaction.token, {
+      components: [
+        {
+          type: ComponentType.Container,
+          components: [
+            {
+              type: ComponentType.TextDisplay,
+              content: 'Color must be a hex value such as #f7f3ec',
             },
           ],
         },
@@ -405,28 +439,10 @@ export async function handleQuoteCustomTextModal(interaction: APIModalSubmitInte
     return;
   }
 
-  if (option === 'color' && !/^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(value)) {
-    await api.interactions.reply(interaction.id, interaction.token, {
-      components: [
-        {
-          type: ComponentType.Container,
-          components: [
-            {
-              type: ComponentType.TextDisplay,
-              content: `${emoji('Exclamation')} Color must be a hex value such as #f7f3ec`,
-            },
-          ],
-        },
-      ],
-      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-    });
-    return;
-  }
+  if (sizeInput) session.options.customSize = Number(sizeInput);
 
-  if (option === 'size') session.options.customSize = Number(value);
-  else session.options.customColor = value;
-  session.expiresAt = Date.now() + SESSION_LIFETIME;
-  persistSessions();
+  if (colorInput) session.options.customColor = colorInput;
+
   await api.interactions.deferMessageUpdate(interaction.id, interaction.token);
   session.busy = true;
 
@@ -435,7 +451,7 @@ export async function handleQuoteCustomTextModal(interaction: APIModalSubmitInte
     await editQuoteEditor(api, session, image, interaction);
   } finally {
     session.busy = false;
-    persistSessions();
+    touchSession(session, api);
   }
 }
 
@@ -464,13 +480,7 @@ async function getAvailableSession(
   const userId = interaction.user?.id ?? interaction.member?.user.id;
 
   if (!session || session.expiresAt <= Date.now()) {
-    if (session) {
-      sessions.delete(session.id);
-      persistSessions();
-    }
-
-    console.warn(`Quote editor unavailable: ${sessionId} (active sessions: ${sessions.size})`);
-
+    if (session) await expireSession(session, api);
     await reportComponentError(
       interaction,
       api,
@@ -481,20 +491,23 @@ async function getAvailableSession(
   }
 
   if (session.ownerId !== userId) {
-    await reportComponentError(interaction, api, `${emoji('Exclamation')} Only the person who made this quote can change it`, canFollowUp);
+    await reportComponentError(interaction, api, `${emoji('Exclamation')} Only the person who made this quote can edit it`, canFollowUp);
     return undefined;
   }
+
   if (session.busy) {
     await reportComponentError(interaction, api, `${emoji('Exclamation')} The quote is still rendering`, canFollowUp);
     return undefined;
   }
 
-  if ('component_type' in interaction.data && 'message' in interaction && interaction.message) {
+  if ('message' in interaction && interaction.message) {
     session.editorChannelId = interaction.message.channel_id;
     session.editorMessageId = interaction.message.id;
   }
+
   session.editorApplicationId = interaction.application_id;
   touchSession(session, api);
+
   return session;
 }
 
@@ -511,8 +524,11 @@ function touchSession(session: QuoteSession, api: API): void {
 
 function armSessionExpiry(session: QuoteSession, api: API): void {
   const existing = expiryTimers.get(session.id);
+
   if (existing) clearTimeout(existing);
+
   const expectedExpiry = session.expiresAt;
+
   const timer = setTimeout(
     () => {
       if (session.expiresAt !== expectedExpiry) {
@@ -528,12 +544,14 @@ function armSessionExpiry(session: QuoteSession, api: API): void {
     },
     Math.max(0, expectedExpiry - Date.now()),
   );
+
   timer.unref();
   expiryTimers.set(session.id, timer);
 }
 
 async function expireSession(session: QuoteSession, api: API): Promise<void> {
   const components = buildExpiredQuoteComponents(session);
+
   try {
     if (session.editorApplicationId && session.editorInteractionToken) {
       try {
@@ -551,9 +569,12 @@ async function expireSession(session: QuoteSession, api: API): Promise<void> {
 
 function removeSession(sessionId: string): void {
   const timer = expiryTimers.get(sessionId);
+
   if (timer) clearTimeout(timer);
+
   expiryTimers.delete(sessionId);
   sessions.delete(sessionId);
+
   persistSessions();
 }
 
@@ -601,6 +622,7 @@ function setQuoteOption(session: QuoteSession, option: QuoteOption, value: strin
   } else {
     return false;
   }
+
   return true;
 }
 
@@ -625,10 +647,12 @@ async function editQuoteEditor(
     await api.interactions.editReply(session.editorApplicationId, session.editorInteractionToken, payload);
     return;
   }
+
   if ('message' in interaction && interaction.message) {
     await api.channels.editMessage(interaction.message.channel_id, interaction.message.id, payload);
     return;
   }
+
   throw new Error(`Quote editor ${session.id} has no editable message reference`);
 }
 
@@ -648,13 +672,16 @@ function getAvatarUrl(message: APIMessage): string {
   if (message.author.avatar) {
     return cdn(`/avatars/${message.author.id}/${message.author.avatar}`, 2048, 'png', message.author.avatar.startsWith('a_'));
   }
+
   const index = message.author.discriminator === '0' ? Number((BigInt(message.author.id) >> 22n) % 6n) : Number(message.author.discriminator) % 5;
+
   return cdn(`/embed/avatars/${index}`, 2048, 'png');
 }
 
 function isTrustedDiscordUrl(url: string): boolean {
   try {
     const parsedUrl = new URL(url);
+
     return (
       parsedUrl.protocol === 'https:' &&
       (parsedUrl.hostname === 'discordapp.com' ||
@@ -669,6 +696,7 @@ function isTrustedDiscordUrl(url: string): boolean {
 
 async function downloadCustomEmojis(content: string): Promise<Record<string, Buffer>> {
   const emojis = new Collection<string, { animated: boolean }>();
+
   for (const match of content.matchAll(/<(a?):[a-zA-Z0-9_]+:(\d+)>/g)) {
     if (emojis.size >= 20) break;
     emojis.set(match[2]!, { animated: match[1] === 'a' });
@@ -680,23 +708,29 @@ async function downloadCustomEmojis(content: string): Promise<Record<string, Buf
       return [id, image] as const;
     }),
   );
+
   return Object.fromEntries(entries.filter((entry): entry is readonly [string, Buffer] => Boolean(entry[1])));
 }
 
 async function downloadImage(url: string): Promise<Buffer | undefined> {
   try {
     if (!isTrustedDiscordUrl(url)) return undefined;
+
     const response = await fetch(url, {
       signal: AbortSignal.timeout(8_000),
       headers: { 'User-Agent': 'PocketToolQuote/1.0' },
     });
+
     if (!response.ok || !response.body) return undefined;
 
     const declaredLength = Number(response.headers.get('content-length') || 0);
+
     if (declaredLength > MAX_IMAGE_BYTES) return undefined;
+
     const reader = response.body.getReader();
     const chunks: Uint8Array[] = [];
     let totalBytes = 0;
+
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -705,8 +739,10 @@ async function downloadImage(url: string): Promise<Buffer | undefined> {
         await reader.cancel();
         return undefined;
       }
+
       chunks.push(value);
     }
+
     return Buffer.concat(chunks, totalBytes);
   } catch (error) {
     console.warn(`Could not download quote avatar: ${String(error)}`);
@@ -716,14 +752,17 @@ async function downloadImage(url: string): Promise<Buffer | undefined> {
 
 function randomKey<T extends Record<string, unknown>>(record: T): keyof T {
   const keys = Object.keys(record) as Array<keyof T>;
+
   return keys[Math.floor(Math.random() * keys.length)]!;
 }
 
 function randomEffectCombination(): Array<keyof typeof CARD_LOOKS> {
   const effects = Object.keys(CARD_LOOKS) as Array<keyof typeof CARD_LOOKS>;
+
   for (let index = effects.length - 1; index > 0; index -= 1) {
     const swapIndex = Math.floor(Math.random() * (index + 1));
     [effects[index], effects[swapIndex]] = [effects[swapIndex]!, effects[index]!];
   }
+
   return effects.slice(0, 1 + Math.floor(Math.random() * Math.min(3, effects.length)));
 }
