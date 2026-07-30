@@ -107,10 +107,12 @@ function persistSessions(): void {
   }
 }
 
-restoreSessions();
-
 export function initializeQuoteSessions(api: API): void {
-  for (const session of sessions.values()) armSessionExpiry(session, api);
+  restoreSessions();
+
+  for (const session of sessions.values()) {
+    armSessionExpiry(session, api);
+  }
 }
 
 export async function createQuoteSession(message: APIMessage, ownerId: string, displayName?: string, guildId?: string): Promise<QuoteSession> {
