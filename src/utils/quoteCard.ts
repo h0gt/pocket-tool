@@ -1,73 +1,83 @@
 import { createCanvas, loadImage, type Canvas, type SKRSContext2D } from '@napi-rs/canvas';
 
-const WIDTH = 1200;
-const HEIGHT = 675;
+const WIDTH = 850;
+const HEIGHT = 450;
 
 export const CARD_FONTS = {
   modern: {
     label: 'Modern Sans',
-    description: 'Clean, calm and versatile',
-    family: '"Arial", "Helvetica", sans-serif',
-    weight: 500,
+    description: 'Clean, light sans-serif',
+    family: 'Arial',
+    fallback: 'sans-serif',
+    weight: 300,
+    style: 'normal',
   },
   editorial: {
     label: 'Editorial Serif',
-    description: 'Elegant magazine-style lettering',
-    family: '"Georgia", "Times New Roman", serif',
+    description: 'Elegant italic serif',
+    family: 'Georgia',
+    fallback: 'serif',
     weight: 400,
+    style: 'italic',
   },
   rounded: {
     label: 'Soft Rounded',
-    description: 'Friendly and conversational',
-    family: '"Trebuchet MS", "Arial Rounded MT Bold", sans-serif',
+    description: 'Friendly rounded lettering',
+    family: 'Trebuchet MS',
+    fallback: 'sans-serif',
     weight: 500,
+    style: 'normal',
   },
   mono: {
     label: 'Typewriter Mono',
-    description: 'Personal, raw and understated',
-    family: '"Courier New", monospace',
-    weight: 500,
+    description: 'Understated monospaced type',
+    family: 'Courier New',
+    fallback: 'monospace',
+    weight: 400,
+    style: 'normal',
   },
   display: {
     label: 'Bold Display',
-    description: 'Loud poster-like impact',
-    family: '"Impact", "Arial Black", sans-serif',
+    description: 'Heavy poster lettering',
+    family: 'Impact',
+    fallback: 'sans-serif',
     weight: 700,
+    style: 'normal',
   },
 } as const;
 
 export const CARD_SIZES = {
   auto: {
     label: 'Smart fit',
-    description: 'Balances the size around the quote',
-    pixels: 66,
+    description: 'Fits the text to the card',
+    pixels: 42,
   },
   compact: {
-    label: 'Compact - 44px',
+    label: 'Compact - 28px',
     description: 'Best for longer messages',
-    pixels: 44,
+    pixels: 28,
   },
   medium: {
-    label: 'Medium - 58px',
-    description: 'A balanced everyday size',
-    pixels: 58,
+    label: 'Medium - 36px',
+    description: 'Balanced everyday size',
+    pixels: 36,
   },
   large: {
-    label: 'Large - 76px',
+    label: 'Large - 46px',
     description: 'Strong and expressive',
-    pixels: 76,
+    pixels: 46,
   },
   huge: {
-    label: 'Huge - 96px',
-    description: 'For very short quotes',
-    pixels: 96,
+    label: 'Huge - 58px',
+    description: 'Best for very short quotes',
+    pixels: 58,
   },
 } as const;
 
 export const CARD_COLORS = {
   auto: {
     label: 'Automatic',
-    description: 'Adapts to the selected look',
+    description: 'Matches the selected layout',
     value: 'auto',
   },
   pearl: {
@@ -108,71 +118,53 @@ export const CARD_COLORS = {
 } as const;
 
 export const CARD_LOOKS = {
-  'split-original': {
-    label: 'Cinematic Split',
-    description: 'Image left, quote right - original',
-    layout: 'split',
+  'full-bleed': {
+    label: 'Full-Bleed Split',
+    description: 'Avatar fills the entire card',
+    layout: 'full-bleed',
     effect: 'original',
   },
-  'split-mono': {
-    label: 'Noir Split',
-    description: 'Image left, quote right - grayscale',
+  flip: {
+    label: 'Flip Image',
+    description: 'Mirror the avatar horizontally',
+    layout: 'split',
+    effect: 'flip',
+  },
+  lyric: {
+    label: 'Lyric Style',
+    description: 'Switch to lyric quote layout',
+    layout: 'lyric',
+    effect: 'original',
+  },
+  grayscale: {
+    label: 'Grayscale',
+    description: 'Convert avatar to black and white',
     layout: 'split',
     effect: 'grayscale',
   },
-  'split-warm': {
-    label: 'Golden Hour',
-    description: 'Cinematic split - warm film',
+  blur: {
+    label: 'Blur',
+    description: 'Gaussian blur on the avatar',
     layout: 'split',
-    effect: 'warm',
-  },
-  'spotlight-original': {
-    label: 'Full-Bleed Spotlight',
-    description: 'Immersive background - original',
-    layout: 'spotlight',
-    effect: 'original',
-  },
-  'spotlight-dream': {
-    label: 'Dream Sequence',
-    description: 'Immersive background - soft blur',
-    layout: 'spotlight',
     effect: 'blur',
   },
-  'spotlight-cool': {
-    label: 'Midnight Blue',
-    description: 'Immersive background - cool grade',
-    layout: 'spotlight',
-    effect: 'cool',
+  brightness: {
+    label: 'Brightness Boost',
+    description: 'Brighten the avatar',
+    layout: 'split',
+    effect: 'brightness',
   },
-  'poster-duotone': {
-    label: 'Duotone Poster',
-    description: 'Graphic cyan and violet treatment',
-    layout: 'poster',
-    effect: 'duotone',
+  pixelate: {
+    label: 'Pixelate',
+    description: 'Pixelate the avatar',
+    layout: 'split',
+    effect: 'pixelate',
   },
-  'poster-pixel': {
-    label: 'Pixel Memory',
-    description: 'Chunky retro image treatment',
-    layout: 'poster',
-    effect: 'pixel',
-  },
-  'editorial-paper': {
-    label: 'Sunday Editorial',
-    description: 'Warm paper and restrained image',
-    layout: 'editorial',
-    effect: 'grayscale',
-  },
-  'minimal-ink': {
-    label: 'Quiet Ink',
-    description: 'Dark, minimal and image-free',
-    layout: 'minimal',
-    effect: 'original',
-  },
-  'minimal-paper': {
-    label: 'Quiet Paper',
-    description: 'Light, minimal and image-free',
-    layout: 'paper',
-    effect: 'original',
+  'remove-watermark': {
+    label: 'Remove Watermark',
+    description: 'Hide the Pocket Tool watermark',
+    layout: 'split',
+    effect: 'remove-watermark',
   },
 } as const;
 
@@ -190,48 +182,54 @@ export type CardOptions = {
   font: FontKey;
   size: SizeKey;
   color: ColorKey;
-  look: LookKey;
+  look: LookKey | 'cinematic';
+  effects?: LookKey[];
   customSize?: number;
   customColor?: string;
 };
 
 export type RenderQuoteCardOptions = CardOptions & {
-  primaryImage?: Buffer;
   avatarImage?: Buffer;
+  emojiImages?: Record<string, Buffer>;
 };
+
+type LoadedImage = Awaited<ReturnType<typeof loadImage>>;
+type RichSpan = { type: 'text'; value: string } | { type: 'emoji'; id: string; name: string };
+type RichLine = RichSpan[];
 
 type TextArea = {
   x: number;
   y: number;
   width: number;
   height: number;
-  align: 'center' | 'end' | 'left' | 'right' | 'start';
-  vertical: 'top' | 'middle' | 'bottom';
+  align: 'center' | 'left';
+  vertical: 'middle' | 'bottom';
 };
 
 export async function renderQuoteCard(options: RenderQuoteCardOptions): Promise<Buffer> {
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
-  const look = CARD_LOOKS[options.look];
-  const [primary, avatar] = await Promise.all([
-    options.primaryImage ? safeLoadImage(options.primaryImage) : undefined,
+  const selectedLooks = resolveSelectedLooks(options);
+  const selectedEffects = new Set(selectedLooks.map((look) => CARD_LOOKS[look].effect));
+  const layout: Layout = selectedLooks.includes('lyric') ? 'lyric' : selectedLooks.includes('full-bleed') ? 'full-bleed' : 'split';
+  const [avatar, emojiEntries] = await Promise.all([
     options.avatarImage ? safeLoadImage(options.avatarImage) : undefined,
+    Promise.all(Object.entries(options.emojiImages ?? {}).map(async ([id, data]) => [id, await safeLoadImage(data)] as const)),
   ]);
-  const image = primary || avatar;
+  const emojiImages = Object.fromEntries(emojiEntries.filter((entry): entry is readonly [string, LoadedImage] => Boolean(entry[1])));
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
-  const textArea = drawLayout(ctx, canvas, look.layout, look.effect, image, avatar);
-  const color = resolveTextColor(options.color, look.layout, options.customColor);
-
-  drawQuote(ctx, options, textArea, color);
-  drawBrandMark(ctx, look.layout, color);
-
-  return canvas.encode('gif');
+  const area = drawLayout(ctx, layout, selectedEffects, avatar);
+  if (layout === 'lyric') drawLyricQuote(ctx, options, emojiImages);
+  else drawQuote(ctx, options, area, resolveTextColor(options.color, options.customColor), emojiImages);
+  if (!selectedEffects.has('remove-watermark')) drawBrandMark(ctx);
+  const losslessFrame = await canvas.encode('png');
+  return sharp(losslessFrame).gif({ colours: 256, dither: 1, effort: 10 }).toBuffer();
 }
 
-async function safeLoadImage(data: Buffer) {
+async function safeLoadImage(data: Buffer): Promise<LoadedImage | undefined> {
   try {
     return await loadImage(data);
   } catch {
@@ -239,407 +237,351 @@ async function safeLoadImage(data: Buffer) {
   }
 }
 
-function drawLayout(
-  ctx: SKRSContext2D,
-  canvas: Canvas,
-  layout: Layout,
-  effect: Effect,
-  image: Awaited<ReturnType<typeof loadImage>> | undefined,
-  avatar: Awaited<ReturnType<typeof loadImage>> | undefined,
-): TextArea {
-  if (layout === 'split') {
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, WIDTH, HEIGHT);
-    const imageWidth = 570;
-    drawSplitBackdrop(ctx, image, imageWidth, effect);
+function resolveSelectedLooks(options: RenderQuoteCardOptions): LookKey[] {
+  if (options.effects) return options.effects.filter((look): look is LookKey => look in CARD_LOOKS);
+  return options.look !== 'cinematic' && options.look in CARD_LOOKS ? [options.look] : [];
+}
 
-    return { x: 630, y: 92, width: 490, height: 485, align: 'center', vertical: 'middle' };
-  }
+function drawLayout(ctx: SKRSContext2D, layout: Layout, effects: ReadonlySet<Effect>, avatar?: LoadedImage): TextArea {
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  if (layout === 'spotlight') {
-    if (image) drawImageCover(ctx, image, 0, 0, WIDTH, HEIGHT, effect);
-    else drawAbstractBackdrop(ctx, 0, 0, WIDTH, HEIGHT);
+  if (layout === 'full-bleed') {
+    if (avatar) drawImageCover(ctx, avatar, 0, 0, WIDTH, HEIGHT, effects);
+    else drawFallbackAvatar(ctx, 0, 0, WIDTH, HEIGHT);
 
-    const shade = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
-    shade.addColorStop(0, 'rgba(5, 7, 15, .2)');
-    shade.addColorStop(0.45, 'rgba(5, 7, 15, .45)');
-    shade.addColorStop(1, 'rgba(3, 3, 7, .94)');
-    ctx.fillStyle = shade;
+    const diagonalShade = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
+    diagonalShade.addColorStop(0, 'rgba(22,24,30,.14)');
+    diagonalShade.addColorStop(0.36, 'rgba(22,24,30,.28)');
+    diagonalShade.addColorStop(0.64, 'rgba(9,12,20,.55)');
+    diagonalShade.addColorStop(0.84, 'rgba(3,6,13,.82)');
+    diagonalShade.addColorStop(1, 'rgba(0,3,10,.96)');
+    ctx.fillStyle = diagonalShade;
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-    const lowerShade = ctx.createLinearGradient(0, 220, 0, HEIGHT);
+    const lowerShade = ctx.createLinearGradient(0, 155, 0, HEIGHT);
     lowerShade.addColorStop(0, 'rgba(0,0,0,0)');
-    lowerShade.addColorStop(1, 'rgba(0,0,0,.65)');
+    lowerShade.addColorStop(1, 'rgba(0,0,0,.32)');
     ctx.fillStyle = lowerShade;
-    ctx.fillRect(0, 220, WIDTH, HEIGHT - 220);
+    ctx.fillRect(0, 155, WIDTH, HEIGHT - 155);
 
-    return { x: 90, y: 110, width: 840, height: 440, align: 'left', vertical: 'bottom' };
+    return { x: 69, y: 197, width: 402, height: 188, align: 'left', vertical: 'middle' };
   }
 
-  if (layout === 'poster') {
-    fillGradient(ctx, ['#12122b', '#5b2c83', '#00a8a8'], 0.35);
-    addFilmGrain(ctx, 0.06);
+  if (layout === 'lyric') {
+    if (avatar) drawImageCover(ctx, avatar, 0, 0, WIDTH, HEIGHT, effects);
+    else drawFallbackAvatar(ctx, 0, 0, WIDTH, HEIGHT);
 
-    ctx.fillStyle = 'rgba(255,255,255,.07)';
-    ctx.beginPath();
-    ctx.arc(1010, 115, 270, 0, Math.PI * 2);
-    ctx.fill();
-
-    if (image) {
-      ctx.save();
-      roundedRect(ctx, 730, 78, 390, 519, 28);
-      ctx.clip();
-      drawImageCover(ctx, image, 730, 78, 390, 519, effect);
-      ctx.restore();
-      ctx.strokeStyle = 'rgba(255,255,255,.3)';
-      ctx.lineWidth = 2;
-      roundedRect(ctx, 730, 78, 390, 519, 28);
-      ctx.stroke();
-    }
-
-    return { x: 78, y: 88, width: image ? 590 : 950, height: 500, align: 'left', vertical: 'middle' };
-  }
-
-  if (layout === 'editorial') {
-    ctx.fillStyle = '#eee7dc';
+    ctx.fillStyle = 'rgba(48,48,48,.58)';
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
-    ctx.fillStyle = '#dfd4c4';
-    ctx.fillRect(0, 0, 28, HEIGHT);
-    addFilmGrain(ctx, 0.035);
-
-    if (image) {
-      ctx.save();
-      roundedRect(ctx, 760, 52, 384, 571, 4);
-      ctx.clip();
-      drawImageCover(ctx, image, 760, 52, 384, 571, effect);
-      ctx.fillStyle = 'rgba(155, 116, 73, .13)';
-      ctx.fillRect(760, 52, 384, 571);
-      ctx.restore();
-    }
-
-    ctx.fillStyle = '#b19b7d';
-    ctx.fillRect(76, 66, 64, 5);
-    return { x: 76, y: 105, width: image ? 610 : 1020, height: 460, align: 'left', vertical: 'middle' };
+    return { x: 72, y: 278, width: 693, height: 120, align: 'left', vertical: 'bottom' };
   }
 
-  if (layout === 'paper') {
-    ctx.fillStyle = '#f2eee7';
-    ctx.fillRect(0, 0, WIDTH, HEIGHT);
-    addFilmGrain(ctx, 0.028);
-    drawAvatarMedallion(ctx, avatar, 600, 112, '#2d2925');
-    return { x: 145, y: 180, width: 910, height: 360, align: 'center', vertical: 'middle' };
-  }
-
-  fillGradient(ctx, ['#0a0b10', '#171524', '#08090e'], 0.2);
-  addFilmGrain(ctx, 0.045);
-  drawAvatarMedallion(ctx, avatar, 600, 112, '#d2c8ff');
-  return { x: 145, y: 180, width: 910, height: 360, align: 'center', vertical: 'middle' };
+  drawSplitAvatar(ctx, avatar, effects);
+  return { x: 445, y: 55, width: 330, height: 340, align: 'center', vertical: 'middle' };
 }
 
-function drawQuote(ctx: SKRSContext2D, options: RenderQuoteCardOptions, area: TextArea, color: string): void {
-  const font = CARD_FONTS[options.font];
-  let fontSize = options.customSize ?? (options.size === 'auto' ? smartFontSize(options.quote) : CARD_SIZES[options.size].pixels);
+function drawSplitAvatar(ctx: SKRSContext2D, avatar: LoadedImage | undefined, effects: ReadonlySet<Effect>): void {
+  const panelWidth = 420;
 
-  const maxLines = 7;
-  let lines: string[] = [];
-
-  while (fontSize >= 30) {
-    ctx.font = `${font.weight} ${fontSize}px ${font.family}`;
-    lines = wrapText(ctx, options.quote, area.width);
-    const lineHeight = fontSize * 1.16;
-    if (lines.length <= maxLines && lines.length * lineHeight <= area.height - 72) break;
-    fontSize -= 3;
-  }
-
-  if (lines.length > maxLines) {
-    lines = lines.slice(0, maxLines);
-    lines[maxLines - 1] = `${lines[maxLines - 1]!.replace(/[.…]+$/, '')}…`;
-  }
-
-  const lineHeight = fontSize * 1.16;
-  const creditSize = Math.max(22, Math.min(30, fontSize * 0.42));
-  const handleSize = Math.max(17, Math.min(22, creditSize * 0.76));
-  const creditGap = options.credit ? 38 + creditSize + handleSize : 0;
-  const contentHeight = lines.length * lineHeight + creditGap;
-
-  let startY = area.y;
-  if (area.vertical === 'middle') startY += (area.height - contentHeight) / 2;
-  if (area.vertical === 'bottom') startY += area.height - contentHeight;
-
-  ctx.textAlign = area.align;
-  ctx.textBaseline = 'top';
-  ctx.fillStyle = color;
-  ctx.font = `${font.weight} ${fontSize}px ${font.family}`;
-  ctx.shadowColor = isLightColor(color) ? 'rgba(0,0,0,.48)' : 'rgba(255,255,255,.12)';
-  ctx.shadowBlur = area.align === 'left' ? 12 : 8;
-  ctx.shadowOffsetY = 2;
-
-  const drawX = area.align === 'center' ? area.x + area.width / 2 : area.align === 'right' ? area.x + area.width : area.x;
-
-  for (const [index, line] of lines.entries()) {
-    ctx.fillText(line, drawX, startY + index * lineHeight);
-  }
-
-  ctx.shadowColor = 'transparent';
-  if (!options.credit) return;
-
-  const creditY = startY + lines.length * lineHeight + 21;
-  ctx.font = `600 ${creditSize}px ${CARD_FONTS.modern.family}`;
-  ctx.globalAlpha = 0.8;
-  ctx.fillText(`— ${options.credit}`, drawX, creditY);
-  if (options.handle) {
-    ctx.font = `500 ${handleSize}px ${CARD_FONTS.modern.family}`;
-    ctx.globalAlpha = 0.58;
-    ctx.fillText(options.handle, drawX, creditY + creditSize + 8);
-  }
-  ctx.globalAlpha = 1;
+  if (avatar) drawImageCover(ctx, avatar, 0, 0, panelWidth, HEIGHT, effects);
+  else drawFallbackAvatar(ctx, 0, 0, panelWidth, HEIGHT);
+  const fadeStart = 255;
+  const fade = ctx.createLinearGradient(fadeStart, 0, panelWidth, 0);
+  fade.addColorStop(0, 'rgba(0,0,0,0)');
+  fade.addColorStop(0.18, 'rgba(0,0,0,.025)');
+  fade.addColorStop(0.36, 'rgba(0,0,0,.1)');
+  fade.addColorStop(0.54, 'rgba(0,0,0,.28)');
+  fade.addColorStop(0.7, 'rgba(0,0,0,.56)');
+  fade.addColorStop(0.84, 'rgba(0,0,0,.82)');
+  fade.addColorStop(0.94, 'rgba(0,0,0,.96)');
+  fade.addColorStop(1, '#000');
+  ctx.fillStyle = fade;
+  ctx.fillRect(fadeStart, 0, panelWidth - fadeStart, HEIGHT);
 }
 
-function wrapText(ctx: SKRSContext2D, input: string, maxWidth: number): string[] {
-  const paragraphs = input.replace(/\r/g, '').split('\n');
-  const lines: string[] = [];
-
-  for (const paragraph of paragraphs) {
-    const words = paragraph.trim().split(/\s+/).filter(Boolean);
-    if (!words.length) {
-      if (lines.length) lines.push('');
-      continue;
-    }
-
-    let current = '';
-    for (const word of words) {
-      const candidate = current ? `${current} ${word}` : word;
-      if (ctx.measureText(candidate).width <= maxWidth) {
-        current = candidate;
-        continue;
-      }
-
-      if (current) lines.push(current);
-      if (ctx.measureText(word).width <= maxWidth) {
-        current = word;
-      } else {
-        const chunks = breakLongWord(ctx, word, maxWidth);
-        lines.push(...chunks.slice(0, -1));
-        current = chunks.at(-1) || '';
-      }
-    }
-    if (current) lines.push(current);
-  }
-
-  return lines.length ? lines : [''];
-}
-
-function breakLongWord(ctx: SKRSContext2D, word: string, maxWidth: number): string[] {
-  const characters = [...word];
-  const chunks: string[] = [];
-  let current = '';
-
-  for (const character of characters) {
-    if (current && ctx.measureText(current + character).width > maxWidth) {
-      chunks.push(current);
-      current = character;
-    } else {
-      current += character;
-    }
-  }
-  if (current) chunks.push(current);
-  return chunks;
-}
-
-function smartFontSize(quote: string): number {
-  const length = [...quote].length;
-  if (length <= 45) return 86;
-  if (length <= 90) return 70;
-  if (length <= 170) return 56;
-  if (length <= 280) return 46;
-  return 38;
-}
-
-function resolveTextColor(color: ColorKey, layout: Layout, customColor?: string): string {
-  if (customColor) return customColor;
-  if (color !== 'auto') return CARD_COLORS[color].value;
-  return layout === 'editorial' || layout === 'paper' ? '#1c1a18' : '#f5f2ec';
-}
-
-function drawSplitBackdrop(ctx: SKRSContext2D, image: Awaited<ReturnType<typeof loadImage>> | undefined, width: number, effect: Effect): void {
-  if (!image) {
-    drawAbstractBackdrop(ctx, 0, 0, width, HEIGHT);
-    return;
-  }
-
-  const panel = createCanvas(width, HEIGHT);
-  const panelCtx = panel.getContext('2d');
-  panelCtx.imageSmoothingEnabled = true;
-  panelCtx.imageSmoothingQuality = 'high';
-  drawImageCover(panelCtx, image, 0, 0, width, HEIGHT, effect);
-
-  const fade = panelCtx.createLinearGradient(width * 0.1, 0, width, 0);
-  fade.addColorStop(0, 'rgba(255,255,255,1)');
-  fade.addColorStop(0.2, 'rgba(255,255,255,.92)');
-  fade.addColorStop(0.52, 'rgba(255,255,255,.5)');
-  fade.addColorStop(0.78, 'rgba(255,255,255,.1)');
-  fade.addColorStop(1, 'rgba(255,255,255,0)');
-  panelCtx.globalCompositeOperation = 'destination-in';
-  panelCtx.fillStyle = fade;
-  panelCtx.fillRect(0, 0, width, HEIGHT);
-
-  ctx.drawImage(panel, 0, 0);
-}
-
-function drawImageCover(
-  ctx: SKRSContext2D,
-  image: Awaited<ReturnType<typeof loadImage>>,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  effect: Effect,
-): void {
+function drawImageCover(ctx: SKRSContext2D, image: LoadedImage, x: number, y: number, width: number, height: number, effects: ReadonlySet<Effect>): void {
   const scale = Math.max(width / image.width, height / image.height);
   const sourceWidth = width / scale;
   const sourceHeight = height / scale;
   const sourceX = (image.width - sourceWidth) / 2;
   const sourceY = (image.height - sourceHeight) / 2;
 
-  if (effect === 'pixel') {
-    const pixelCanvas = createCanvas(52, Math.max(30, Math.round((52 * height) / width)));
-    const pixelCtx = pixelCanvas.getContext('2d');
-    pixelCtx.imageSmoothingEnabled = true;
-    pixelCtx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, pixelCanvas.width, pixelCanvas.height);
-    ctx.save();
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(pixelCanvas, x, y, width, height);
-    ctx.restore();
-    return;
+  let source = image as Parameters<SKRSContext2D['drawImage']>[0];
+  let drawSourceX = sourceX;
+  let drawSourceY = sourceY;
+  let drawSourceWidth = sourceWidth;
+  let drawSourceHeight = sourceHeight;
+
+  if (effects.has('pixelate')) {
+    const pixelWidth = 28;
+    const pixelHeight = Math.max(24, Math.round((pixelWidth * height) / width));
+    const pixels = createCanvas(pixelWidth, pixelHeight);
+    const pixelsCtx = pixels.getContext('2d');
+    pixelsCtx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, pixelWidth, pixelHeight);
+    source = pixels;
+    drawSourceX = 0;
+    drawSourceY = 0;
+    drawSourceWidth = pixelWidth;
+    drawSourceHeight = pixelHeight;
   }
 
   ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, width, height);
+  ctx.clip();
+  if (effects.has('pixelate')) ctx.imageSmoothingEnabled = false;
   const filters: string[] = [];
-  if (effect === 'grayscale') filters.push('grayscale(1)', 'contrast(1.06)');
-  if (effect === 'warm') filters.push('sepia(.32)', 'saturate(1.22)', 'contrast(1.04)');
-  if (effect === 'cool') filters.push('saturate(.82)', 'hue-rotate(168deg)', 'contrast(1.08)');
-  if (effect === 'blur') filters.push('blur(10px)', 'saturate(.8)');
-  if (effect === 'duotone') filters.push('grayscale(1)', 'contrast(1.28)');
+  if (effects.has('grayscale')) filters.push('grayscale(1)', 'contrast(1.08)');
+  if (effects.has('blur')) filters.push('blur(12px)', 'saturate(.82)');
+  if (effects.has('brightness')) filters.push('brightness(1.55)', 'contrast(1.04)');
   if (filters.length) ctx.filter = filters.join(' ');
 
-  const overscan = effect === 'blur' ? 18 : 0;
-  ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x - overscan, y - overscan, width + overscan * 2, height + overscan * 2);
+  const overscan = effects.has('blur') ? 20 : 0;
+  if (effects.has('flip')) {
+    ctx.translate(x * 2 + width, 0);
+    ctx.scale(-1, 1);
+  }
+  ctx.drawImage(source, drawSourceX, drawSourceY, drawSourceWidth, drawSourceHeight, x - overscan, y - overscan, width + overscan * 2, height + overscan * 2);
   ctx.restore();
-
-  if (effect === 'warm') {
-    ctx.fillStyle = 'rgba(255, 133, 62, .13)';
-    ctx.fillRect(x, y, width, height);
-  }
-  if (effect === 'cool') {
-    ctx.fillStyle = 'rgba(36, 76, 160, .2)';
-    ctx.fillRect(x, y, width, height);
-  }
-  if (effect === 'duotone') {
-    ctx.save();
-    ctx.globalCompositeOperation = 'color';
-    const duo = ctx.createLinearGradient(x, y, x + width, y + height);
-    duo.addColorStop(0, '#23d5d5');
-    duo.addColorStop(1, '#9b4dff');
-    ctx.fillStyle = duo;
-    ctx.fillRect(x, y, width, height);
-    ctx.restore();
-  }
 }
 
-function drawAvatarMedallion(
-  ctx: SKRSContext2D,
-  avatar: Awaited<ReturnType<typeof loadImage>> | undefined,
-  centerX: number,
-  centerY: number,
-  ringColor: string,
-): void {
-  const radius = 46;
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-  ctx.clip();
-  if (avatar) {
-    drawImageCover(ctx, avatar, centerX - radius, centerY - radius, radius * 2, radius * 2, 'original');
-  } else {
-    ctx.fillStyle = '#34313d';
-    ctx.fillRect(centerX - radius, centerY - radius, radius * 2, radius * 2);
-  }
-  ctx.restore();
-
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, radius + 5, 0, Math.PI * 2);
-  ctx.strokeStyle = ringColor;
-  ctx.lineWidth = 3;
-  ctx.stroke();
-}
-
-function fillGradient(ctx: SKRSContext2D, colors: readonly string[], diagonal: number): void {
-  const gradient = ctx.createLinearGradient(WIDTH * diagonal, 0, WIDTH * (1 - diagonal), HEIGHT);
-  colors.forEach((color, index) => {
-    gradient.addColorStop(index / (colors.length - 1), color);
-  });
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, WIDTH, HEIGHT);
-}
-
-function drawAbstractBackdrop(ctx: SKRSContext2D, x: number, y: number, width: number, height: number): void {
+function drawFallbackAvatar(ctx: SKRSContext2D, x: number, y: number, width: number, height: number): void {
   const gradient = ctx.createLinearGradient(x, y, x + width, y + height);
-  gradient.addColorStop(0, '#23334e');
-  gradient.addColorStop(0.52, '#4f315b');
-  gradient.addColorStop(1, '#11121b');
+  gradient.addColorStop(0, '#454545');
+  gradient.addColorStop(0.52, '#222');
+  gradient.addColorStop(1, '#080808');
   ctx.fillStyle = gradient;
   ctx.fillRect(x, y, width, height);
-
-  ctx.fillStyle = 'rgba(113, 224, 255, .18)';
-  ctx.beginPath();
-  ctx.arc(x + width * 0.25, y + height * 0.25, width * 0.36, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(255, 154, 211, .15)';
-  ctx.beginPath();
-  ctx.arc(x + width * 0.78, y + height * 0.72, width * 0.43, 0, Math.PI * 2);
-  ctx.fill();
-  addFilmGrain(ctx, 0.04, x, y, width, height);
 }
 
-function addFilmGrain(ctx: SKRSContext2D, opacity: number, x = 0, y = 0, width = WIDTH, height = HEIGHT): void {
-  ctx.save();
-  ctx.globalAlpha = opacity;
-  for (let index = 0; index < 2_000; index += 1) {
-    const shade = Math.random() > 0.5 ? 255 : 0;
-    ctx.fillStyle = `rgb(${shade},${shade},${shade})`;
-    const size = Math.random() > 0.92 ? 2 : 1;
-    ctx.fillRect(x + Math.random() * width, y + Math.random() * height, size, size);
+function drawQuote(ctx: SKRSContext2D, options: RenderQuoteCardOptions, area: TextArea, color: string, emojiImages: Record<string, LoadedImage>): void {
+  const selectedFont = CARD_FONTS[options.font];
+  let fontSize = options.customSize ?? (options.size === 'auto' ? smartFontSize(options.quote) : CARD_SIZES[options.size].pixels);
+  const minFontSize = 20;
+  const maxLines = 7;
+  let lines: RichLine[] = [];
+
+  while (fontSize >= minFontSize) {
+    ctx.font = fontString(selectedFont, fontSize);
+    lines = wrapRichText(ctx, options.quote, area.width, fontSize);
+    if (lines.length <= maxLines && lines.length * fontSize * 1.16 <= area.height - 62) break;
+    fontSize -= 2;
   }
-  ctx.restore();
+
+  if (lines.length > maxLines) {
+    lines = lines.slice(0, maxLines);
+    appendText(lines[maxLines - 1]!, '…');
+  }
+
+  const lineHeight = fontSize * 1.16;
+  const creditSize = Math.max(15, Math.min(22, fontSize * 0.48));
+  const handleSize = Math.max(13, Math.min(17, creditSize * 0.78));
+  const creditGap = options.credit ? 18 + creditSize + handleSize : 0;
+  const contentHeight = lines.length * lineHeight + creditGap;
+  let startY = area.y;
+  if (area.vertical === 'middle') startY += (area.height - contentHeight) / 2;
+  if (area.vertical === 'bottom') startY += area.height - contentHeight;
+
+  const drawX = area.align === 'center' ? area.x + area.width / 2 : area.x;
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = color;
+  ctx.font = fontString(selectedFont, fontSize);
+
+  for (const [index, line] of lines.entries()) {
+    drawRichLine(ctx, line, drawX, startY + index * lineHeight, area.align, fontSize, emojiImages);
+  }
+
+  if (!options.credit) return;
+  const creditY = startY + lines.length * lineHeight + 14;
+  ctx.textAlign = area.align;
+  ctx.globalAlpha = 0.9;
+  ctx.font = `italic 500 ${creditSize}px Arial, sans-serif`;
+  ctx.fillText(`– ${options.credit}`, drawX, creditY);
+
+  if (options.handle) {
+    ctx.globalAlpha = 0.58;
+    ctx.font = `400 ${handleSize}px Arial, sans-serif`;
+    ctx.fillText(options.handle, drawX, creditY + creditSize + 4);
+  }
+  ctx.globalAlpha = 1;
 }
 
-function drawBrandMark(ctx: SKRSContext2D, layout: Layout, textColor: string): void {
-  const darkText = layout === 'editorial' || layout === 'paper';
+function drawLyricQuote(ctx: SKRSContext2D, options: RenderQuoteCardOptions, emojiImages: Record<string, LoadedImage>): void {
+  const fontSize = options.customSize ? Math.max(28, Math.min(58, options.customSize)) : smartLyricFontSize(options.quote);
+  const lineHeight = fontSize + 12;
+  ctx.font = `700 ${fontSize}px Arial, "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+  const lines = wrapRichText(ctx, options.quote, 700, fontSize).slice(0, 3);
+  const blockHeight = lines.length * lineHeight;
+  const usernameY = HEIGHT - 82;
+  const blockY = usernameY - blockHeight - 17;
+  const textX = 72;
+
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.font = `700 76px Georgia, serif`;
+  ctx.fillText('”', 15, blockY - 25);
+
+  ctx.font = `700 ${fontSize}px Arial, "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+  for (const [index, line] of lines.entries()) {
+    const lineY = blockY + index * lineHeight;
+    const lineWidth = measureRichLine(ctx, line, fontSize);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(textX, lineY, lineWidth + 16, fontSize + 10);
+    ctx.fillStyle = '#090909';
+    drawRichLine(ctx, line, textX + 8, lineY + 4, 'left', fontSize, emojiImages);
+  }
+
+  const username = options.handle.replace(/^@/, '').toUpperCase() || options.credit.toUpperCase();
+  ctx.font = '400 29px Impact, "Arial Black", sans-serif';
+  ctx.lineWidth = 3;
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#171717';
+  ctx.fillStyle = '#ffffff';
+  ctx.strokeText(username, textX, usernameY);
+  ctx.fillText(username, textX, usernameY);
+}
+
+function fontString(font: (typeof CARD_FONTS)[FontKey], size: number): string {
+  return `${font.style} ${font.weight} ${size}px "${font.family}", "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", ${font.fallback}`;
+}
+
+function wrapRichText(ctx: SKRSContext2D, input: string, maxWidth: number, fontSize: number): RichLine[] {
+  const lines: RichLine[] = [];
+  for (const paragraph of input.replace(/\r/g, '').split('\n')) {
+    const words = paragraph.trim().split(/\s+/).filter(Boolean);
+    if (!words.length) {
+      if (lines.length) lines.push([]);
+      continue;
+    }
+
+    let current: RichLine = [];
+    for (const word of words) {
+      const wordSpans = parseRichWord(word);
+      const candidate = current.length ? [...current, { type: 'text', value: ' ' } as const, ...wordSpans] : wordSpans;
+      if (measureRichLine(ctx, candidate, fontSize) <= maxWidth) {
+        current = candidate;
+        continue;
+      }
+
+      if (current.length) lines.push(current);
+      if (measureRichLine(ctx, wordSpans, fontSize) <= maxWidth) {
+        current = wordSpans;
+      } else {
+        const chunks = breakLongRichWord(ctx, wordSpans, maxWidth, fontSize);
+        lines.push(...chunks.slice(0, -1));
+        current = chunks.at(-1) || [];
+      }
+    }
+    if (current.length) lines.push(current);
+  }
+  return lines.length ? lines : [[]];
+}
+
+function parseRichWord(word: string): RichLine {
+  const spans: RichLine = [];
+  const customEmoji = /<a?:([a-zA-Z0-9_]+):(\d+)>/g;
+  let cursor = 0;
+  for (const match of word.matchAll(customEmoji)) {
+    if (match.index > cursor) appendText(spans, word.slice(cursor, match.index));
+    spans.push({ type: 'emoji', name: match[1]!, id: match[2]! });
+    cursor = match.index + match[0].length;
+  }
+  if (cursor < word.length) appendText(spans, word.slice(cursor));
+  return spans;
+}
+
+function breakLongRichWord(ctx: SKRSContext2D, spans: RichLine, maxWidth: number, fontSize: number): RichLine[] {
+  const chunks: RichLine[] = [];
+  let current: RichLine = [];
+  const atoms = spans.flatMap((span): RichSpan[] => (span.type === 'emoji' ? [span] : [...span.value].map((value) => ({ type: 'text', value }))));
+
+  for (const atom of atoms) {
+    const candidate = [...current, atom];
+    if (current.length && measureRichLine(ctx, candidate, fontSize) > maxWidth) {
+      chunks.push(current);
+      current = [atom];
+    } else {
+      current = candidate;
+    }
+  }
+  if (current.length) chunks.push(current);
+  return chunks;
+}
+
+function measureRichLine(ctx: SKRSContext2D, line: RichLine, fontSize: number): number {
+  return line.reduce((width, span) => width + (span.type === 'emoji' ? fontSize : ctx.measureText(span.value).width), 0);
+}
+
+function drawRichLine(
+  ctx: SKRSContext2D,
+  line: RichLine,
+  anchorX: number,
+  y: number,
+  align: TextArea['align'],
+  fontSize: number,
+  emojiImages: Record<string, LoadedImage>,
+): void {
+  const width = measureRichLine(ctx, line, fontSize);
+  let x = align === 'center' ? anchorX - width / 2 : anchorX;
+  ctx.textAlign = 'left';
+
+  for (const span of line) {
+    if (span.type === 'text') {
+      ctx.fillText(span.value, x, y);
+      x += ctx.measureText(span.value).width;
+      continue;
+    }
+
+    const emojiImage = emojiImages[span.id];
+    if (emojiImage) {
+      const emojiSize = fontSize * 0.92;
+      ctx.drawImage(emojiImage, x + fontSize * 0.04, y + fontSize * 0.04, emojiSize, emojiSize);
+      x += fontSize;
+    } else {
+      const fallback = `:${span.name}:`;
+      ctx.fillText(fallback, x, y);
+      x += ctx.measureText(fallback).width;
+    }
+  }
+}
+
+function appendText(line: RichLine, value: string): void {
+  const last = line.at(-1);
+  if (last?.type === 'text') last.value += value;
+  else line.push({ type: 'text', value });
+}
+
+function smartFontSize(quote: string): number {
+  const length = [...quote].length;
+  if (length <= 35) return 42;
+  if (length <= 75) return 36;
+  if (length <= 140) return 31;
+  if (length <= 240) return 26;
+  return 22;
+}
+
+function smartLyricFontSize(quote: string): number {
+  const length = [...quote].length;
+  if (length <= 24) return 42;
+  if (length <= 60) return 36;
+  if (length <= 120) return 31;
+  return 28;
+}
+
+function drawBrandMark(ctx: SKRSContext2D): void {
   ctx.save();
-  ctx.globalAlpha = 0.45;
-  ctx.fillStyle = darkText ? '#201d19' : textColor;
+  ctx.globalAlpha = 0.62;
+  ctx.fillStyle = '#d8d8d8';
   ctx.textAlign = 'right';
   ctx.textBaseline = 'alphabetic';
-  ctx.font = `600 16px ${CARD_FONTS.modern.family}`;
-  ctx.fillText('Pocket Tool', WIDTH - 34, HEIGHT - 28);
+  ctx.font = '600 14px "Courier New", monospace';
+  ctx.fillText('Pocket Tool', WIDTH - 17, HEIGHT - 14);
   ctx.restore();
 }
 
-function roundedRect(ctx: SKRSContext2D, x: number, y: number, width: number, height: number, radius: number): void {
-  const r = Math.min(radius, width / 2, height / 2);
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + width, y, x + width, y + height, r);
-  ctx.arcTo(x + width, y + height, x, y + height, r);
-  ctx.arcTo(x, y + height, x, y, r);
-  ctx.arcTo(x, y, x + width, y, r);
-  ctx.closePath();
-}
-
-function isLightColor(color: string): boolean {
-  if (!color.startsWith('#') || color.length !== 7) return true;
-  const red = Number.parseInt(color.slice(1, 3), 16);
-  const green = Number.parseInt(color.slice(3, 5), 16);
-  const blue = Number.parseInt(color.slice(5, 7), 16);
-  return red * 0.299 + green * 0.587 + blue * 0.114 > 150;
+function resolveTextColor(color: ColorKey, customColor?: string): string {
+  if (customColor) return customColor;
+  return color === 'auto' ? '#f5f5f5' : CARD_COLORS[color].value;
 }

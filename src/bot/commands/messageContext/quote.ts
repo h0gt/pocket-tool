@@ -38,6 +38,7 @@ createApplicationCommand({
     const member = interaction.guild_id ? await api.guilds.getMember(interaction.guild_id, message.author.id).catch(() => undefined) : undefined;
     const displayName = member?.nick ?? message.author.global_name ?? message.author.username;
     const session = await createQuoteSession(message, ownerId, displayName, interaction.guild_id);
+    session.editorApplicationId = interaction.application_id;
     session.editorInteractionToken = interaction.token;
     const image = await renderQuoteSession(session);
 
