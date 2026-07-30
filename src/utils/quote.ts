@@ -17,6 +17,7 @@ import { dirname, resolve } from 'node:path';
 import { cdn, emoji } from './markdown';
 import { CARD_COLORS, CARD_FONTS, CARD_LOOKS, CARD_SIZES, renderQuoteCard, type CardOptions } from './quoteCard';
 import { toEmoji } from './utils';
+import { Collection } from '@discordjs/collection';
 
 const SESSION_LIFETIME = 3 * 60 * 1_000;
 const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
@@ -46,8 +47,8 @@ type StoredQuoteSession = Omit<QuoteSession, 'avatarImage' | 'emojiImages' | 'bu
   emojiImages?: Record<string, string>;
 };
 
-const sessions = new Map<string, QuoteSession>();
-const expiryTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const sessions = new Collection<string, QuoteSession>();
+const expiryTimers = new Collection<string, ReturnType<typeof setTimeout>>();
 
 function restoreSessions(): void {
   try {
@@ -536,8 +537,7 @@ async function expireSession(session: QuoteSession, api: API): Promise<void> {
       try {
         await api.interactions.editReply(session.editorApplicationId, session.editorInteractionToken, { components });
         return;
-      } catch {
-      }
+      } catch {}
     }
     if (session.editorChannelId && session.editorMessageId) await api.channels.editMessage(session.editorChannelId, session.editorMessageId, { components });
   } catch (error) {
@@ -666,7 +666,7 @@ function isTrustedDiscordUrl(url: string): boolean {
 }
 
 async function downloadCustomEmojis(content: string): Promise<Record<string, Buffer>> {
-  const emojis = new Map<string, { animated: boolean }>();
+  const emojis = new Collection<string, { animated: boolean }>();
   for (const match of content.matchAll(/<(a?):[a-zA-Z0-9_]+:(\d+)>/g)) {
     if (emojis.size >= 20) break;
     emojis.set(match[2]!, { animated: match[1] === 'a' });
