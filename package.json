@@ -9,26 +9,26 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "prettier": "^3.8.4",
+    "prettier": "^3.9.6",
     "typescript": "^6.0.3"
   },
   "dependencies": {
     "@discordjs/collection": "^2.1.1",
-    "@discordjs/core": "^2.5.0",
-    "@discordjs/rest": "^2.6.1",
-    "@elevenlabs/elevenlabs-js": "^2.54.0",
-    "@napi-rs/canvas": "^1.0.2",
-    "@supabase/supabase-js": "^2.108.2",
+    "@discordjs/core": "^2.6.0",
+    "@discordjs/rest": "^2.6.3",
+    "@elevenlabs/elevenlabs-js": "^2.60.0",
+    "@napi-rs/canvas": "^1.0.3",
+    "@supabase/supabase-js": "^2.111.0",
     "@tolga1452/toolbox.js": "^2.0.1",
-    "chrono-node": "^2.9.1",
+    "chrono-node": "^2.10.1",
     "discord-verify": "^1.2.0",
-    "hono": "^4.12.27",
-    "i18next": "^26.3.2",
-    "i18next-fs-backend": "^2.6.6",
+    "hono": "^4.12.33",
+    "i18next": "^26.3.6",
+    "i18next-fs-backend": "^2.6.7",
     "mathjs": "^15.2.0",
-    "node-cron": "^4.5.0",
-    "openai": "^6.44.0",
-    "redis": "^6.0.0",
-    "sharp": "^0.35.2"
+    "node-cron": "^4.6.0",
+    "openai": "^6.49.0",
+    "redis": "^6.2.0",
+    "sharp": "^0.35.3"
   }
 }
