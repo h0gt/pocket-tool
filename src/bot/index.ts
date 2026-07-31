@@ -52,7 +52,7 @@ export const cooldowns = new Collection<string, Collection<Snowflake, number>>()
 export const collectors = new Set<Collector<any>>();
 
 await readDirectory(path.join(process.cwd(), 'src', 'bot', 'commands'));
-await readDirectory(path.join(process.cwd(), 'src', 'bot', 'components'));
+// await readDirectory(path.join(process.cwd(), 'src', 'bot', 'components')); theres no component files for now
 
 const rest = new REST().setToken(env.get('token', true).toString());
 const api = new API(rest);
