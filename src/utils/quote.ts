@@ -243,6 +243,7 @@ export function buildQuoteComponents(session: QuoteSession): APIMessageTopLevelC
           type: ComponentType.Button as const,
           custom_id: `quote-action_${session.id}_shuffle`,
           label: 'Surprise me',
+          emoji: toEmoji('Spark') as APIMessageComponentEmoji,
           style: ButtonStyle.Secondary,
         },
         ...viewOriginalButton(session),
@@ -272,6 +273,7 @@ function viewOriginalButton(session: QuoteSession) {
       type: ComponentType.Button as const,
       url: session.sourceUrl,
       label: 'View original',
+      emoji: toEmoji('Quote') as APIMessageComponentEmoji,
       style: ButtonStyle.Link as const,
     },
   ];

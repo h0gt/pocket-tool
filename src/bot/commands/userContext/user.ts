@@ -56,18 +56,6 @@ createApplicationCommand({
               },
             },
             {
-              type: ComponentType.ActionRow,
-              components: [
-                {
-                  type: ComponentType.Button,
-                  url: `discord://-/users/${user.id}`,
-                  label: 'View User',
-                  emoji: toEmoji('Person') as APIMessageComponentEmoji,
-                  style: ButtonStyle.Link,
-                },
-              ],
-            },
-            {
               type: ComponentType.Separator,
             },
             {
