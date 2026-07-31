@@ -1,7 +1,7 @@
-import { ApplicationCommandType, ButtonStyle, ComponentType, MessageFlags, type APIMessageComponentEmoji } from '@discordjs/core/http-only';
+import { ApplicationCommandType, ComponentType, MessageFlags, type APIMessageComponentEmoji } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
 import { cdn, emoji, highlight, hyperlink, timestamp } from '../../../utils/markdown';
-import { getTimestampFromSnowflake, toEmoji } from '../../../utils/utils';
+import { getTimestampFromSnowflake } from '../../../utils/utils';
 import { TimestampStyle } from '../../../types/types';
 
 createApplicationCommand({

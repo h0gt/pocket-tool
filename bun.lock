@@ -11,6 +11,7 @@
         "@elevenlabs/elevenlabs-js": "^2.54.0",
         "@napi-rs/canvas": "^1.0.2",
         "@supabase/supabase-js": "^2.108.2",
+        "@tolga1452/toolbox.js": "^2.0.1",
         "chrono-node": "^2.9.1",
         "discord-verify": "^1.2.0",
         "hono": "^4.12.27",
@@ -151,6 +152,8 @@
     "@supabase/storage-js": ["@supabase/storage-js@2.108.2", "", { "dependencies": { "iceberg-js": "^0.8.1", "tslib": "2.8.1" } }, "sha512-TVZPQxXGxY2+A6yTtm77zUHsh70lBhYUEaJL8RQC+BghcX/ygiMG/rmXrNVBce30/WAeNPa8FiG8HbqlGeV05g=="],
 
     "@supabase/supabase-js": ["@supabase/supabase-js@2.108.2", "", { "dependencies": { "@supabase/auth-js": "2.108.2", "@supabase/functions-js": "2.108.2", "@supabase/postgrest-js": "2.108.2", "@supabase/realtime-js": "2.108.2", "@supabase/storage-js": "2.108.2" } }, "sha512-hFhnPveb5JQg4a0QYicM0swT253YHMdfeRAl2BKHOlI5VAzuHxUGSr8RbwNLYNPauWOgQMS1H8sz8bvYlgwUfQ=="],
+
+    "@tolga1452/toolbox.js": ["@tolga1452/toolbox.js@2.0.1", "", {}, "sha512-4c27HkFxRaDmZdsTzRpYfKdbHpqRNB0Qszxd5WO5ILyANpYQ5BPeQO5su4Rm62U/Xo/oexKIrVsQ6gz3fFOCwQ=="],
 
     "@types/body-parser": ["@types/body-parser@1.19.6", "", { "dependencies": { "@types/connect": "*", "@types/node": "*" } }, "sha512-HLFeCYgz89uk22N5Qg3dvGvsv46B8GLvKKo1zKG4NybA8U2DiEO3w9lqGg29t/tfLRJpJ6iQxnVw4OnB7MoM9g=="],
 

@@ -29,6 +29,7 @@ import {
   type BooleanChatInputOption,
   type ButtonComponent,
   type ChatInputCommand,
+  type Collector,
   type Component,
   type MessageContextMenuCommand,
   type ModalComponent,
@@ -40,7 +41,6 @@ import { emoji, hyperlink, timestamp } from '../utils/markdown';
 import { getChatInputOption, localizeCommand, parseCommandOptions, parseComponentArgs, readDirectory } from '../utils/utils';
 import path from 'path';
 import { verify } from 'discord-verify/node';
-import { initializeQuoteSessions } from '../utils/quote';
 
 process.on('uncaughtException', console.error);
 process.on('unhandledRejection', console.error);
@@ -49,13 +49,13 @@ export const commands = new Collection<string, ApplicationCommand>();
 export const components = new Collection<string, Component>();
 
 export const cooldowns = new Collection<string, Collection<Snowflake, number>>();
+export const collectors = new Set<Collector<any>>();
 
 await readDirectory(path.join(process.cwd(), 'src', 'bot', 'commands'));
 await readDirectory(path.join(process.cwd(), 'src', 'bot', 'components'));
 
 const rest = new REST().setToken(env.get('token', true).toString());
 const api = new API(rest);
-initializeQuoteSessions(api);
 
 const app = new Hono();
 
@@ -138,7 +138,8 @@ app.post('/interactions', async (c) => {
 });
 
 Bun.serve({
-  port: env.get('port', true).toNumber(),
+  // port: env.get('port', true).toNumber(),
+  port: 3000,
   fetch: app.fetch,
 });
 
@@ -413,7 +414,13 @@ async function handleButtonComponent(interaction: APIMessageComponentButtonInter
 
   const button = components.get(customId) as ButtonComponent;
 
-  if (!button) return;
+  if (!button) {
+    for (const collector of collectors) {
+      await collector.collect(interaction);
+    }
+
+    return;
+  }
 
   if (button.acknowledge) {
     await api.interactions.deferMessageUpdate(interaction.id, interaction.token);
@@ -434,7 +441,13 @@ async function handleSelectMenuComponent(interaction: APIMessageComponentSelectM
 
   const selectMenu = components.get(customId) as SelectMenuComponent;
 
-  if (!selectMenu) return;
+  if (!selectMenu) {
+    for (const collector of collectors) {
+      await collector.collect(interaction);
+    }
+
+    return;
+  }
 
   if (selectMenu.acknowledge) {
     await api.interactions.deferMessageUpdate(interaction.id, interaction.token);
@@ -455,7 +468,13 @@ async function handleModalSubmit(interaction: APIModalSubmitInteraction, api: AP
 
   const modal = components.get(customId) as ModalComponent;
 
-  if (!modal) return;
+  if (!modal) {
+    for (const collector of collectors) {
+      await collector.collect(interaction);
+    }
+
+    return;
+  }
 
   try {
     await modal.run(interaction, parseComponentArgs(modal, args), api);

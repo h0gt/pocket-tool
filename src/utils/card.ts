@@ -1,5 +1,6 @@
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import type { SKRSContext2D } from '@napi-rs/canvas';
+import { isHex, type Hexadecimal } from '@tolga1452/toolbox.js';
 import sharp from 'sharp';
 
 const WIDTH = 850;
@@ -119,7 +120,7 @@ export const CARD_COLORS = {
   },
 } as const;
 
-export const CARD_LOOKS = {
+export const CARD_EFFECTS = {
   'full-bleed': {
     label: 'Full-Bleed Split',
     description: 'Avatar fills the entire card',
@@ -131,12 +132,6 @@ export const CARD_LOOKS = {
     description: 'Mirror the avatar horizontally',
     layout: 'split',
     effect: 'flip',
-  },
-  lyric: {
-    label: 'Lyric Style',
-    description: 'Switch to lyric quote layout',
-    layout: 'lyric',
-    effect: 'original',
   },
   grayscale: {
     label: 'Grayscale',
@@ -170,33 +165,30 @@ export const CARD_LOOKS = {
   },
 } as const;
 
-type FontKey = keyof typeof CARD_FONTS;
-type SizeKey = keyof typeof CARD_SIZES;
-type ColorKey = keyof typeof CARD_COLORS;
-type LookKey = keyof typeof CARD_LOOKS;
-type Layout = (typeof CARD_LOOKS)[LookKey]['layout'];
-type Effect = (typeof CARD_LOOKS)[LookKey]['effect'];
+export type FontKey = keyof typeof CARD_FONTS;
+export type SizeKey = keyof typeof CARD_SIZES;
+export type ColorKey = keyof typeof CARD_COLORS;
+export type EffectKey = keyof typeof CARD_EFFECTS;
+export type Layout = (typeof CARD_EFFECTS)[EffectKey]['layout'];
+export type Effect = (typeof CARD_EFFECTS)[EffectKey]['effect'];
 
 export type CardOptions = {
   quote: string;
   credit: string;
-  handle: string;
+  mention: string;
   font: FontKey;
-  size: SizeKey;
-  color: ColorKey;
-  look: LookKey | 'cinematic';
-  effects?: LookKey[];
-  customSize?: number;
-  customColor?: string;
+  size: SizeKey | number;
+  color: ColorKey | Hexadecimal;
+  effects: EffectKey[];
 };
 
 export type RenderQuoteCardOptions = CardOptions & {
-  avatarImage?: Buffer;
-  emojiImages?: Record<string, Buffer>;
+  avatar: Buffer;
+  emojis?: Record<string, Buffer>;
 };
 
 type LoadedImage = Awaited<ReturnType<typeof loadImage>>;
-type RichSpan = { type: 'text'; value: string } | { type: 'emoji'; id: string; name: string };
+type RichSpan = { type: 'text'; value: string } | { type: 'emoji'; name: string; id?: string };
 type RichLine = RichSpan[];
 
 type TextArea = {
@@ -211,37 +203,27 @@ type TextArea = {
 export async function renderQuoteCard(options: RenderQuoteCardOptions): Promise<Buffer> {
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
-  const selectedLooks = resolveSelectedLooks(options);
-  const selectedEffects = new Set(selectedLooks.map((look) => CARD_LOOKS[look].effect));
-  const layout: Layout = selectedLooks.includes('lyric') ? 'lyric' : selectedLooks.includes('full-bleed') ? 'full-bleed' : 'split';
+  const selectedEffects = new Set(options.effects.map((effect) => CARD_EFFECTS[effect].effect));
+  const layout: Layout = options.effects.includes('full-bleed') ? 'full-bleed' : 'split';
   const [avatar, emojiEntries] = await Promise.all([
-    options.avatarImage ? safeLoadImage(options.avatarImage) : undefined,
-    Promise.all(Object.entries(options.emojiImages ?? {}).map(async ([id, data]) => [id, await safeLoadImage(data)] as const)),
+    options.avatar ? loadImage(options.avatar) : undefined,
+    Promise.all(Object.entries(options.emojis ?? {}).map(async ([id, data]) => [id, await loadImage(data)] as const)),
   ]);
-  const emojiImages = Object.fromEntries(emojiEntries.filter((entry): entry is readonly [string, LoadedImage] => Boolean(entry[1])));
+
+  const emojis = Object.fromEntries(emojiEntries.filter((entry): entry is readonly [string, LoadedImage] => Boolean(entry[1])));
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
   const area = drawLayout(ctx, layout, selectedEffects, avatar);
-  if (layout === 'lyric') drawLyricQuote(ctx, options, emojiImages);
-  else drawQuote(ctx, options, area, resolveTextColor(options.color, options.customColor), emojiImages);
+
+  drawQuote(ctx, options, area, resolveTextColor(options.color), emojis);
+
   if (!selectedEffects.has('remove-watermark')) drawBrandMark(ctx);
+
   const losslessFrame = await canvas.encode('png');
+
   return sharp(losslessFrame).gif({ colours: 256, dither: 1, effort: 10 }).toBuffer();
-}
-
-async function safeLoadImage(data: Buffer): Promise<LoadedImage | undefined> {
-  try {
-    return await loadImage(data);
-  } catch {
-    return undefined;
-  }
-}
-
-function resolveSelectedLooks(options: RenderQuoteCardOptions): LookKey[] {
-  if (options.effects) return options.effects.filter((look): look is LookKey => look in CARD_LOOKS);
-  return options.look !== 'cinematic' && options.look in CARD_LOOKS ? [options.look] : [];
 }
 
 function drawLayout(ctx: SKRSContext2D, layout: Layout, effects: ReadonlySet<Effect>, avatar?: LoadedImage): TextArea {
@@ -268,15 +250,6 @@ function drawLayout(ctx: SKRSContext2D, layout: Layout, effects: ReadonlySet<Eff
     ctx.fillRect(0, 155, WIDTH, HEIGHT - 155);
 
     return { x: 69, y: 197, width: 402, height: 188, align: 'left', vertical: 'middle' };
-  }
-
-  if (layout === 'lyric') {
-    if (avatar) drawImageCover(ctx, avatar, 0, 0, WIDTH, HEIGHT, effects);
-    else drawFallbackAvatar(ctx, 0, 0, WIDTH, HEIGHT);
-
-    ctx.fillStyle = 'rgba(48,48,48,.58)';
-    ctx.fillRect(0, 0, WIDTH, HEIGHT);
-    return { x: 72, y: 278, width: 693, height: 120, align: 'left', vertical: 'bottom' };
   }
 
   drawSplitAvatar(ctx, avatar, effects);
@@ -340,10 +313,12 @@ function drawImageCover(ctx: SKRSContext2D, image: LoadedImage, x: number, y: nu
   if (filters.length) ctx.filter = filters.join(' ');
 
   const overscan = effects.has('blur') ? 20 : 0;
+
   if (effects.has('flip')) {
     ctx.translate(x * 2 + width, 0);
     ctx.scale(-1, 1);
   }
+
   ctx.drawImage(source, drawSourceX, drawSourceY, drawSourceWidth, drawSourceHeight, x - overscan, y - overscan, width + overscan * 2, height + overscan * 2);
   ctx.restore();
 }
@@ -359,7 +334,9 @@ function drawFallbackAvatar(ctx: SKRSContext2D, x: number, y: number, width: num
 
 function drawQuote(ctx: SKRSContext2D, options: RenderQuoteCardOptions, area: TextArea, color: string, emojiImages: Record<string, LoadedImage>): void {
   const selectedFont = CARD_FONTS[options.font];
-  let fontSize = options.customSize ?? (options.size === 'auto' ? smartFontSize(options.quote) : CARD_SIZES[options.size].pixels);
+
+  let fontSize = typeof options.size === 'number' ? options.size : options.size === 'auto' ? smartFontSize(options.quote) : CARD_SIZES[options.size].pixels;
+
   const minFontSize = 20;
   const maxLines = 7;
   let lines: RichLine[] = [];
@@ -367,7 +344,9 @@ function drawQuote(ctx: SKRSContext2D, options: RenderQuoteCardOptions, area: Te
   while (fontSize >= minFontSize) {
     ctx.font = fontString(selectedFont, fontSize);
     lines = wrapRichText(ctx, options.quote, area.width, fontSize);
+
     if (lines.length <= maxLines && lines.length * fontSize * 1.16 <= area.height - 62) break;
+
     fontSize -= 2;
   }
 
@@ -381,11 +360,19 @@ function drawQuote(ctx: SKRSContext2D, options: RenderQuoteCardOptions, area: Te
   const handleSize = Math.max(13, Math.min(17, creditSize * 0.78));
   const creditGap = options.credit ? 18 + creditSize + handleSize : 0;
   const contentHeight = lines.length * lineHeight + creditGap;
+
   let startY = area.y;
-  if (area.vertical === 'middle') startY += (area.height - contentHeight) / 2;
-  if (area.vertical === 'bottom') startY += area.height - contentHeight;
+
+  if (area.vertical === 'middle') {
+    startY += (area.height - contentHeight) / 2;
+  }
+
+  if (area.vertical === 'bottom') {
+    startY += area.height - contentHeight;
+  }
 
   const drawX = area.align === 'center' ? area.x + area.width / 2 : area.x;
+
   ctx.textBaseline = 'top';
   ctx.fillStyle = color;
   ctx.font = fontString(selectedFont, fontSize);
@@ -395,54 +382,21 @@ function drawQuote(ctx: SKRSContext2D, options: RenderQuoteCardOptions, area: Te
   }
 
   if (!options.credit) return;
+
   const creditY = startY + lines.length * lineHeight + 14;
+
   ctx.textAlign = area.align;
   ctx.globalAlpha = 0.9;
   ctx.font = `italic 500 ${creditSize}px Arial, sans-serif`;
   ctx.fillText(`– ${options.credit}`, drawX, creditY);
 
-  if (options.handle) {
+  if (options.mention) {
     ctx.globalAlpha = 0.58;
     ctx.font = `400 ${handleSize}px Arial, sans-serif`;
-    ctx.fillText(options.handle, drawX, creditY + creditSize + 4);
+    ctx.fillText(options.mention, drawX, creditY + creditSize + 4);
   }
+
   ctx.globalAlpha = 1;
-}
-
-function drawLyricQuote(ctx: SKRSContext2D, options: RenderQuoteCardOptions, emojiImages: Record<string, LoadedImage>): void {
-  const fontSize = options.customSize ? Math.max(28, Math.min(58, options.customSize)) : smartLyricFontSize(options.quote);
-  const lineHeight = fontSize + 12;
-  ctx.font = `700 ${fontSize}px Arial, "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
-  const lines = wrapRichText(ctx, options.quote, 700, fontSize).slice(0, 3);
-  const blockHeight = lines.length * lineHeight;
-  const usernameY = HEIGHT - 82;
-  const blockY = usernameY - blockHeight - 17;
-  const textX = 72;
-
-  ctx.fillStyle = '#ffffff';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'top';
-  ctx.font = `700 76px Georgia, serif`;
-  ctx.fillText('”', 15, blockY - 25);
-
-  ctx.font = `700 ${fontSize}px Arial, "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
-  for (const [index, line] of lines.entries()) {
-    const lineY = blockY + index * lineHeight;
-    const lineWidth = measureRichLine(ctx, line, fontSize);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(textX, lineY, lineWidth + 16, fontSize + 10);
-    ctx.fillStyle = '#090909';
-    drawRichLine(ctx, line, textX + 8, lineY + 4, 'left', fontSize, emojiImages);
-  }
-
-  const username = options.handle.replace(/^@/, '').toUpperCase() || options.credit.toUpperCase();
-  ctx.font = '400 29px Impact, "Arial Black", sans-serif';
-  ctx.lineWidth = 3;
-  ctx.lineJoin = 'round';
-  ctx.strokeStyle = '#171717';
-  ctx.fillStyle = '#ffffff';
-  ctx.strokeText(username, textX, usernameY);
-  ctx.fillText(username, textX, usernameY);
 }
 
 function fontString(font: (typeof CARD_FONTS)[FontKey], size: number): string {
@@ -483,14 +437,38 @@ function wrapRichText(ctx: SKRSContext2D, input: string, maxWidth: number, fontS
 
 function parseRichWord(word: string): RichLine {
   const spans: RichLine = [];
-  const customEmoji = /<a?:([a-zA-Z0-9_]+):(\d+)>/g;
+
+  const regex = /<a?:([a-zA-Z0-9_]+):(\d+)>|\p{Extended_Pictographic}/gu;
+
   let cursor = 0;
-  for (const match of word.matchAll(customEmoji)) {
-    if (match.index > cursor) appendText(spans, word.slice(cursor, match.index));
-    spans.push({ type: 'emoji', name: match[1]!, id: match[2]! });
-    cursor = match.index + match[0].length;
+
+  for (const match of word.matchAll(regex)) {
+    if (match.index! > cursor) {
+      appendText(spans, word.slice(cursor, match.index));
+    }
+
+    if (match[2]) {
+      // custom emoji
+      spans.push({
+        type: 'emoji',
+        name: match[1]!,
+        id: match[2]!,
+      });
+    } else {
+      // unicode emoji
+      spans.push({
+        type: 'emoji',
+        name: match[0]!,
+      });
+    }
+
+    cursor = match.index! + match[0].length;
   }
-  if (cursor < word.length) appendText(spans, word.slice(cursor));
+
+  if (cursor < word.length) {
+    appendText(spans, word.slice(cursor));
+  }
+
   return spans;
 }
 
@@ -527,6 +505,7 @@ function drawRichLine(
 ): void {
   const width = measureRichLine(ctx, line, fontSize);
   let x = align === 'center' ? anchorX - width / 2 : anchorX;
+
   ctx.textAlign = 'left';
 
   for (const span of line) {
@@ -536,15 +515,17 @@ function drawRichLine(
       continue;
     }
 
-    const emojiImage = emojiImages[span.id];
+    const emojiImage = span.id ? emojiImages[span.id] : undefined;
+
     if (emojiImage) {
       const emojiSize = fontSize * 0.92;
+
       ctx.drawImage(emojiImage, x + fontSize * 0.04, y + fontSize * 0.04, emojiSize, emojiSize);
+
       x += fontSize;
     } else {
-      const fallback = `:${span.name}:`;
-      ctx.fillText(fallback, x, y);
-      x += ctx.measureText(fallback).width;
+      ctx.fillText(span.name, x, y);
+      x += ctx.measureText(span.name).width;
     }
   }
 }
@@ -583,7 +564,8 @@ function drawBrandMark(ctx: SKRSContext2D): void {
   ctx.restore();
 }
 
-function resolveTextColor(color: ColorKey, customColor?: string): string {
-  if (customColor) return customColor;
+function resolveTextColor(color: ColorKey | Hexadecimal): string {
+  if (isHex(color)) return color;
+
   return color === 'auto' ? '#f5f5f5' : CARD_COLORS[color].value;
 }

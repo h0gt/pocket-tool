@@ -12,29 +12,7 @@ createApplicationCommand({
   cooldown: 5,
   acknowledge: true,
   async run(interaction, api) {
-    const elevenLabsApiKey = env.get('eleven_labs_api_key').toString();
-
-    if (!elevenLabsApiKey) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
-        components: [
-          {
-            type: ComponentType.Container,
-            components: [
-              {
-                type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} Eleven Labs API key not set`,
-              },
-            ],
-          },
-        ],
-        flags: MessageFlags.IsComponentsV2,
-      });
-
-      return;
-    }
-
-    const messageId = interaction.data.target_id;
-    const message = interaction.data.resolved.messages[messageId];
+    const message = interaction.data.resolved.messages[interaction.data.target_id];
 
     if (!message) return;
 
@@ -49,6 +27,27 @@ createApplicationCommand({
           },
           {
             type: ComponentType.Separator,
+          },
+        ],
+        flags: MessageFlags.IsComponentsV2,
+      });
+
+      return;
+    }
+
+    const elevenLabsApiKey = env.get('eleven_labs_api_key').toString();
+
+    if (!elevenLabsApiKey) {
+      await api.interactions.editReply(interaction.application_id, interaction.token, {
+        components: [
+          {
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Wrong')} Eleven Labs API key not set`,
+              },
+            ],
           },
         ],
         flags: MessageFlags.IsComponentsV2,

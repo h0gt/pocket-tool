@@ -13,8 +13,7 @@ createApplicationCommand({
   cooldown: 3,
   acknowledge: true,
   async run(interaction, api) {
-    const messageId = interaction.data.target_id;
-    const message = interaction.data.resolved.messages[messageId];
+    const message = interaction.data.resolved.messages[interaction.data.target_id];
 
     if (!message) return;
 

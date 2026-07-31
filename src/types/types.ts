@@ -22,6 +22,7 @@ import type {
   LocalizationMap,
   Snowflake,
 } from '@discordjs/core/http-only';
+import { EventEmitter } from 'events';
 
 export type Localization = (Partial<Record<keyof LocalizationMap, string>> & { global: string }) | string;
 
@@ -274,4 +275,29 @@ export interface Track {
   buffer: Buffer;
   onFinish?: () => void;
   onError?: (error: Error) => void;
+}
+
+export interface CollectorOptions<Type> {
+  key: string;
+  filter?: (item: Type) => boolean | Promise<boolean>;
+  duration?: number;
+  max?: number;
+}
+
+export interface CollectorEvents<Type> {
+  collect: [Type];
+  end: [string];
+}
+
+export interface CollectorData<Type> {
+  id: string;
+  key: string;
+  max?: number;
+  filter?: (item: Type) => boolean | Promise<boolean>;
+  emitter: EventEmitter<CollectorEvents<Type>>;
+}
+
+export interface Collector<Type> extends EventEmitter<CollectorEvents<Type>> {
+  collect(item: Type): Promise<void>;
+  end(reason?: string): void;
 }

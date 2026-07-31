@@ -2,7 +2,6 @@ import {
   ApplicationCommandOptionType,
   ApplicationCommandType,
   ApplicationIntegrationType,
-  ButtonStyle,
   ComponentType,
   InteractionContextType,
   MessageFlags,
@@ -11,7 +10,7 @@ import {
 } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
 import { cdn, emoji, highlight, hyperlink, timestamp } from '../../../utils/markdown';
-import { getTimestampFromSnowflake, toEmoji } from '../../../utils/utils';
+import { getTimestampFromSnowflake } from '../../../utils/utils';
 import { TimestampStyle } from '../../../types/types';
 
 createApplicationCommand({
