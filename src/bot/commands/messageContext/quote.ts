@@ -196,7 +196,7 @@ createApplicationCommand({
             {
               type: ComponentType.StringSelect,
               custom_id: 'quote-effects',
-              placeholder: 'Choose some effects',
+              placeholder: 'Choose Some Effects!',
               min_values: 0,
               max_values: Object.keys(CARD_EFFECTS).length,
               options: Object.entries(CARD_EFFECTS).map(([value, item]) => ({
@@ -336,7 +336,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.StringSelect,
                     custom_id: 'quote-effects',
-                    placeholder: 'Choose some effects',
+                    placeholder: 'Choose Some Effects!',
                     min_values: 0,
                     max_values: Object.keys(CARD_EFFECTS).length,
                     options: Object.entries(CARD_EFFECTS).map(([value, item]) => ({
@@ -487,7 +487,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.StringSelect,
                     custom_id: 'quote-effects',
-                    placeholder: 'Choose some effects',
+                    placeholder: 'Choose Some Effects!',
                     min_values: 0,
                     max_values: Object.keys(CARD_EFFECTS).length,
                     options: Object.entries(CARD_EFFECTS).map(([value, item]) => ({
@@ -638,7 +638,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.StringSelect,
                     custom_id: 'quote-effects',
-                    placeholder: 'Choose some effects',
+                    placeholder: 'Choose Some Effects!',
                     min_values: 0,
                     max_values: Object.keys(CARD_EFFECTS).length,
                     options: Object.entries(CARD_EFFECTS).map(([value, item]) => ({
@@ -769,7 +769,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.StringSelect,
                     custom_id: 'quote-effects',
-                    placeholder: 'Choose some effects',
+                    placeholder: 'Choose Some Effects!',
                     min_values: 0,
                     max_values: Object.keys(CARD_EFFECTS).length,
                     options: Object.entries(CARD_EFFECTS).map(([value, item]) => ({
@@ -895,7 +895,7 @@ createApplicationCommand({
                 {
                   type: ComponentType.StringSelect,
                   custom_id: 'quote-effects',
-                  placeholder: 'Choose some effects',
+                  placeholder: 'Choose Some Effects!',
                   min_values: 0,
                   max_values: Object.keys(CARD_EFFECTS).length,
                   options: Object.entries(CARD_EFFECTS).map(([value, item]) => ({
