@@ -138,12 +138,11 @@ app.post('/interactions', async (c) => {
 });
 
 Bun.serve({
-  // port: env.get('port', true).toNumber(),
-  port: 3000,
+  port: env.get('port').toNumber() ?? 3000,
   fetch: app.fetch,
 });
 
-console.log(`Pocket Tool listening on port ${env.get('port', true).toNumber()}`);
+console.log(`Pocket Tool listening on port ${env.get('port').toNumber() ?? 3000}`);
 
 if (env.get('register_commands').toBoolean() === true) {
   console.log('Refreshing application (/) commands');
