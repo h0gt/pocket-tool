@@ -8,7 +8,6 @@ import {
   TextInputStyle,
   type APIMessageComponentButtonInteraction,
   type APIMessageComponentEmoji,
-  type APIMessageComponentInteraction,
   type APIMessageComponentSelectMenuInteraction,
   type APIModalSubmitInteraction,
   type APIModalSubmitTextInputComponent,
@@ -73,12 +72,9 @@ createApplicationCommand({
     }
 
     const avatar = await makeRequest(
-      cdn(
-        `/avatars/${interaction.user?.id ?? interaction.member?.user.id}/${interaction.user?.avatar ?? interaction.member?.user.avatar}`,
-        4096,
-        'webp',
-        false,
-      ),
+      message.author.avatar
+        ? cdn(`/avatars/${message.author.id}/${message.author.avatar}`, 4096, 'webp', false)
+        : cdn(`/embed/avatars/${Number(BigInt(message.author.id) >> 22n) % 6}`, 4096, 'webp', false),
       {
         method: RequestMethod.GET,
         response: ResponseType.BUFFER,

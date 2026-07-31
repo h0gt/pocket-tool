@@ -181,9 +181,7 @@ export interface PrimaryEntryPointCommand {
 }
 
 export type NonPrimaryEntryPointCommand<Options extends ChatInputOption[] = ChatInputOption[]> =
-  | ChatInputCommand<Options>
-  | UserContextMenuCommand
-  | MessageContextMenuCommand;
+  ChatInputCommand<Options> | UserContextMenuCommand | MessageContextMenuCommand;
 
 export type ApplicationCommand<Options extends ChatInputOption[] = ChatInputOption[]> = NonPrimaryEntryPointCommand<Options> | PrimaryEntryPointCommand;
 
