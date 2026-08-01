@@ -29,8 +29,8 @@ export function loadFonts(): void {
   for (const [family, file] of FONTS) {
     try {
       GlobalFonts.registerFromPath(path.join(process.cwd(), 'fonts', file), family);
-    } catch (e) {
-      console.error(`Failed to load font ${family}:`, e);
+    } catch (error) {
+      console.error(`Failed to load font ${family}:`, error);
     }
   }
 }
