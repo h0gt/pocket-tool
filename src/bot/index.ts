@@ -41,6 +41,7 @@ import { emoji, hyperlink, timestamp } from '../utils/markdown';
 import { getChatInputOption, localizeCommand, parseCommandOptions, parseComponentArgs, readDirectory } from '../utils/utils';
 import path from 'path';
 import { verify } from 'discord-verify/node';
+import { loadFonts } from '../utils/card';
 
 process.on('uncaughtException', console.error);
 process.on('unhandledRejection', console.error);
@@ -56,6 +57,8 @@ await readDirectory(path.join(process.cwd(), 'src', 'bot', 'commands'));
 
 const rest = new REST().setToken(env.get('token', true).toString());
 const api = new API(rest);
+
+loadFonts();
 
 const app = new Hono();
 

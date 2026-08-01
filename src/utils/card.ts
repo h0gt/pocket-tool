@@ -1,52 +1,170 @@
-import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { createCanvas, GlobalFonts, loadImage } from '@napi-rs/canvas';
 import type { SKRSContext2D } from '@napi-rs/canvas';
 import { isHex, type Hexadecimal } from '@tolga1452/toolbox.js';
 import sharp from 'sharp';
 import emojiRegex from 'emoji-regex';
 import twemoji from '@twemoji/api';
+import path from 'path';
+
+const FONTS = [
+  ['M PLUS Rounded 1c', 'MPLUSRounded1c_regular.ttf'],
+  ['Dela Gothic One', 'DelaGothicOne-Regular.ttf'],
+  ['DotGothic16', 'DotGothic16-Regular.ttf'],
+  ['Hachi Maru Pop', 'HachiMaruPop-Regular.ttf'],
+  ['Rampart One', 'RampartOne-Regular.ttf'],
+  ['Reggae One', 'ReggaeOne-Regular.ttf'],
+  ['RocknRoll One', 'RocknRollOne-Regular.ttf'],
+  ['Zen Old Mincho', 'ZenOldMincho-Regular.ttf'],
+  ['Yuji Syuku', 'YujiSyuku-Regular.ttf'],
+  ['Yusei Magic', 'YuseiMagic-Regular.ttf'],
+  ['Inconsolata', 'Inconsolata-Regular.ttf'],
+  ['Exo 2', 'Exo2-Regular.ttf'],
+  ['Castoro Titling', 'CastoroTitling-Regular.ttf'],
+  ['Poltawski Nowy', 'PoltawskiNowy-Regular.ttf'],
+  ['Vina Sans', 'VinaSans-Regular.ttf'],
+  ['Dancing Script', 'DancingScript-Regular.ttf'],
+] as const;
+
+export function loadFonts(): void {
+  for (const [family, file] of FONTS) {
+    try {
+      GlobalFonts.registerFromPath(path.join(process.cwd(), 'fonts', file), family);
+    } catch (e) {
+      console.error(`Failed to load font ${family}:`, e);
+    }
+  }
+}
 
 const WIDTH = 850;
 const HEIGHT = 450;
 
 export const CARD_FONTS = {
   modern: {
-    label: 'Modern Sans',
-    description: 'Clean, light sans-serif',
-    family: 'Arial',
+    label: 'M PLUS Rounded 1c',
+    description: 'Clean rounded sans-serif',
+    family: 'M PLUS Rounded 1c',
     fallback: 'sans-serif',
-    weight: 300,
-    style: 'normal',
-  },
-  editorial: {
-    label: 'Editorial Serif',
-    description: 'Elegant italic serif',
-    family: 'Georgia',
-    fallback: 'serif',
-    weight: 400,
-    style: 'italic',
-  },
-  rounded: {
-    label: 'Soft Rounded',
-    description: 'Friendly rounded lettering',
-    family: 'Trebuchet MS',
-    fallback: 'sans-serif',
-    weight: 500,
-    style: 'normal',
-  },
-  mono: {
-    label: 'Typewriter Mono',
-    description: 'Understated monospaced type',
-    family: 'Courier New',
-    fallback: 'monospace',
     weight: 400,
     style: 'normal',
   },
   display: {
-    label: 'Bold Display',
-    description: 'Heavy poster lettering',
-    family: 'Impact',
+    label: 'Dela Gothic One',
+    description: 'Bold display lettering',
+    family: 'Dela Gothic One',
     fallback: 'sans-serif',
-    weight: 700,
+    weight: 400,
+    style: 'normal',
+  },
+  pixel: {
+    label: 'DotGothic16',
+    description: 'Pixel-inspired gothic',
+    family: 'DotGothic16',
+    fallback: 'monospace',
+    weight: 400,
+    style: 'normal',
+  },
+  pop: {
+    label: 'Hachi Maru Pop',
+    description: 'Cute handwritten style',
+    family: 'Hachi Maru Pop',
+    fallback: 'sans-serif',
+    weight: 400,
+    style: 'normal',
+  },
+  graffiti: {
+    label: 'Rampart One',
+    description: 'Bold playful lettering',
+    family: 'Rampart One',
+    fallback: 'sans-serif',
+    weight: 400,
+    style: 'normal',
+  },
+  reggae: {
+    label: 'Reggae One',
+    description: 'Fun decorative display',
+    family: 'Reggae One',
+    fallback: 'sans-serif',
+    weight: 400,
+    style: 'normal',
+  },
+  rock: {
+    label: 'RocknRoll One',
+    description: 'Strong expressive display',
+    family: 'RocknRoll One',
+    fallback: 'sans-serif',
+    weight: 400,
+    style: 'normal',
+  },
+  editorial: {
+    label: 'Zen Old Mincho',
+    description: 'Classic serif',
+    family: 'Zen Old Mincho',
+    fallback: 'serif',
+    weight: 400,
+    style: 'normal',
+  },
+  calligraphy: {
+    label: 'Yuji Syuku',
+    description: 'Traditional calligraphy',
+    family: 'Yuji Syuku',
+    fallback: 'serif',
+    weight: 400,
+    style: 'normal',
+  },
+  magic: {
+    label: 'Yusei Magic',
+    description: 'Friendly handwritten',
+    family: 'Yusei Magic',
+    fallback: 'sans-serif',
+    weight: 400,
+    style: 'normal',
+  },
+  mono: {
+    label: 'Inconsolata',
+    description: 'Modern monospace',
+    family: 'Inconsolata',
+    fallback: 'monospace',
+    weight: 400,
+    style: 'normal',
+  },
+  exo: {
+    label: 'Exo 2',
+    description: 'Modern geometric sans',
+    family: 'Exo 2',
+    fallback: 'sans-serif',
+    weight: 400,
+    style: 'normal',
+  },
+  titling: {
+    label: 'Castoro Titling',
+    description: 'Elegant titles',
+    family: 'Castoro Titling',
+    fallback: 'serif',
+    weight: 400,
+    style: 'normal',
+  },
+  classic: {
+    label: 'Poltawski Nowy',
+    description: 'Traditional serif',
+    family: 'Poltawski Nowy',
+    fallback: 'serif',
+    weight: 400,
+    style: 'normal',
+  },
+  vina: {
+    label: 'Vina Sans',
+    description: 'Heavy condensed display',
+    family: 'Vina Sans',
+    fallback: 'sans-serif',
+    weight: 400,
+    style: 'normal',
+  },
+  script: {
+    label: 'Dancing Script',
+    description: 'Elegant cursive',
+    family: 'Dancing Script',
+    fallback: 'cursive',
+    weight: 400,
     style: 'normal',
   },
 } as const;
@@ -350,7 +468,7 @@ async function drawQuote(
   let lines: RichLine[] = [];
 
   while (fontSize >= minFontSize) {
-    ctx.font = fontString(selectedFont, fontSize);
+    ctx.font = resolveFont(selectedFont, fontSize);
     lines = wrapRichText(ctx, options.quote, area.width, fontSize);
 
     if (lines.length <= maxLines && lines.length * fontSize * 1.16 <= area.height - 62) break;
@@ -383,7 +501,7 @@ async function drawQuote(
 
   ctx.textBaseline = 'top';
   ctx.fillStyle = color;
-  ctx.font = fontString(selectedFont, fontSize);
+  ctx.font = resolveFont(selectedFont, fontSize);
 
   for (const [index, line] of lines.entries()) {
     await drawRichLine(ctx, line, drawX, startY + index * lineHeight, area.align, fontSize, emojiImages);
@@ -395,20 +513,20 @@ async function drawQuote(
 
   ctx.textAlign = area.align;
   ctx.globalAlpha = 0.9;
-  ctx.font = `italic 500 ${creditSize}px Arial, sans-serif`;
+  ctx.font = `400 ${creditSize}px "Exo 2", sans-serif`;
   ctx.fillText(`– ${options.credit}`, drawX, creditY);
 
   if (options.mention) {
     ctx.globalAlpha = 0.58;
-    ctx.font = `400 ${handleSize}px Arial, sans-serif`;
+    ctx.font = `400 ${handleSize}px "Exo 2", sans-serif`;
     ctx.fillText(options.mention, drawX, creditY + creditSize + 4);
   }
 
   ctx.globalAlpha = 1;
 }
 
-function fontString(font: (typeof CARD_FONTS)[FontKey], size: number): string {
-  return `${font.style} ${font.weight} ${size}px "${font.family}", "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", ${font.fallback}`;
+function resolveFont(font: (typeof CARD_FONTS)[FontKey], size: number): string {
+  return `${font.style} ${font.weight} ${size}px "${font.family}", ${font.fallback}`;
 }
 
 function wrapRichText(ctx: SKRSContext2D, input: string, maxWidth: number, fontSize: number): RichLine[] {
@@ -583,7 +701,7 @@ function drawBrandMark(ctx: SKRSContext2D): void {
   ctx.fillStyle = '#d8d8d8';
   ctx.textAlign = 'right';
   ctx.textBaseline = 'alphabetic';
-  ctx.font = '600 14px "Courier New", monospace';
+  ctx.font = '400 14px "Inconsolata", monospace';
   ctx.fillText('Pocket Tool', WIDTH - 17, HEIGHT - 14);
   ctx.restore();
 }
