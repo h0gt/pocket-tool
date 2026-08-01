@@ -6,11 +6,13 @@ import {
   InteractionContextType,
   MessageFlags,
   TextInputStyle,
+  type APIMessage,
   type APIMessageComponentButtonInteraction,
   type APIMessageComponentEmoji,
   type APIMessageComponentSelectMenuInteraction,
   type APIModalSubmitInteraction,
   type APIModalSubmitTextInputComponent,
+  type APIUser,
   type ModalSubmitLabelComponent,
 } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
@@ -91,27 +93,12 @@ createApplicationCommand({
       effects: [],
     });
 
-    const customEmojiRegex = /<a?:\w+:(\d+)>/g;
-
-    const emojiIds = [...message.content.matchAll(customEmojiRegex)].map((m) => m[1]!);
-
-    const emojis = Object.fromEntries(
-      await Promise.all(
-        emojiIds.map(async (id) => {
-          const data = await makeRequest(cdn(`/emojis/${id}`, undefined, 'png', false), {
-            method: RequestMethod.GET,
-            response: ResponseType.BUFFER,
-          });
-
-          return [id, data] as const;
-        }),
-      ),
-    );
+    const quote = await resolveContent(message);
 
     let image = await renderQuoteCard({
       avatar: sessions.get(interaction.token)!.avatar,
-      quote: message.content.trim(),
-      emojis,
+      quote: quote.content,
+      emojis: quote.emojis,
       credit: message.author.global_name ?? message.author.username,
       mention: `@${message.author.username}`,
       font: sessions.get(interaction.token)!.font,
@@ -1017,4 +1004,37 @@ function randomizeSession(sessions: Session): Session {
   sessions.effects = shuffle(Object.keys(CARD_EFFECTS) as EffectKey[]).slice(0, Math.floor(Math.random() * 4));
 
   return sessions;
+}
+
+export async function resolveContent(message: APIMessage) {
+  const content = message.content.trim();
+  const mentions = message.mentions;
+
+  const customEmojiRegex = /<a?:\w+:(\d+)>/g;
+
+  const emojiIds = [...content.matchAll(customEmojiRegex)].map((m) => m[1]!);
+
+  const emojis = Object.fromEntries(
+    await Promise.all(
+      emojiIds.map(async (id) => {
+        const data = await makeRequest(cdn(`/emojis/${id}`, undefined, 'png', false), {
+          method: RequestMethod.GET,
+          response: ResponseType.BUFFER,
+        });
+
+        return [id, data] as const;
+      }),
+    ),
+  );
+
+  const parsedContent = content.replace(/<@!?(\d+)>/g, (_, id) => {
+    const user = mentions?.find((user) => user.id === id);
+
+    return user ? `@${user.global_name ?? user.username}` : '@unknown';
+  });
+
+  return {
+    content: parsedContent,
+    emojis,
+  };
 }
