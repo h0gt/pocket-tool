@@ -2,6 +2,8 @@ import { createCanvas, loadImage } from '@napi-rs/canvas';
 import type { SKRSContext2D } from '@napi-rs/canvas';
 import { isHex, type Hexadecimal } from '@tolga1452/toolbox.js';
 import sharp from 'sharp';
+import emojiRegex from 'emoji-regex';
+import twemoji from '@twemoji/api';
 
 const WIDTH = 850;
 const HEIGHT = 450;
@@ -188,7 +190,7 @@ export type RenderQuoteCardOptions = CardOptions & {
 };
 
 type LoadedImage = Awaited<ReturnType<typeof loadImage>>;
-type RichSpan = { type: 'text'; value: string } | { type: 'emoji'; name: string; id?: string };
+type RichSpan = { type: 'text'; value: string } | { type: 'emoji'; name: string; id?: string; unicode?: boolean };
 type RichLine = RichSpan[];
 
 type TextArea = {
@@ -217,7 +219,7 @@ export async function renderQuoteCard(options: RenderQuoteCardOptions): Promise<
 
   const area = drawLayout(ctx, layout, selectedEffects, avatar);
 
-  drawQuote(ctx, options, area, resolveTextColor(options.color), emojis);
+  await drawQuote(ctx, options, area, resolveTextColor(options.color), emojis);
 
   if (!selectedEffects.has('remove-watermark')) drawBrandMark(ctx);
 
@@ -332,7 +334,13 @@ function drawFallbackAvatar(ctx: SKRSContext2D, x: number, y: number, width: num
   ctx.fillRect(x, y, width, height);
 }
 
-function drawQuote(ctx: SKRSContext2D, options: RenderQuoteCardOptions, area: TextArea, color: string, emojiImages: Record<string, LoadedImage>): void {
+async function drawQuote(
+  ctx: SKRSContext2D,
+  options: RenderQuoteCardOptions,
+  area: TextArea,
+  color: string,
+  emojiImages: Record<string, LoadedImage>,
+): Promise<void> {
   const selectedFont = CARD_FONTS[options.font];
 
   let fontSize = typeof options.size === 'number' ? options.size : options.size === 'auto' ? smartFontSize(options.quote) : CARD_SIZES[options.size].pixels;
@@ -378,7 +386,7 @@ function drawQuote(ctx: SKRSContext2D, options: RenderQuoteCardOptions, area: Te
   ctx.font = fontString(selectedFont, fontSize);
 
   for (const [index, line] of lines.entries()) {
-    drawRichLine(ctx, line, drawX, startY + index * lineHeight, area.align, fontSize, emojiImages);
+    await drawRichLine(ctx, line, drawX, startY + index * lineHeight, area.align, fontSize, emojiImages);
   }
 
   if (!options.credit) return;
@@ -438,11 +446,22 @@ function wrapRichText(ctx: SKRSContext2D, input: string, maxWidth: number, fontS
 function parseRichWord(word: string): RichLine {
   const spans: RichLine = [];
 
-  const regex = /<a?:([a-zA-Z0-9_]+):(\d+)>|\p{Extended_Pictographic}/gu;
+  const regex = /<a?:([a-zA-Z0-9_]+):(\d+)>/g;
 
   let cursor = 0;
 
-  for (const match of word.matchAll(regex)) {
+  const matches = [
+    ...word.matchAll(regex),
+    ...[...word.matchAll(emojiRegex())].map((match) => ({
+      ...match,
+      index: match.index!,
+      0: match[0],
+      1: undefined,
+      2: undefined,
+    })),
+  ].sort((a, b) => a.index! - b.index!);
+
+  for (const match of matches) {
     if (match.index! > cursor) {
       appendText(spans, word.slice(cursor, match.index));
     }
@@ -458,7 +477,8 @@ function parseRichWord(word: string): RichLine {
       // unicode emoji
       spans.push({
         type: 'emoji',
-        name: match[0]!,
+        name: match[0],
+        unicode: true,
       });
     }
 
@@ -491,18 +511,24 @@ function breakLongRichWord(ctx: SKRSContext2D, spans: RichLine, maxWidth: number
 }
 
 function measureRichLine(ctx: SKRSContext2D, line: RichLine, fontSize: number): number {
-  return line.reduce((width, span) => width + (span.type === 'emoji' ? fontSize : ctx.measureText(span.value).width), 0);
+  return line.reduce((width, span) => {
+    if (span.type === 'emoji') {
+      return width + fontSize;
+    }
+
+    return width + ctx.measureText(span.value).width;
+  }, 0);
 }
 
-function drawRichLine(
+async function drawRichLine(
   ctx: SKRSContext2D,
   line: RichLine,
   anchorX: number,
   y: number,
   align: TextArea['align'],
   fontSize: number,
-  emojiImages: Record<string, LoadedImage>,
-): void {
+  emojis: Record<string, LoadedImage>,
+): Promise<void> {
   const width = measureRichLine(ctx, line, fontSize);
   let x = align === 'center' ? anchorX - width / 2 : anchorX;
 
@@ -515,12 +541,18 @@ function drawRichLine(
       continue;
     }
 
-    const emojiImage = span.id ? emojiImages[span.id] : undefined;
+    const emoji = span.id ? emojis[span.id] : undefined;
 
-    if (emojiImage) {
+    if (emoji) {
       const emojiSize = fontSize * 0.92;
 
-      ctx.drawImage(emojiImage, x + fontSize * 0.04, y + fontSize * 0.04, emojiSize, emojiSize);
+      ctx.drawImage(emoji, x + fontSize * 0.04, y + fontSize * 0.04, emojiSize, emojiSize);
+
+      x += fontSize;
+    } else if (span.unicode) {
+      const img = await loadImage(getTwemojiUrl(span.name));
+
+      ctx.drawImage(img, x, y, fontSize, fontSize);
 
       x += fontSize;
     } else {
@@ -545,14 +577,6 @@ function smartFontSize(quote: string): number {
   return 22;
 }
 
-function smartLyricFontSize(quote: string): number {
-  const length = [...quote].length;
-  if (length <= 24) return 42;
-  if (length <= 60) return 36;
-  if (length <= 120) return 31;
-  return 28;
-}
-
 function drawBrandMark(ctx: SKRSContext2D): void {
   ctx.save();
   ctx.globalAlpha = 0.62;
@@ -568,4 +592,10 @@ function resolveTextColor(color: ColorKey | Hexadecimal): string {
   if (isHex(color)) return color;
 
   return color === 'auto' ? '#f5f5f5' : CARD_COLORS[color].value;
+}
+
+function getTwemojiUrl(emoji: string): string {
+  const code = twemoji.convert.toCodePoint(emoji);
+
+  return `https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/${code}.png`;
 }
