@@ -224,7 +224,7 @@ createApplicationCommand({
     const collector = createCollector<APIMessageComponentSelectMenuInteraction | APIMessageComponentButtonInteraction | APIModalSubmitInteraction>({
       key: 'quote',
       filter: (i) => i.message?.id === originalMessage.id && (i.user?.id ?? i.member?.user.id) === (interaction.user?.id ?? interaction.member?.user.id),
-      duration: 15 * 60 * 1000,
+      duration: 5 * 60 * 1000,
     });
 
     collectors.add(collector);
@@ -1238,7 +1238,20 @@ createApplicationCommand({
             data: image,
           },
         ],
-        components: [],
+        components: [
+          {
+            type: ComponentType.ActionRow,
+            components: [
+              {
+                type: ComponentType.Button,
+                url: `https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`,
+                label: 'View Original',
+                emoji: toEmoji('Quote') as APIMessageComponentEmoji,
+                style: ButtonStyle.Link,
+              },
+            ],
+          },
+        ],
       });
     });
   },
