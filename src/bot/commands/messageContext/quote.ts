@@ -381,8 +381,6 @@ createApplicationCommand({
                   placeholder: 'Use whole numbers from 20px to 100px',
                   style: TextInputStyle.Short,
                   required: true,
-                  min_length: 1,
-                  max_length: 3,
                 },
               },
             ],
@@ -935,7 +933,7 @@ createApplicationCommand({
               )
             : undefined;
 
-        if (!Number.isNaN(size) || size! < 20 || size! > 100) {
+        if (size === undefined || Number.isNaN(size) || size < 20 || size > 100) {
           await api.interactions.followUp(i.application_id, i.token, {
             components: [
               {
@@ -954,7 +952,7 @@ createApplicationCommand({
           return;
         }
 
-        sessions.get(interaction.token)!.size = size!;
+        sessions.get(interaction.token)!.size = size;
 
         image = await renderQuoteCard({
           avatar: sessions.get(interaction.token)!.avatar,
@@ -1085,7 +1083,7 @@ createApplicationCommand({
             ? (((i as APIModalSubmitInteraction).data.components[0] as ModalSubmitLabelComponent).component as APIModalSubmitTextInputComponent).value
             : undefined;
 
-        if (!isHex(color)) {
+        if (color === undefined || !isHex(color)) {
           await api.interactions.followUp(i.application_id, i.token, {
             components: [
               {
@@ -1104,7 +1102,7 @@ createApplicationCommand({
           return;
         }
 
-        sessions.get(interaction.token)!.color = color!;
+        sessions.get(interaction.token)!.color = color;
 
         image = await renderQuoteCard({
           avatar: sessions.get(interaction.token)!.avatar,
