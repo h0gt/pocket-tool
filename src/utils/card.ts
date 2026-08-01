@@ -329,14 +329,12 @@ export async function renderQuoteCard(options: RenderQuoteCardOptions): Promise<
     options.avatar ? loadImage(options.avatar) : undefined,
     Promise.all(Object.entries(options.emojis ?? {}).map(async ([id, data]) => [id, await loadImage(data)] as const)),
   ]);
-
   const emojis = Object.fromEntries(e.filter((entry): entry is readonly [string, LoadedImage] => Boolean(entry[1])));
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
   const area = drawLayout(ctx, layout, selectedEffects, avatar);
-
   await drawQuote(ctx, options, area, resolveTextColor(options.color), emojis);
 
   if (!selectedEffects.has('remove-watermark')) drawBrandMark(ctx);
@@ -360,12 +358,14 @@ function drawLayout(ctx: SKRSContext2D, layout: Layout, effects: ReadonlySet<Eff
     diagonalShade.addColorStop(0.64, 'rgba(9,12,20,.55)');
     diagonalShade.addColorStop(0.84, 'rgba(3,6,13,.82)');
     diagonalShade.addColorStop(1, 'rgba(0,3,10,.96)');
+
     ctx.fillStyle = diagonalShade;
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
     const lowerShade = ctx.createLinearGradient(0, 155, 0, HEIGHT);
     lowerShade.addColorStop(0, 'rgba(0,0,0,0)');
     lowerShade.addColorStop(1, 'rgba(0,0,0,.32)');
+
     ctx.fillStyle = lowerShade;
     ctx.fillRect(0, 155, WIDTH, HEIGHT - 155);
 
@@ -373,6 +373,7 @@ function drawLayout(ctx: SKRSContext2D, layout: Layout, effects: ReadonlySet<Eff
   }
 
   drawSplitAvatar(ctx, avatar, effects);
+
   return { x: 445, y: 55, width: 330, height: 340, align: 'center', vertical: 'middle' };
 }
 
@@ -381,6 +382,7 @@ function drawSplitAvatar(ctx: SKRSContext2D, avatar: LoadedImage | undefined, ef
 
   if (avatar) drawImageCover(ctx, avatar, 0, 0, panelWidth, HEIGHT, effects);
   else drawFallbackAvatar(ctx, 0, 0, panelWidth, HEIGHT);
+
   const fadeStart = 255;
   const fade = ctx.createLinearGradient(fadeStart, 0, panelWidth, 0);
   fade.addColorStop(0, 'rgba(0,0,0,0)');
@@ -391,6 +393,7 @@ function drawSplitAvatar(ctx: SKRSContext2D, avatar: LoadedImage | undefined, ef
   fade.addColorStop(0.84, 'rgba(0,0,0,.82)');
   fade.addColorStop(0.94, 'rgba(0,0,0,.96)');
   fade.addColorStop(1, '#000');
+
   ctx.fillStyle = fade;
   ctx.fillRect(fadeStart, 0, panelWidth - fadeStart, HEIGHT);
 }
@@ -401,7 +404,6 @@ function drawImageCover(ctx: SKRSContext2D, image: LoadedImage, x: number, y: nu
   const sourceHeight = height / scale;
   const sourceX = (image.width - sourceWidth) / 2;
   const sourceY = (image.height - sourceHeight) / 2;
-
   let source = image as Parameters<SKRSContext2D['drawImage']>[0];
   let drawSourceX = sourceX;
   let drawSourceY = sourceY;
@@ -425,8 +427,11 @@ function drawImageCover(ctx: SKRSContext2D, image: LoadedImage, x: number, y: nu
   ctx.beginPath();
   ctx.rect(x, y, width, height);
   ctx.clip();
+
   if (effects.has('pixelate')) ctx.imageSmoothingEnabled = false;
+
   const filters: string[] = [];
+
   if (effects.has('grayscale')) filters.push('grayscale(1)', 'contrast(1.08)');
   if (effects.has('blur')) filters.push('blur(12px)', 'saturate(.82)');
   if (effects.has('brightness')) filters.push('brightness(1.55)', 'contrast(1.04)');
@@ -448,6 +453,7 @@ function drawFallbackAvatar(ctx: SKRSContext2D, x: number, y: number, width: num
   gradient.addColorStop(0, '#454545');
   gradient.addColorStop(0.52, '#222');
   gradient.addColorStop(1, '#080808');
+
   ctx.fillStyle = gradient;
   ctx.fillRect(x, y, width, height);
 }
@@ -460,9 +466,7 @@ async function drawQuote(
   emojiImages: Record<string, LoadedImage>,
 ): Promise<void> {
   const selectedFont = CARD_FONTS[options.font];
-
   let fontSize = typeof options.size === 'number' ? options.size : options.size === 'auto' ? smartFontSize(options.quote) : CARD_SIZES[options.size].pixels;
-
   const minFontSize = 20;
   const maxLines = 7;
   let lines: RichLine[] = [];
@@ -471,9 +475,7 @@ async function drawQuote(
     ctx.font = resolveFont(selectedFont, fontSize);
     lines = wrapRichText(ctx, options.quote, area.width, fontSize);
 
-    if (lines.length <= maxLines && lines.length * fontSize * 1.16 <= area.height - 62) {
-      break;
-    }
+    if (lines.length <= maxLines && lines.length * fontSize * 1.16 <= area.height - 62) break;
 
     fontSize -= 2;
   }
@@ -491,13 +493,8 @@ async function drawQuote(
 
   let startY = area.y;
 
-  if (area.vertical === 'middle') {
-    startY += (area.height - contentHeight) / 2;
-  }
-
-  if (area.vertical === 'bottom') {
-    startY += area.height - contentHeight;
-  }
+  if (area.vertical === 'middle') startY += (area.height - contentHeight) / 2;
+  if (area.vertical === 'bottom') startY += area.height - contentHeight;
 
   const drawX = area.align === 'center' ? area.x + area.width / 2 : area.x;
 
@@ -505,9 +502,7 @@ async function drawQuote(
   ctx.fillStyle = color;
   ctx.font = resolveFont(selectedFont, fontSize);
 
-  for (const [index, line] of lines.entries()) {
-    await drawRichLine(ctx, line, drawX, startY + index * lineHeight, area.align, fontSize, emojiImages);
-  }
+  for (const [index, line] of lines.entries()) await drawRichLine(ctx, line, drawX, startY + index * lineHeight, area.align, fontSize, emojiImages);
 
   const creditY = startY + lines.length * lineHeight + 14;
 
@@ -590,9 +585,7 @@ function parseRichWord(word: string): RichLine {
   ].sort((a, b) => a.index! - b.index!);
 
   for (const match of matches) {
-    if (match.index! > cursor) {
-      appendText(spans, word.slice(cursor, match.index));
-    }
+    if (match.index! > cursor) appendText(spans, word.slice(cursor, match.index));
 
     if (match[2]) {
       // custom emoji
@@ -613,9 +606,7 @@ function parseRichWord(word: string): RichLine {
     cursor = match.index! + match[0].length;
   }
 
-  if (cursor < word.length) {
-    appendText(spans, word.slice(cursor));
-  }
+  if (cursor < word.length) appendText(spans, word.slice(cursor));
 
   return spans;
 }
@@ -644,9 +635,7 @@ function breakLongRichWord(ctx: SKRSContext2D, spans: RichLine, maxWidth: number
 
 function measureRichLine(ctx: SKRSContext2D, line: RichLine, fontSize: number): number {
   return line.reduce((width, span) => {
-    if (span.type === 'emoji') {
-      return width + fontSize;
-    }
+    if (span.type === 'emoji') return width + fontSize;
 
     return width + ctx.measureText(span.value).width;
   }, 0);
@@ -670,6 +659,7 @@ async function drawRichLine(
     if (span.type === 'text') {
       ctx.fillText(span.value, x, y);
       x += ctx.measureText(span.value).width;
+
       continue;
     }
 

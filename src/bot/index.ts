@@ -67,15 +67,11 @@ app.post('/interactions', async (c) => {
   const timestamp = c.req.header('X-Signature-Timestamp');
   const rawBody = await c.req.text();
 
-  if (!signature || !timestamp) {
-    return c.body('missing signature or timestamp', 400);
-  }
+  if (!signature || !timestamp) return c.body('missing signature or timestamp', 400);
 
   const isValid = await verify(rawBody, signature, timestamp, env.get('discord_public_key', true).toString(), crypto.subtle);
 
-  if (!isValid) {
-    return c.body('invalid request signature', 401);
-  }
+  if (!isValid) return c.body('invalid request signature', 401);
 
   const body = JSON.parse(rawBody);
   const interaction = body as APIInteraction;
@@ -417,9 +413,7 @@ async function handleButtonComponent(interaction: APIMessageComponentButtonInter
   const button = components.get(customId) as ButtonComponent;
 
   if (!button) {
-    for (const collector of collectors) {
-      await collector.collect(interaction);
-    }
+    for (const collector of collectors) await collector.collect(interaction);
 
     return;
   }
@@ -444,9 +438,7 @@ async function handleSelectMenuComponent(interaction: APIMessageComponentSelectM
   const selectMenu = components.get(customId) as SelectMenuComponent;
 
   if (!selectMenu) {
-    for (const collector of collectors) {
-      await collector.collect(interaction);
-    }
+    for (const collector of collectors) await collector.collect(interaction);
 
     return;
   }
@@ -471,9 +463,7 @@ async function handleModalSubmit(interaction: APIModalSubmitInteraction, api: AP
   const modal = components.get(customId) as ModalComponent;
 
   if (!modal) {
-    for (const collector of collectors) {
-      await collector.collect(interaction);
-    }
+    for (const collector of collectors) await collector.collect(interaction);
 
     return;
   }
