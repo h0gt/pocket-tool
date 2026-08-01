@@ -471,7 +471,9 @@ async function drawQuote(
     ctx.font = resolveFont(selectedFont, fontSize);
     lines = wrapRichText(ctx, options.quote, area.width, fontSize);
 
-    if (lines.length <= maxLines && lines.length * fontSize * 1.16 <= area.height - 62) break;
+    if (lines.length <= maxLines && lines.length * fontSize * 1.16 <= area.height - 62) {
+      break;
+    }
 
     fontSize -= 2;
   }
@@ -507,20 +509,21 @@ async function drawQuote(
     await drawRichLine(ctx, line, drawX, startY + index * lineHeight, area.align, fontSize, emojiImages);
   }
 
-  if (!options.credit) return;
-
   const creditY = startY + lines.length * lineHeight + 14;
 
-  ctx.textAlign = area.align;
   ctx.globalAlpha = 0.9;
   ctx.font = `400 ${creditSize}px "Exo 2", sans-serif`;
-  ctx.fillText(`– ${options.credit}`, drawX, creditY);
 
-  if (options.mention) {
-    ctx.globalAlpha = 0.58;
-    ctx.font = `400 ${handleSize}px "Exo 2", sans-serif`;
-    ctx.fillText(options.mention, drawX, creditY + creditSize + 4);
-  }
+  const creditLine = parseRichWord(`– ${options.credit}`);
+
+  await drawRichLine(ctx, creditLine, drawX, creditY, area.align, creditSize, emojiImages);
+
+  ctx.globalAlpha = 0.58;
+  ctx.font = `400 ${handleSize}px "Exo 2", sans-serif`;
+
+  const mentionLine = parseRichWord(options.mention);
+
+  await drawRichLine(ctx, mentionLine, drawX, creditY + creditSize + 4, area.align, handleSize, emojiImages);
 
   ctx.globalAlpha = 1;
 }
@@ -531,23 +534,28 @@ function resolveFont(font: (typeof CARD_FONTS)[FontKey], size: number): string {
 
 function wrapRichText(ctx: SKRSContext2D, input: string, maxWidth: number, fontSize: number): RichLine[] {
   const lines: RichLine[] = [];
+
   for (const paragraph of input.replace(/\r/g, '').split('\n')) {
     const words = paragraph.trim().split(/\s+/).filter(Boolean);
+
     if (!words.length) {
       if (lines.length) lines.push([]);
       continue;
     }
 
     let current: RichLine = [];
+
     for (const word of words) {
       const wordSpans = parseRichWord(word);
       const candidate = current.length ? [...current, { type: 'text', value: ' ' } as const, ...wordSpans] : wordSpans;
+
       if (measureRichLine(ctx, candidate, fontSize) <= maxWidth) {
         current = candidate;
         continue;
       }
 
       if (current.length) lines.push(current);
+
       if (measureRichLine(ctx, wordSpans, fontSize) <= maxWidth) {
         current = wordSpans;
       } else {
@@ -556,8 +564,10 @@ function wrapRichText(ctx: SKRSContext2D, input: string, maxWidth: number, fontS
         current = chunks.at(-1) || [];
       }
     }
+
     if (current.length) lines.push(current);
   }
+
   return lines.length ? lines : [[]];
 }
 
@@ -613,10 +623,12 @@ function parseRichWord(word: string): RichLine {
 function breakLongRichWord(ctx: SKRSContext2D, spans: RichLine, maxWidth: number, fontSize: number): RichLine[] {
   const chunks: RichLine[] = [];
   let current: RichLine = [];
+
   const atoms = spans.flatMap((span): RichSpan[] => (span.type === 'emoji' ? [span] : [...span.value].map((value) => ({ type: 'text', value }))));
 
   for (const atom of atoms) {
     const candidate = [...current, atom];
+
     if (current.length && measureRichLine(ctx, candidate, fontSize) > maxWidth) {
       chunks.push(current);
       current = [atom];
@@ -624,7 +636,9 @@ function breakLongRichWord(ctx: SKRSContext2D, spans: RichLine, maxWidth: number
       current = candidate;
     }
   }
+
   if (current.length) chunks.push(current);
+
   return chunks;
 }
 
@@ -662,36 +676,43 @@ async function drawRichLine(
     const emoji = span.id ? emojis[span.id] : undefined;
 
     if (emoji) {
-      const emojiSize = fontSize * 0.92;
-
-      ctx.drawImage(emoji, x + fontSize * 0.04, y + fontSize * 0.04, emojiSize, emojiSize);
-
+      ctx.drawImage(emoji, x, y, fontSize, fontSize);
       x += fontSize;
-    } else if (span.unicode) {
-      const img = await loadImage(getTwemojiUrl(span.name));
 
-      ctx.drawImage(img, x, y, fontSize, fontSize);
-
-      x += fontSize;
-    } else {
-      ctx.fillText(span.name, x, y);
-      x += ctx.measureText(span.name).width;
+      continue;
     }
+
+    if (span.unicode) {
+      try {
+        const img = await loadImage(getTwemojiUrl(span.name));
+
+        ctx.drawImage(img, x, y, fontSize, fontSize);
+      } catch {}
+
+      x += fontSize;
+      continue;
+    }
+
+    ctx.fillText(span.name, x, y);
+    x += ctx.measureText(span.name).width;
   }
 }
 
 function appendText(line: RichLine, value: string): void {
   const last = line.at(-1);
+
   if (last?.type === 'text') last.value += value;
   else line.push({ type: 'text', value });
 }
 
 function smartFontSize(quote: string): number {
   const length = [...quote].length;
+
   if (length <= 35) return 42;
   if (length <= 75) return 36;
   if (length <= 140) return 31;
   if (length <= 240) return 26;
+
   return 22;
 }
 
@@ -715,5 +736,10 @@ function resolveTextColor(color: ColorKey | Hexadecimal): string {
 function getTwemojiUrl(emoji: string): string {
   const code = twemoji.convert.toCodePoint(emoji);
 
-  return `https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/${code}.png`;
+  const normalizedCode = code
+    .split('-')
+    .filter((part) => part !== 'fe0f')
+    .join('-');
+
+  return `https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/${normalizedCode}.png`;
 }
