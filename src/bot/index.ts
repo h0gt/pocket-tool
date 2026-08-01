@@ -175,7 +175,7 @@ if (env.get('register_commands').toBoolean() === true) {
   }
 
   const globalCommands = Array.from(commands.values())
-    .filter((c) => !('guild' in c))
+    .filter((c) => !('guilds' in c))
     .map(localizeCommand);
 
   if (globalCommands.length > 0) {
