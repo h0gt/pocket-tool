@@ -205,12 +205,12 @@ export async function renderQuoteCard(options: RenderQuoteCardOptions): Promise<
   const ctx = canvas.getContext('2d');
   const selectedEffects = new Set(options.effects.map((effect) => CARD_EFFECTS[effect].effect));
   const layout: Layout = options.effects.includes('full-bleed') ? 'full-bleed' : 'split';
-  const [avatar, emojiEntries] = await Promise.all([
+  const [avatar, e] = await Promise.all([
     options.avatar ? loadImage(options.avatar) : undefined,
     Promise.all(Object.entries(options.emojis ?? {}).map(async ([id, data]) => [id, await loadImage(data)] as const)),
   ]);
 
-  const emojis = Object.fromEntries(emojiEntries.filter((entry): entry is readonly [string, LoadedImage] => Boolean(entry[1])));
+  const emojis = Object.fromEntries(e.filter((entry): entry is readonly [string, LoadedImage] => Boolean(entry[1])));
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';

@@ -42,6 +42,8 @@ type Session = {
   size: SizeKey | number;
   color: ColorKey | Hexadecimal;
   effects: EffectKey[];
+  content: string;
+  emojis: Record<string, Buffer>;
 };
 
 createApplicationCommand({
@@ -85,15 +87,17 @@ createApplicationCommand({
 
     const sessions = new Collection<string, Session>();
 
+    const quote = await resolveContent(message);
+
     sessions.set(interaction.token, {
       avatar,
       font: 'modern',
       size: 'auto',
       color: 'auto',
       effects: [],
+      content: quote.content,
+      emojis: quote.emojis,
     });
-
-    const quote = await resolveContent(message);
 
     let image = await renderQuoteCard({
       avatar: sessions.get(interaction.token)!.avatar,
@@ -238,7 +242,8 @@ createApplicationCommand({
 
           image = await renderQuoteCard({
             avatar: sessions.get(interaction.token)!.avatar,
-            quote: message.content.trim(),
+            quote: sessions.get(interaction.token)!.content,
+            emojis: sessions.get(interaction.token)!.emojis,
             credit: message.author.global_name ?? message.author.username,
             mention: `@${message.author.username}`,
             font: sessions.get(interaction.token)!.font,
@@ -389,7 +394,8 @@ createApplicationCommand({
 
           image = await renderQuoteCard({
             avatar: sessions.get(interaction.token)!.avatar,
-            quote: message.content.trim(),
+            quote: sessions.get(interaction.token)!.content,
+            emojis: sessions.get(interaction.token)!.emojis,
             credit: message.author.global_name ?? message.author.username,
             mention: `@${message.author.username}`,
             font: sessions.get(interaction.token)!.font,
@@ -538,10 +544,11 @@ createApplicationCommand({
 
           sessions.get(interaction.token)!.color = color as ColorKey;
 
-          const image = await renderQuoteCard({
+          image = await renderQuoteCard({
             avatar: sessions.get(interaction.token)!.avatar,
-            quote: message.content.trim(),
-            credit: 'Pocket Tool',
+            quote: sessions.get(interaction.token)!.content,
+            emojis: sessions.get(interaction.token)!.emojis,
+            credit: message.author.global_name ?? message.author.username,
             mention: `@${message.author.username}`,
             font: sessions.get(interaction.token)!.font,
             size: sessions.get(interaction.token)!.size,
@@ -671,8 +678,9 @@ createApplicationCommand({
 
           image = await renderQuoteCard({
             avatar: sessions.get(interaction.token)!.avatar,
-            quote: message.content.trim(),
-            credit: 'Pocket Tool',
+            quote: sessions.get(interaction.token)!.content,
+            emojis: sessions.get(interaction.token)!.emojis,
+            credit: message.author.global_name ?? message.author.username,
             mention: `@${message.author.username}`,
             font: sessions.get(interaction.token)!.font,
             size: sessions.get(interaction.token)!.size,
@@ -797,8 +805,9 @@ createApplicationCommand({
 
         image = await renderQuoteCard({
           avatar: sessions.get(interaction.token)!.avatar,
-          quote: message.content.trim(),
-          credit: 'Pocket Tool',
+          quote: sessions.get(interaction.token)!.content,
+          emojis: sessions.get(interaction.token)!.emojis,
+          credit: message.author.global_name ?? message.author.username,
           mention: `@${message.author.username}`,
           font: sessions.get(interaction.token)!.font,
           size: sessions.get(interaction.token)!.size,
@@ -946,6 +955,128 @@ createApplicationCommand({
         }
 
         sessions.get(interaction.token)!.size = size!;
+
+        image = await renderQuoteCard({
+          avatar: sessions.get(interaction.token)!.avatar,
+          quote: sessions.get(interaction.token)!.content,
+          emojis: sessions.get(interaction.token)!.emojis,
+          credit: message.author.global_name ?? message.author.username,
+          mention: `@${message.author.username}`,
+          font: sessions.get(interaction.token)!.font,
+          size: sessions.get(interaction.token)!.size,
+          color: sessions.get(interaction.token)!.color,
+          effects: sessions.get(interaction.token)!.effects,
+        });
+
+        await api.interactions.editReply(interaction.application_id, interaction.token, {
+          files: [
+            {
+              name: `quote.gif`,
+              data: image,
+            },
+          ],
+          components: [
+            {
+              type: ComponentType.ActionRow,
+              components: [
+                {
+                  type: ComponentType.StringSelect,
+                  custom_id: 'quote-font',
+                  placeholder: 'Choose a font',
+                  options: Object.entries(CARD_FONTS).map(([value, item]) => ({
+                    label: item.label,
+                    description: item.description,
+                    value,
+                    default: value === sessions.get(interaction.token)!.font,
+                  })),
+                },
+              ],
+            },
+            {
+              type: ComponentType.ActionRow,
+              components: [
+                {
+                  type: ComponentType.StringSelect,
+                  custom_id: 'quote-size',
+                  placeholder: 'Choose a size ',
+                  options: [
+                    ...Object.entries(CARD_SIZES).map(([value, item]) => ({
+                      label: item.label,
+                      description: item.description,
+                      value,
+                      default: value === sessions.get(interaction.token)!.size,
+                    })),
+                    {
+                      label: 'Custom Font Size',
+                      description: 'Provide a custom font size',
+                      value: 'custom',
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: ComponentType.ActionRow,
+              components: [
+                {
+                  type: ComponentType.StringSelect,
+                  custom_id: 'quote-color',
+                  placeholder: 'Choose a color',
+                  options: [
+                    ...Object.entries(CARD_COLORS).map(([value, item]) => ({
+                      label: item.label,
+                      description: item.description,
+                      value,
+                      default: value === sessions.get(interaction.token)!.color,
+                    })),
+                    {
+                      label: 'Custom Text Color',
+                      description: 'Provide a custom text color',
+                      value: 'custom',
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: ComponentType.ActionRow,
+              components: [
+                {
+                  type: ComponentType.StringSelect,
+                  custom_id: 'quote-effects',
+                  placeholder: 'Choose Some Effects!',
+                  min_values: 0,
+                  max_values: Object.keys(CARD_EFFECTS).length,
+                  options: Object.entries(CARD_EFFECTS).map(([value, item]) => ({
+                    label: item.label,
+                    description: item.description,
+                    value,
+                    default: sessions.get(interaction.token)!.effects.includes(value as EffectKey),
+                  })),
+                },
+              ],
+            },
+            {
+              type: ComponentType.ActionRow,
+              components: [
+                {
+                  type: ComponentType.Button,
+                  custom_id: 'random',
+                  label: 'Surprise Me!',
+                  emoji: toEmoji('Spark') as APIMessageComponentEmoji,
+                  style: ButtonStyle.Secondary,
+                },
+                {
+                  type: ComponentType.Button,
+                  url: `https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`,
+                  label: 'View Original',
+                  emoji: toEmoji('Quote') as APIMessageComponentEmoji,
+                  style: ButtonStyle.Link,
+                },
+              ],
+            },
+          ],
+        });
       } else if (i.data.custom_id === 'custom-color') {
         await api.interactions.deferMessageUpdate(i.id, i.token);
 
@@ -974,6 +1105,128 @@ createApplicationCommand({
         }
 
         sessions.get(interaction.token)!.color = color!;
+
+        image = await renderQuoteCard({
+          avatar: sessions.get(interaction.token)!.avatar,
+          quote: sessions.get(interaction.token)!.content,
+          emojis: sessions.get(interaction.token)!.emojis,
+          credit: message.author.global_name ?? message.author.username,
+          mention: `@${message.author.username}`,
+          font: sessions.get(interaction.token)!.font,
+          size: sessions.get(interaction.token)!.size,
+          color: sessions.get(interaction.token)!.color,
+          effects: sessions.get(interaction.token)!.effects,
+        });
+
+        await api.interactions.editReply(interaction.application_id, interaction.token, {
+          files: [
+            {
+              name: `quote.gif`,
+              data: image,
+            },
+          ],
+          components: [
+            {
+              type: ComponentType.ActionRow,
+              components: [
+                {
+                  type: ComponentType.StringSelect,
+                  custom_id: 'quote-font',
+                  placeholder: 'Choose a font',
+                  options: Object.entries(CARD_FONTS).map(([value, item]) => ({
+                    label: item.label,
+                    description: item.description,
+                    value,
+                    default: value === sessions.get(interaction.token)!.font,
+                  })),
+                },
+              ],
+            },
+            {
+              type: ComponentType.ActionRow,
+              components: [
+                {
+                  type: ComponentType.StringSelect,
+                  custom_id: 'quote-size',
+                  placeholder: 'Choose a size ',
+                  options: [
+                    ...Object.entries(CARD_SIZES).map(([value, item]) => ({
+                      label: item.label,
+                      description: item.description,
+                      value,
+                      default: value === sessions.get(interaction.token)!.size,
+                    })),
+                    {
+                      label: 'Custom Font Size',
+                      description: 'Provide a custom font size',
+                      value: 'custom',
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: ComponentType.ActionRow,
+              components: [
+                {
+                  type: ComponentType.StringSelect,
+                  custom_id: 'quote-color',
+                  placeholder: 'Choose a color',
+                  options: [
+                    ...Object.entries(CARD_COLORS).map(([value, item]) => ({
+                      label: item.label,
+                      description: item.description,
+                      value,
+                      default: value === sessions.get(interaction.token)!.color,
+                    })),
+                    {
+                      label: 'Custom Text Color',
+                      description: 'Provide a custom text color',
+                      value: 'custom',
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: ComponentType.ActionRow,
+              components: [
+                {
+                  type: ComponentType.StringSelect,
+                  custom_id: 'quote-effects',
+                  placeholder: 'Choose Some Effects!',
+                  min_values: 0,
+                  max_values: Object.keys(CARD_EFFECTS).length,
+                  options: Object.entries(CARD_EFFECTS).map(([value, item]) => ({
+                    label: item.label,
+                    description: item.description,
+                    value,
+                    default: sessions.get(interaction.token)!.effects.includes(value as EffectKey),
+                  })),
+                },
+              ],
+            },
+            {
+              type: ComponentType.ActionRow,
+              components: [
+                {
+                  type: ComponentType.Button,
+                  custom_id: 'random',
+                  label: 'Surprise Me!',
+                  emoji: toEmoji('Spark') as APIMessageComponentEmoji,
+                  style: ButtonStyle.Secondary,
+                },
+                {
+                  type: ComponentType.Button,
+                  url: `https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`,
+                  label: 'View Original',
+                  emoji: toEmoji('Quote') as APIMessageComponentEmoji,
+                  style: ButtonStyle.Link,
+                },
+              ],
+            },
+          ],
+        });
       }
     });
 
