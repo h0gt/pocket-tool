@@ -52,8 +52,8 @@ export const components = new Collection<string, Component>();
 export const cooldowns = new Collection<string, Collection<Snowflake, number>>();
 export const collectors = new Set<Collector<any>>();
 
-await readDirectory(path.join(process.cwd(), 'src', 'bot', 'commands'));
-// await readDirectory(path.join(process.cwd(), 'src', 'bot', 'components')); theres no component files for now
+await readDirectory(path.join(process.cwd(), 'src', 'app', 'commands'));
+// await readDirectory(path.join(process.cwd(), 'src', 'app', 'components')); theres no component files for now
 
 const rest = new REST().setToken(env.get('token', true).toString());
 const api = new API(rest);
@@ -94,7 +94,7 @@ app.post('/interactions', async (c) => {
           components: [
             {
               type: ComponentType.TextDisplay,
-              content: `${emoji('Exclamation')} The bot is currently under maintenance - please try again later`,
+              content: `${emoji('Exclamation')} The app is currently under maintenance - please try again later`,
             },
           ],
         },

@@ -5,12 +5,11 @@ import {
   ComponentType,
   InteractionContextType,
   MessageFlags,
-  type APIMessageComponentEmoji,
 } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
 import { highlight } from '../../../utils/markdown';
 import { HighlightStyle } from '../../../types/types';
-import { toEmoji } from '../../../utils/utils';
+import { toComponentEmoji } from '../../../utils/utils';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
@@ -35,7 +34,8 @@ createApplicationCommand({
             },
             {
               type: ComponentType.TextDisplay,
-              content: '### How to report bugs?\nTo report bugs, join our __support server__ and create a post at <#1457038318045888646>',
+              content:
+                '### How to report bugs?\nTo report bugs, join our __support server__ and create a post at https://discord.com/channels/1533439024637939792/1533485684961054781',
             },
             {
               type: ComponentType.Separator,
@@ -45,16 +45,16 @@ createApplicationCommand({
               components: [
                 {
                   type: ComponentType.Button,
-                  label: 'Invite Me!',
-                  emoji: toEmoji('Link') as APIMessageComponentEmoji,
+                  label: 'Add to Your Apps!',
+                  emoji: toComponentEmoji('Link'),
                   url: `https://discord.com/oauth2/authorize?client_id=${interaction.application_id}`,
                   style: ButtonStyle.Link,
                 },
                 {
                   type: ComponentType.Button,
                   label: 'Support Server',
-                  emoji: toEmoji('Discord') as APIMessageComponentEmoji,
-                  url: 'https://discord.gg/EEAchFSWpr',
+                  emoji: toComponentEmoji('Discord'),
+                  url: 'https://discord.gg/Y67yNmsPuf',
                   style: ButtonStyle.Link,
                 },
               ],

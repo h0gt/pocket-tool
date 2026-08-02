@@ -1,10 +1,10 @@
 {
   "name": "pocket-tool-http",
-  "module": "src/bot/index.ts",
+  "module": "src/app/index.ts",
   "type": "module",
   "private": true,
   "scripts": {
-    "start": "bun src/bot/index.ts",
+    "start": "bun src/app/index.ts",
     "format": "prettier . --write"
   },
   "devDependencies": {

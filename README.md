@@ -1,21 +1,21 @@
 <h1 align="center">
   <a href="https://discord.com/oauth2/authorize?client_id=1489362526880796903" target="_blank">
-      Pocket Tool Discord Bot
+      Pocket Tool Discord App
   </a>
 </h1>
 
-> A lightweight utility Discord bot made to be used anywhere at any time!
+> A lightweight utility Discord app made to be used anywhere at any time!
 
 ## Why use Pocket Tool?
 
-Pocket Tool is a **lightweight, fast, and versatile Discord bot** designed to be your all-in-one utility companion. Whether you're looking to enhance productivity, access handy tools anywhere on Discord, or add fun features, Pocket Tool has you covered.
+Pocket Tool is a **lightweight, fast, and versatile Discord app** designed to be your all-in-one utility companion. Whether you're looking to enhance productivity, access handy tools anywhere on Discord, or add fun features, Pocket Tool has you covered.
 
 > _You can also try [Pocket Tool Canary](https://discord.com/oauth2/authorize?client_id=1489363092071518324) to access the latest features early. Note that it may be unstable and occasionally offline._
 
 ## How do I self-host Pocket Tool?
 
 - [Bun](https://bun.com/)
-- A Discord bot token
+- A Discord app token
 - A publicly accessible URL to receive interactions (e.g. via a reverse proxy, [ngrok](https://ngrok.com/), or a hosting provider)
 
 1. Clone the repository:
@@ -37,8 +37,8 @@ bun install
 cp .env.example .env
 ```
 
-4. Edit the `.env` file to add your bot token and other configuration options.
-5. Build and run the bot:
+4. Edit the `.env` file to add your app token and other configuration options.
+5. Build and run the app:
 
 ```bash
 bun run start

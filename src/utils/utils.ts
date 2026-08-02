@@ -83,7 +83,7 @@ export function readableTimeToMs(time: string): number | null {
   return matched ? ms : null;
 }
 
-export function toEmoji(name: keyof typeof Emoji): APIEmoji | APIMessageComponentEmoji {
+export function toComponentEmoji(name: keyof typeof Emoji): APIMessageComponentEmoji {
   const emoji = Emoji[name];
 
   if (!emoji) throw new Error(`Emoji "${name}" not found`);

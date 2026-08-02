@@ -2,13 +2,13 @@
 
 Last Updated: May 13, 2026
 
-Welcome to **Pocket Tool**. By using this bot, you agree to these Terms of Service.
+Welcome to **Pocket Tool**. By using this app, you agree to these Terms of Service.
 
 ---
 
 # 1. Acceptance of Terms
 
-By accessing or using the bot, you confirm that you have read, understood, and agreed to these Terms.
+By accessing or using the app, you confirm that you have read, understood, and agreed to these Terms.
 
 If you do not agree with these Terms, you must stop using the service immediately.
 
@@ -26,11 +26,11 @@ Features and functionality may change, be modified, or be removed at any time wi
 
 You agree not to:
 
-- Use the bot for illegal activities
+- Use the app for illegal activities
 - Abuse, exploit, or harass other users
 - Attempt to reverse engineer or disrupt the service
 - Spam commands or overload the infrastructure
-- Use the bot to distribute malicious content
+- Use the app to distribute malicious content
 
 You are fully responsible for how you use the service.
 
@@ -38,7 +38,7 @@ You are fully responsible for how you use the service.
 
 # 4. Data Collection
 
-The bot may collect and store:
+The app may collect and store:
 
 - Interaction trigger logs
 
@@ -50,7 +50,7 @@ We do not sell user data.
 
 # 5. Third-Party Services
 
-The bot may rely on third-party APIs and services, including AI providers, hosting providers, and Discord services.
+The app may rely on third-party APIs and services, including AI providers, hosting providers, and Discord services.
 
 We are not responsible for outages, interruptions, data loss, or issues caused by third-party services.
 
@@ -86,7 +86,7 @@ Use the service at your own risk.
 
 # 8. Termination
 
-We reserve the right to suspend or terminate access to the bot at any time, with or without notice, for violations of these Terms.
+We reserve the right to suspend or terminate access to the app at any time, with or without notice, for violations of these Terms.
 
 ---
 
@@ -94,7 +94,7 @@ We reserve the right to suspend or terminate access to the bot at any time, with
 
 These Terms may be updated or modified at any time.
 
-Continued use of the bot after changes become effective constitutes acceptance of the revised Terms.
+Continued use of the app after changes become effective constitutes acceptance of the revised Terms.
 
 ---
 
@@ -111,4 +111,4 @@ For support or legal inquiries:
 
 Users must also comply with Discord's Terms of Service and Community Guidelines.
 
-Failure to comply with Discord's policies may result in restricted or terminated access to the bot.
+Failure to comply with Discord's policies may result in restricted or terminated access to the app.

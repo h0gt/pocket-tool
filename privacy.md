@@ -4,7 +4,7 @@ Last Updated: May 13, 2026
 
 This Privacy Policy explains how **Pocket Tool** collects, uses, stores, and protects user data.
 
-By using the bot, you agree to the practices described in this Privacy Policy.
+By using the app, you agree to the practices described in this Privacy Policy.
 
 ---
 
@@ -22,7 +22,7 @@ We only collect data necessary for operating and improving the service.
 
 Collected information may be used to:
 
-- Provide bot functionality
+- Provide app functionality
 - Process commands and components
 - Improve performance and reliability
 - Prevent abuse and malicious activity
