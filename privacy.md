@@ -1,6 +1,6 @@
 # Privacy Policy - Pocket Tool
 
-Last Updated: May 13, 2026
+Last Updated: August 2, 2026
 
 This Privacy Policy explains how **Pocket Tool** collects, uses, stores, and protects user data.
 

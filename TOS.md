@@ -1,6 +1,6 @@
 # Terms of Service - Pocket Tool
 
-Last Updated: May 13, 2026
+Last Updated: August 2, 2026
 
 Welcome to **Pocket Tool**. By using this app, you agree to these Terms of Service.
 
