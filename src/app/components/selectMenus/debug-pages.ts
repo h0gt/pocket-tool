@@ -14,7 +14,7 @@ createComponent({
   async run(interaction, args, api) {
     const { userId } = args;
 
-    if (interaction.user?.id ?? interaction.member?.user.id !== userId) return;
+    if ((interaction.user?.id ?? interaction.member?.user.id) !== userId) return;
 
     const page =
       (interaction as APIMessageComponentSelectMenuInteraction).data.component_type === ComponentType.StringSelect &&
