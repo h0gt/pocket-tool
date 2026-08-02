@@ -55,7 +55,7 @@ createComponent({
                   components: [
                     {
                       type: ComponentType.StringSelect,
-                      custom_id: 'about-pages',
+                      custom_id: 'debug-pages',
                       options: [
                         {
                           label: 'About',
@@ -112,7 +112,7 @@ createComponent({
                   components: [
                     {
                       type: ComponentType.StringSelect,
-                      custom_id: 'about-pages',
+                      custom_id: 'debug-pages',
                       options: [
                         {
                           label: 'About',
