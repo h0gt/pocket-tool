@@ -105,7 +105,7 @@ createComponent({
               components: [
                 {
                   type: ComponentType.TextDisplay,
-                  content: `-# **Development:**\n> ${hyperlink('https://discord.com/users/782946852278501407', '@mloetta')} - Lead Developer\n> ${hyperlink('https://discord.com/users/775273108671430677', '@h0gtt')} - Contributor\n**Design:**\n> ${hyperlink('https://merpix.de/', 'Merpix')}\n**Additional:**\n> ${hyperlink('https://discord.com/users/808606684837576714', '@mineturtle2.')} - Made most of the emojis\n> ${hyperlink('https://discord.com/users/1031965725423849492', 'wolfypro')} - Host Provider`,
+                  content: `-# **Development:**\n> ${hyperlink('https://discord.com/users/782946852278501407', '@mloetta')} - Lead Developer\n> ${hyperlink('https://discord.com/users/775273108671430677', '@h0gtt')} - Contributor\n-# **Design:**\n> ${hyperlink('https://merpix.de/', 'Merpix')}\n-# **Additional:**\n> ${hyperlink('https://discord.com/users/808606684837576714', '@mineturtle2.')} - Made most of the emojis\n> ${hyperlink('https://discord.com/users/1031965725423849492', 'wolfypro')} - Host Provider`,
                 },
                 {
                   type: ComponentType.ActionRow,
