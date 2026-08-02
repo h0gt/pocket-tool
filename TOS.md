@@ -102,7 +102,7 @@ Continued use of the app after changes become effective constitutes acceptance o
 
 For support or legal inquiries:
 
-- Support Server: https://discord.gg/V2MxaBJxgd
+- Support Server: https://discord.gg/Y67yNmsPuf
 - Discord: @mloetta
 
 ---

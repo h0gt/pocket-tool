@@ -103,5 +103,5 @@ Continued use of the service after changes become effective constitutes acceptan
 
 For privacy-related questions or requests:
 
-- Support Server: https://discord.gg/V2MxaBJxgd
+- Support Server: https://discord.gg/Y67yNmsPuf
 - Discord: @mloetta
