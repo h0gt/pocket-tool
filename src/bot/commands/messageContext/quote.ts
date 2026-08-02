@@ -78,7 +78,7 @@ createApplicationCommand({
     const avatar = await makeRequest(
       message.author.avatar
         ? cdn(`/avatars/${message.author.id}/${message.author.avatar}`, 4096, 'webp', false)
-        : cdn(`/embed/avatars/${Number(BigInt(message.author.id) >> 22n) % 6}`, 4096, 'webp', false),
+        : cdn(`/embed/avatars/${Number(BigInt(message.author.id) >> 22n) % 6}`, 4096, 'png'),
       {
         method: RequestMethod.GET,
         response: ResponseType.BUFFER,
