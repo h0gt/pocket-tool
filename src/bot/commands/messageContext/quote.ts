@@ -1241,6 +1241,98 @@ createApplicationCommand({
             type: ComponentType.ActionRow,
             components: [
               {
+                type: ComponentType.StringSelect,
+                custom_id: 'quote-font',
+                placeholder: 'Choose a font',
+                options: Object.entries(CARD_FONTS).map(([value, item]) => ({
+                  label: item.label,
+                  description: item.description,
+                  value,
+                  default: value === sessions.get(interaction.token)!.font,
+                })),
+                disabled: true,
+              },
+            ],
+          },
+          {
+            type: ComponentType.ActionRow,
+            components: [
+              {
+                type: ComponentType.StringSelect,
+                custom_id: 'quote-size',
+                placeholder: 'Choose a size ',
+                options: [
+                  ...Object.entries(CARD_SIZES).map(([value, item]) => ({
+                    label: item.label,
+                    description: item.description,
+                    value,
+                    default: value === sessions.get(interaction.token)!.size,
+                  })),
+                  {
+                    label: 'Custom Font Size',
+                    description: 'Provide a custom font size',
+                    value: 'custom',
+                  },
+                ],
+                disabled: true,
+              },
+            ],
+          },
+          {
+            type: ComponentType.ActionRow,
+            components: [
+              {
+                type: ComponentType.StringSelect,
+                custom_id: 'quote-color',
+                placeholder: 'Choose a color',
+                options: [
+                  ...Object.entries(CARD_COLORS).map(([value, item]) => ({
+                    label: item.label,
+                    description: item.description,
+                    value,
+                    default: value === sessions.get(interaction.token)!.color,
+                  })),
+                  {
+                    label: 'Custom Text Color',
+                    description: 'Provide a custom text color',
+                    value: 'custom',
+                  },
+                ],
+                disabled: true,
+              },
+            ],
+          },
+          {
+            type: ComponentType.ActionRow,
+            components: [
+              {
+                type: ComponentType.StringSelect,
+                custom_id: 'quote-effects',
+                placeholder: 'Choose Some Effects!',
+                min_values: 0,
+                max_values: Object.keys(CARD_EFFECTS).length,
+                options: Object.entries(CARD_EFFECTS).map(([value, item]) => ({
+                  label: item.label,
+                  description: item.description,
+                  value,
+                  default: sessions.get(interaction.token)!.effects.includes(value as EffectKey),
+                })),
+                disabled: true,
+              },
+            ],
+          },
+          {
+            type: ComponentType.ActionRow,
+            components: [
+              {
+                type: ComponentType.Button,
+                custom_id: 'random',
+                label: 'Surprise Me!',
+                emoji: toEmoji('Spark') as APIMessageComponentEmoji,
+                style: ButtonStyle.Secondary,
+                disabled: true,
+              },
+              {
                 type: ComponentType.Button,
                 url: `https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`,
                 label: 'View Original',
