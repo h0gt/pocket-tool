@@ -2,9 +2,8 @@ import { ButtonStyle, ComponentType, MessageFlags, type APIMessageComponentSelec
 import createComponent from '../../../helpers/component';
 import { InteractableComponentType, TimestampStyle } from '../../../types/types';
 import { msToReadableTime, toComponentEmoji } from '../../../utils/utils';
-import os from 'os';
 import { highlight, hyperlink, timestamp } from '../../../utils/markdown';
-import { commands } from '../..';
+import { commands, components } from '../..';
 
 createComponent({
   type: InteractableComponentType.SelectMenu,
@@ -23,13 +22,6 @@ createComponent({
     switch (page) {
       case 'about': {
         const app = await api.applications.getCurrent();
-        const originalReply = await api.interactions.getOriginalReply(interaction.application_id, interaction.token);
-        const sentAt = new Date(originalReply.timestamp).getTime();
-        const latency = new Date().getTime() - sentAt;
-        const total = os.totalmem();
-        const free = os.freemem();
-        const used = total - free;
-        const percent = used / total;
 
         await api.interactions.editReply(interaction.application_id, interaction.token, {
           components: [
@@ -45,7 +37,7 @@ createComponent({
                 },
                 {
                   type: ComponentType.TextDisplay,
-                  content: `> Commands: ${highlight(commands.size)}\n> Installs: ${highlight(app.approximate_user_install_count)}\n> Latency: ${highlight(`${latency}ms`)}\n> Uptime: ${highlight(`${msToReadableTime(process.uptime() * 1000)}`)} (${timestamp(Math.floor(new Date().getTime() - process.uptime() * 1000), TimestampStyle.ShortDate)})\n> Memory: ${highlight(`${percent.toLocaleString('en-US', { style: 'percent', maximumFractionDigits: 2 })} (${(used / 1024 / 1024).toFixed(2)} MiB)`)}`,
+                  content: `> Commands: ${highlight(commands.size)}\n> Components: ${highlight(components.size)}\n> Installs: ${highlight(app.approximate_user_install_count)}\n> Uptime: ${highlight(`${msToReadableTime(process.uptime() * 1000)}`)} (${timestamp(Math.floor(new Date().getTime() - process.uptime() * 1000), TimestampStyle.ShortDate)})`,
                 },
                 {
                   type: ComponentType.Separator,
