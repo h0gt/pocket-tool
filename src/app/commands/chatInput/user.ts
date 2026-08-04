@@ -6,7 +6,6 @@ import {
   InteractionContextType,
   MessageFlags,
   type APIInteractionDataResolvedGuildMember,
-  type APIMessageComponentEmoji,
 } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
 import { cdn, emoji, highlight, hyperlink, timestamp } from '../../../utils/markdown';

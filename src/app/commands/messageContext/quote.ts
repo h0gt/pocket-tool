@@ -152,6 +152,16 @@ createApplicationCommand({
                   description: 'Provide a custom font size',
                   value: 'custom',
                 },
+                ...(!(sessions.get(interaction.token)!.size in CARD_SIZES)
+                  ? [
+                      {
+                        label: `Custom Text Size: ${sessions.get(interaction.token)!.size}px`,
+                        description: 'Currently selected custom size',
+                        value: String(sessions.get(interaction.token)!.size),
+                        default: true,
+                      },
+                    ]
+                  : []),
               ],
             },
           ],
@@ -175,6 +185,16 @@ createApplicationCommand({
                   description: 'Provide a custom text color',
                   value: 'custom',
                 },
+                ...(!(sessions.get(interaction.token)!.color in CARD_COLORS)
+                  ? [
+                      {
+                        label: `Custom Text Color: ${sessions.get(interaction.token)!.color}`,
+                        description: 'Currently selected custom color',
+                        value: sessions.get(interaction.token)!.color,
+                        default: true,
+                      },
+                    ]
+                  : []),
               ],
             },
           ],
@@ -293,6 +313,16 @@ createApplicationCommand({
                         description: 'Provide a custom font size',
                         value: 'custom',
                       },
+                      ...(!(sessions.get(interaction.token)!.size in CARD_SIZES)
+                        ? [
+                            {
+                              label: `Custom Text Size: ${sessions.get(interaction.token)!.size}px`,
+                              description: 'Currently selected custom size',
+                              value: String(sessions.get(interaction.token)!.size),
+                              default: true,
+                            },
+                          ]
+                        : []),
                     ],
                   },
                 ],
@@ -316,6 +346,16 @@ createApplicationCommand({
                         description: 'Provide a custom text color',
                         value: 'custom',
                       },
+                      ...(!(sessions.get(interaction.token)!.color in CARD_COLORS)
+                        ? [
+                            {
+                              label: `Custom Text Color: ${sessions.get(interaction.token)!.color}`,
+                              description: 'Currently selected custom color',
+                              value: sessions.get(interaction.token)!.color,
+                              default: true,
+                            },
+                          ]
+                        : []),
                     ],
                   },
                 ],
@@ -443,6 +483,16 @@ createApplicationCommand({
                         description: 'Provide a custom font size',
                         value: 'custom',
                       },
+                      ...(!(sessions.get(interaction.token)!.size in CARD_SIZES)
+                        ? [
+                            {
+                              label: `Custom Text Size: ${sessions.get(interaction.token)!.size}px`,
+                              description: 'Currently selected custom size',
+                              value: String(sessions.get(interaction.token)!.size),
+                              default: true,
+                            },
+                          ]
+                        : []),
                     ],
                   },
                 ],
@@ -466,6 +516,16 @@ createApplicationCommand({
                         description: 'Provide a custom text color',
                         value: 'custom',
                       },
+                      ...(!(sessions.get(interaction.token)!.color in CARD_COLORS)
+                        ? [
+                            {
+                              label: `Custom Text Color: ${sessions.get(interaction.token)!.color}`,
+                              description: 'Currently selected custom color',
+                              value: sessions.get(interaction.token)!.color,
+                              default: true,
+                            },
+                          ]
+                        : []),
                     ],
                   },
                 ],
@@ -595,6 +655,16 @@ createApplicationCommand({
                         description: 'Provide a custom font size',
                         value: 'custom',
                       },
+                      ...(!(sessions.get(interaction.token)!.size in CARD_SIZES)
+                        ? [
+                            {
+                              label: `Custom Text Size: ${sessions.get(interaction.token)!.size}px`,
+                              description: 'Currently selected custom size',
+                              value: String(sessions.get(interaction.token)!.size),
+                              default: true,
+                            },
+                          ]
+                        : []),
                     ],
                   },
                 ],
@@ -618,6 +688,16 @@ createApplicationCommand({
                         description: 'Provide a custom text color',
                         value: 'custom',
                       },
+                      ...(!(sessions.get(interaction.token)!.color in CARD_COLORS)
+                        ? [
+                            {
+                              label: `Custom Text Color: ${sessions.get(interaction.token)!.color}`,
+                              description: 'Currently selected custom color',
+                              value: sessions.get(interaction.token)!.color,
+                              default: true,
+                            },
+                          ]
+                        : []),
                     ],
                   },
                 ],
@@ -727,6 +807,16 @@ createApplicationCommand({
                         description: 'Provide a custom font size',
                         value: 'custom',
                       },
+                      ...(!(sessions.get(interaction.token)!.size in CARD_SIZES)
+                        ? [
+                            {
+                              label: `Custom Text Size: ${sessions.get(interaction.token)!.size}px`,
+                              description: 'Currently selected custom size',
+                              value: String(sessions.get(interaction.token)!.size),
+                              default: true,
+                            },
+                          ]
+                        : []),
                     ],
                   },
                 ],
@@ -750,6 +840,16 @@ createApplicationCommand({
                         description: 'Provide a custom text color',
                         value: 'custom',
                       },
+                      ...(!(sessions.get(interaction.token)!.color in CARD_COLORS)
+                        ? [
+                            {
+                              label: `Custom Text Color: ${sessions.get(interaction.token)!.color}`,
+                              description: 'Currently selected custom color',
+                              value: sessions.get(interaction.token)!.color,
+                              default: true,
+                            },
+                          ]
+                        : []),
                     ],
                   },
                 ],
@@ -854,6 +954,16 @@ createApplicationCommand({
                       description: 'Provide a custom font size',
                       value: 'custom',
                     },
+                    ...(!(sessions.get(interaction.token)!.size in CARD_SIZES)
+                      ? [
+                          {
+                            label: `Custom Text Size: ${sessions.get(interaction.token)!.size}px`,
+                            description: 'Currently selected custom size',
+                            value: String(sessions.get(interaction.token)!.size),
+                            default: true,
+                          },
+                        ]
+                      : []),
                   ],
                 },
               ],
@@ -877,6 +987,16 @@ createApplicationCommand({
                       description: 'Provide a custom text color',
                       value: 'custom',
                     },
+                    ...(!(sessions.get(interaction.token)!.color in CARD_COLORS)
+                      ? [
+                          {
+                            label: `Custom Text Color: ${sessions.get(interaction.token)!.color}`,
+                            description: 'Currently selected custom color',
+                            value: sessions.get(interaction.token)!.color,
+                            default: true,
+                          },
+                        ]
+                      : []),
                   ],
                 },
               ],
@@ -1007,6 +1127,16 @@ createApplicationCommand({
                       description: 'Provide a custom font size',
                       value: 'custom',
                     },
+                    ...(!(sessions.get(interaction.token)!.size in CARD_SIZES)
+                      ? [
+                          {
+                            label: `Custom Text Size: ${sessions.get(interaction.token)!.size}px`,
+                            description: 'Currently selected custom size',
+                            value: String(sessions.get(interaction.token)!.size),
+                            default: true,
+                          },
+                        ]
+                      : []),
                   ],
                 },
               ],
@@ -1030,6 +1160,16 @@ createApplicationCommand({
                       description: 'Provide a custom text color',
                       value: 'custom',
                     },
+                    ...(!(sessions.get(interaction.token)!.color in CARD_COLORS)
+                      ? [
+                          {
+                            label: `Custom Text Color: ${sessions.get(interaction.token)!.color}`,
+                            description: 'Currently selected custom color',
+                            value: sessions.get(interaction.token)!.color,
+                            default: true,
+                          },
+                        ]
+                      : []),
                   ],
                 },
               ],
@@ -1157,6 +1297,16 @@ createApplicationCommand({
                       description: 'Provide a custom font size',
                       value: 'custom',
                     },
+                    ...(!(sessions.get(interaction.token)!.size in CARD_SIZES)
+                      ? [
+                          {
+                            label: `Custom Text Size: ${sessions.get(interaction.token)!.size}px`,
+                            description: 'Currently selected custom size',
+                            value: String(sessions.get(interaction.token)!.size),
+                            default: true,
+                          },
+                        ]
+                      : []),
                   ],
                 },
               ],
@@ -1180,6 +1330,16 @@ createApplicationCommand({
                       description: 'Provide a custom text color',
                       value: 'custom',
                     },
+                    ...(!(sessions.get(interaction.token)!.color in CARD_COLORS)
+                      ? [
+                          {
+                            label: `Custom Text Color: ${sessions.get(interaction.token)!.color}`,
+                            description: 'Currently selected custom color',
+                            value: sessions.get(interaction.token)!.color,
+                            default: true,
+                          },
+                        ]
+                      : []),
                   ],
                 },
               ],
@@ -1271,8 +1431,17 @@ createApplicationCommand({
                     description: 'Provide a custom font size',
                     value: 'custom',
                   },
+                  ...(!(sessions.get(interaction.token)!.size in CARD_SIZES)
+                    ? [
+                        {
+                          label: `Custom Text Size: ${sessions.get(interaction.token)!.size}px`,
+                          description: 'Currently selected custom size',
+                          value: String(sessions.get(interaction.token)!.size),
+                          default: true,
+                        },
+                      ]
+                    : []),
                 ],
-                disabled: true,
               },
             ],
           },
@@ -1295,8 +1464,17 @@ createApplicationCommand({
                     description: 'Provide a custom text color',
                     value: 'custom',
                   },
+                  ...(!(sessions.get(interaction.token)!.color in CARD_COLORS)
+                    ? [
+                        {
+                          label: `Custom Text Color: ${sessions.get(interaction.token)!.color}`,
+                          description: 'Currently selected custom color',
+                          value: sessions.get(interaction.token)!.color,
+                          default: true,
+                        },
+                      ]
+                    : []),
                 ],
-                disabled: true,
               },
             ],
           },

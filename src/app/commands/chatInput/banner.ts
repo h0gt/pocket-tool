@@ -25,37 +25,17 @@ createApplicationCommand({
       description: 'The user to view the banner of',
       required: false,
     },
-    {
-      type: ApplicationCommandOptionType.String,
-      name: 'scope',
-      description: 'the scope of the banner to view',
-      choices: [
-        {
-          name: 'Global',
-          value: 'global',
-        },
-        {
-          name: 'Guild',
-          value: 'guild',
-        },
-      ],
-      required: false,
-    },
   ],
   cooldown: 3,
   acknowledge: true,
   async run(interaction, options, api) {
-    let { user: target, scope } = options;
+    let { user: target } = options;
 
     if (!target) {
       target = {
         user: (interaction.user ?? interaction.member?.user)!,
         member: interaction.member as APIInteractionDataResolvedGuildMember,
       };
-    }
-
-    if (!scope) {
-      scope = 'global';
     }
 
     const { user, member } = target;
@@ -81,162 +61,80 @@ createApplicationCommand({
 
     const u = await api.users.get(user.id);
 
-    const guild = scope === 'guild' && interaction.guild_id ? await api.guilds.get(interaction.guild_id).catch(() => null) : null;
-
-    if (scope === 'guild' && member && guild) {
-      const m = await api.guilds.getMember(guild.id, user.id);
-
-      if (!m.banner) {
-        await api.interactions.editReply(interaction.application_id, interaction.token, {
-          components: [
-            {
-              type: ComponentType.Container,
-              components: [
-                {
-                  type: ComponentType.TextDisplay,
-                  content: `${emoji('Exclamation')} <@${user.id}> doesn't have a guild banner`,
-                },
-              ],
-            },
-          ],
-          flags: MessageFlags.IsComponentsV2,
-        });
-
-        return;
-      }
-
+    if (!u.banner) {
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
             components: [
               {
-                type: ComponentType.MediaGallery,
-                items: [
-                  {
-                    media: {
-                      url: cdn(`guilds/${interaction.guild_id}/users/${user.id}/banners/${m.banner}`, 4096, 'webp', true),
-                    },
-                  },
-                ],
-              },
-              {
-                type: ComponentType.Separator,
-              },
-              {
-                type: ComponentType.ActionRow,
-                components: [
-                  {
-                    type: ComponentType.Button,
-                    url: cdn(`guilds/${interaction.guild_id}/users/${user.id}/banners/${m.banner}`, 4096, 'png'),
-                    label: 'PNG',
-                    style: ButtonStyle.Link,
-                  },
-                  {
-                    type: ComponentType.Button,
-                    url: cdn(`guilds/${interaction.guild_id}/users/${user.id}/banners/${m.banner}`, 4096, 'jpg'),
-                    label: 'JPG',
-                    style: ButtonStyle.Link,
-                  },
-                  {
-                    type: ComponentType.Button,
-                    url: cdn(`guilds/${interaction.guild_id}/users/${user.id}/banners/${m.banner}`, 4096, 'webp'),
-                    label: 'WEBP',
-                    style: ButtonStyle.Link,
-                  },
-                  ...(m.banner.startsWith('a_')
-                    ? ([
-                        {
-                          type: ComponentType.Button,
-                          url: cdn(`guilds/${interaction.guild_id}/users/${user.id}/banners/${m.banner}`, 4096, 'gif'),
-                          label: 'GIF',
-                          style: ButtonStyle.Link,
-                        },
-                      ] satisfies APIComponentInMessageActionRow[])
-                    : []),
-                ],
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Exclamation')} <@${user.id}> doesn't have a banner`,
               },
             ],
           },
         ],
         flags: MessageFlags.IsComponentsV2,
       });
-    } else {
-      if (!u.banner) {
-        await api.interactions.editReply(interaction.application_id, interaction.token, {
-          components: [
-            {
-              type: ComponentType.Container,
-              components: [
-                {
-                  type: ComponentType.TextDisplay,
-                  content: `${emoji('Exclamation')} <@${user.id}> doesn't have a banner`,
-                },
-              ],
-            },
-          ],
-          flags: MessageFlags.IsComponentsV2,
-        });
 
-        return;
-      }
-
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
-        components: [
-          {
-            type: ComponentType.Container,
-            components: [
-              {
-                type: ComponentType.MediaGallery,
-                items: [
-                  {
-                    media: {
-                      url: cdn(`/banners/${user.id}/${u.banner}`, 4096, 'webp', true),
-                    },
-                  },
-                ],
-              },
-              {
-                type: ComponentType.Separator,
-              },
-              {
-                type: ComponentType.ActionRow,
-                components: [
-                  {
-                    type: ComponentType.Button,
-                    url: cdn(`/banners/${user.id}/${u.banner}`, 4096, 'png'),
-                    label: 'PNG',
-                    style: ButtonStyle.Link,
-                  },
-                  {
-                    type: ComponentType.Button,
-                    url: cdn(`/banners/${user.id}/${u.banner}`, 4096, 'jpg'),
-                    label: 'JPG',
-                    style: ButtonStyle.Link,
-                  },
-                  {
-                    type: ComponentType.Button,
-                    url: cdn(`/banners/${user.id}/${u.banner}`, 4096, 'webp', true),
-                    label: 'WEBP',
-                    style: ButtonStyle.Link,
-                  },
-                  ...(u.banner?.startsWith('a_')
-                    ? ([
-                        {
-                          type: ComponentType.Button,
-                          url: cdn(`/banners/${user.id}/${u.banner}`, 4096, 'gif'),
-                          label: 'GIF',
-                          style: ButtonStyle.Link,
-                        },
-                      ] satisfies APIComponentInMessageActionRow[])
-                    : []),
-                ],
-              },
-            ],
-          },
-        ],
-        flags: MessageFlags.IsComponentsV2,
-      });
+      return;
     }
+
+    await api.interactions.editReply(interaction.application_id, interaction.token, {
+      components: [
+        {
+          type: ComponentType.Container,
+          components: [
+            {
+              type: ComponentType.MediaGallery,
+              items: [
+                {
+                  media: {
+                    url: cdn(`/banners/${user.id}/${u.banner}`, 4096, 'webp', true),
+                  },
+                },
+              ],
+            },
+            {
+              type: ComponentType.Separator,
+            },
+            {
+              type: ComponentType.ActionRow,
+              components: [
+                {
+                  type: ComponentType.Button,
+                  url: cdn(`/banners/${user.id}/${u.banner}`, 4096, 'png'),
+                  label: 'PNG',
+                  style: ButtonStyle.Link,
+                },
+                {
+                  type: ComponentType.Button,
+                  url: cdn(`/banners/${user.id}/${u.banner}`, 4096, 'jpg'),
+                  label: 'JPG',
+                  style: ButtonStyle.Link,
+                },
+                {
+                  type: ComponentType.Button,
+                  url: cdn(`/banners/${user.id}/${u.banner}`, 4096, 'webp', true),
+                  label: 'WEBP',
+                  style: ButtonStyle.Link,
+                },
+                ...(u.banner?.startsWith('a_')
+                  ? ([
+                      {
+                        type: ComponentType.Button,
+                        url: cdn(`/banners/${user.id}/${u.banner}`, 4096, 'gif'),
+                        label: 'GIF',
+                        style: ButtonStyle.Link,
+                      },
+                    ] satisfies APIComponentInMessageActionRow[])
+                  : []),
+              ],
+            },
+          ],
+        },
+      ],
+      flags: MessageFlags.IsComponentsV2,
+    });
   },
 });
