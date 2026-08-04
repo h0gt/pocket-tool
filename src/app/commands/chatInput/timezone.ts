@@ -30,11 +30,19 @@ createApplicationCommand({
   acknowledge: true,
   async autocomplete(interaction, api) {
     const focused = getAutocompleteFocusedOption(interaction.data.options);
-    const value = String(focused?.value).toLowerCase() ?? '';
+    const value = String(focused?.value ?? '').toLowerCase();
 
-    const choices = Object.values(Intl.supportedValuesOf('timeZone'))
+    const now = new Date();
+
+    const choices = Intl.supportedValuesOf('timeZone')
       .map((z) => ({
-        name: z,
+        name: `${z} (${new Intl.DateTimeFormat('en-US', {
+          timeZone: z,
+          timeZoneName: 'short',
+        })
+          .format(now)
+          .split(', ')
+          .pop()})`,
         value: z,
       }))
       .filter((c) => c.name.toLowerCase().includes(value))
@@ -54,7 +62,7 @@ createApplicationCommand({
           components: [
             {
               type: ComponentType.TextDisplay,
-              content: `${emoji('Clock')} **${zone}**: ${time.toFormat("cccc d LLLL yyyy 'at' HH:mm:ss")}`,
+              content: `${emoji('Clock')} **${zone}:** ${time.toFormat("cccc d LLLL yyyy 'at' HH:mm:ss")}`,
             },
           ],
         },
