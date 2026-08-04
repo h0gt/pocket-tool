@@ -10,7 +10,7 @@ import {
   type APIMessageTopLevelComponent,
 } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
-import { getChatInputFocusedOption } from '../../../utils/utils';
+import { getAutocompleteFocusedOption } from '../../../utils/utils';
 import env from '../../../utils/env';
 import { emoji, hyperlink, timestamp } from '../../../utils/markdown';
 import { makeRequest } from '../../../utils/request';
@@ -40,7 +40,7 @@ createApplicationCommand({
   cooldown: 5,
   acknowledge: true,
   async autocomplete(interaction, api) {
-    const focused = getChatInputFocusedOption(interaction.data.options);
+    const focused = getAutocompleteFocusedOption(interaction.data.options);
     const value = String(focused?.value).toLowerCase() ?? '';
 
     const choices = [

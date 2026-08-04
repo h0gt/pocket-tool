@@ -231,12 +231,12 @@ export function getChatInputOption(
   }
 }
 
-export function getChatInputFocusedOption(
+export function getAutocompleteFocusedOption(
   options: APIApplicationCommandInteractionDataOption[],
 ): (APIApplicationCommandInteractionDataOption & { value: any }) | undefined {
   for (const option of options) {
     if (option.type === ApplicationCommandOptionType.Subcommand || option.type === ApplicationCommandOptionType.SubcommandGroup) {
-      const found = getChatInputFocusedOption(option.options ?? []);
+      const found = getAutocompleteFocusedOption(option.options ?? []);
 
       if (found) return found;
     }

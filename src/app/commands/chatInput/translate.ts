@@ -8,7 +8,7 @@ import {
   MessageFlags,
 } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
-import { getChatInputFocusedOption } from '../../../utils/utils';
+import { getAutocompleteFocusedOption } from '../../../utils/utils';
 import { makeRequest } from '../../../utils/request';
 import { RequestMethod, ResponseType } from '../../../types/types';
 import { emoji } from '../../../utils/markdown';
@@ -44,7 +44,7 @@ createApplicationCommand({
   cooldown: 5,
   acknowledge: true,
   async autocomplete(interaction, api) {
-    const focused = getChatInputFocusedOption(interaction.data.options);
+    const focused = getAutocompleteFocusedOption(interaction.data.options);
     const value = String(focused?.value).toLowerCase() ?? '';
 
     switch (focused?.name) {

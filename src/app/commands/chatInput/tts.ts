@@ -8,7 +8,7 @@ import {
   MessageFlags,
 } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
-import { getChatInputFocusedOption } from '../../../utils/utils';
+import { getAutocompleteFocusedOption } from '../../../utils/utils';
 import env from '../../../utils/env';
 import { emoji } from '../../../utils/markdown';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
@@ -49,7 +49,7 @@ createApplicationCommand({
   cooldown: 5,
   acknowledge: true,
   async autocomplete(interaction, api) {
-    const focused = getChatInputFocusedOption(interaction.data.options);
+    const focused = getAutocompleteFocusedOption(interaction.data.options);
     const value = String(focused?.value).toLowerCase() ?? '';
 
     const choices = [
