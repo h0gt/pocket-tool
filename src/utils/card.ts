@@ -339,9 +339,9 @@ export async function renderQuoteCard(options: RenderQuoteCardOptions): Promise<
 
   if (!selectedEffects.has('remove-watermark')) drawBrandMark(ctx);
 
-  const losslessFrame = await canvas.encode('png');
+  const frame = await canvas.encode('png');
 
-  return sharp(losslessFrame).gif({ colours: 256, dither: 1, effort: 10 }).toBuffer();
+  return sharp(frame).gif({ effort: 10 }).toBuffer();
 }
 
 function drawLayout(ctx: SKRSContext2D, layout: Layout, effects: ReadonlySet<Effect>, avatar?: LoadedImage): TextArea {

@@ -73,6 +73,25 @@ createApplicationCommand({
       return;
     }
 
+    if (message.message_snapshots && message.message_snapshots.length > 0) {
+      await api.interactions.editReply(interaction.application_id, interaction.token, {
+        components: [
+          {
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Exclamation')} Forwarded messages are currently not supported`,
+              },
+            ],
+          },
+        ],
+        flags: MessageFlags.IsComponentsV2,
+      });
+
+      return;
+    }
+
     const avatar = await makeRequest(
       message.author.avatar
         ? cdn(`/avatars/${message.author.id}/${message.author.avatar}`, 4096, 'webp', false)

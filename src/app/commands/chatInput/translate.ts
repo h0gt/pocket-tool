@@ -82,6 +82,27 @@ createApplicationCommand({
   async run(interaction, options, api) {
     const { text, from, to } = options;
 
+    const query = text.trim();
+
+    if (!query) {
+      await api.interactions.editReply(interaction.application_id, interaction.token, {
+        components: [
+          {
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Exclamation')} Please provide a text message to translate`,
+              },
+            ],
+          },
+        ],
+        flags: MessageFlags.IsComponentsV2,
+      });
+
+      return;
+    }
+
     const res = await makeRequest('https://translate.googleapis.com/translate_a/single', {
       method: RequestMethod.GET,
       response: ResponseType.JSON,
@@ -90,7 +111,7 @@ createApplicationCommand({
         sl: from ?? 'auto',
         tl: to ?? interaction.locale,
         dt: 't',
-        q: text,
+        q: query,
       },
     });
 

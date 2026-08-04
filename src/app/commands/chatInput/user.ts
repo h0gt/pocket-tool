@@ -109,7 +109,7 @@ createApplicationCommand({
                         .map((id) => `<@&${id}>`)
                         .join(', ')}`
                     : ''
-                }${member.roles.length > 5 ? ` ${highlight(`+${(member.roles.length - 5).toLocaleString('en-US')}`)}` : ``}\n\n-# ${emoji('Exclamation')} Due to Discord API limitations this command is unable to display the whole profile, ${hyperlink(`discord://-/users/${user.id}`, 'click here')} to view it through Discord instead!`,
+                }${member.roles.length > 5 ? ` ${highlight(`+${(member.roles.length - 5).toLocaleString('en-US')}`)}` : ``}\n\n-# ${emoji('Exclamation')} Due to Discord limitations, this profile can't be fully displayed ${hyperlink(`discord://-/users/${user.id}`, 'open it in Discord')}`,
               },
             ],
           },
@@ -142,7 +142,7 @@ createApplicationCommand({
               },
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Calendar')} **Created At:**\n${timestamp(getTimestampFromSnowflake(user.id), TimestampStyle.LongDate)} (${timestamp(getTimestampFromSnowflake(user.id), TimestampStyle.RelativeTime)})\n\n-# ${emoji('Exclamation')} Due to Discord API limitations this command is unable to display the whole profile, ${hyperlink(`discord://-/users/${user.id}`, 'click here')} to view it through Discord instead!`,
+                content: `${emoji('Calendar')} **Created At:**\n${timestamp(getTimestampFromSnowflake(user.id), TimestampStyle.LongDate)} (${timestamp(getTimestampFromSnowflake(user.id), TimestampStyle.RelativeTime)})\n\n-# ${emoji('Exclamation')} Due to Discord limitations, this profile can't be fully displayed ${hyperlink(`discord://-/users/${user.id}`, 'open it in Discord')}`,
               },
             ],
           },

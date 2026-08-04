@@ -55,13 +55,13 @@ createApplicationCommand({
       response: ResponseType.BUFFER,
     });
 
-    const gif = await sharp(buffer).gif().toBuffer();
+    const gif = await sharp(buffer).gif({ effort: 10 }).toBuffer();
 
     await api.interactions.editReply(interaction.application_id, interaction.token, {
       content: `-# ${emoji('GIF')} Hover over the GIF to add it to your favorites`,
       files: [
         {
-          name: 'output.gif',
+          name: 'gif.gif',
           data: gif,
         },
       ],

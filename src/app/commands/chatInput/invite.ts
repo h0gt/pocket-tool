@@ -30,7 +30,7 @@ createApplicationCommand({
   async run(interaction, options, api) {
     const { link } = options;
 
-    const code = link.match(/(https?:\/\/)?(www\.)?(discord\.gg|discord(?:app)?\.com\/invite)\/([a-zA-Z0-9-]{2,64})/)?.[4];
+    const code = link.trim().match(/(https?:\/\/)?(www\.)?(discord\.gg|discord(?:app)?\.com\/invite)\/([a-zA-Z0-9-]{2,64})/)?.[4];
 
     if (!code) {
       await api.interactions.editReply(interaction.application_id, interaction.token, {
@@ -40,7 +40,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please provide a valid invite link to view`,
+                content: `${emoji('Exclamation')} Please provide an invite link to view`,
               },
             ],
           },
