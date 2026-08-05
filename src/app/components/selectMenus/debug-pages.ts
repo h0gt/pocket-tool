@@ -121,7 +121,7 @@ createComponent({
         const topCommands = commandsUsage
           .sort((a, b) => Number(b.uses) - Number(a.uses))
           .slice(0, 5)
-          .map((command) => `</${command.name}:${command.id}>: **${Number(command.uses).toLocaleString('en-US')} uses**`)
+          .map((command) => `> </${command.name}:${command.id}>: **${Number(command.uses).toLocaleString('en-US')} uses**`)
           .join('\n');
 
         await api.interactions.editReply(interaction.application_id, interaction.token, {
