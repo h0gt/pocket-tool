@@ -4,6 +4,7 @@ import { InteractableComponentType, TimestampStyle } from '../../../types/types'
 import { msToReadableTime, toComponentEmoji } from '../../../utils/utils';
 import { highlight, hyperlink, timestamp } from '../../../utils/markdown';
 import { commands, components } from '../..';
+import { redis } from '../../../utils/redis';
 
 createComponent({
   type: InteractableComponentType.SelectMenu,
@@ -55,8 +56,105 @@ createComponent({
                           default: true,
                         },
                         {
+                          label: 'Usage',
+                          value: 'usage',
+                        },
+                        {
                           label: 'Credits',
                           value: 'credits',
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  type: ComponentType.ActionRow,
+                  components: [
+                    {
+                      type: ComponentType.Button,
+                      label: 'Add to Your Apps!',
+                      emoji: toComponentEmoji('Link'),
+                      url: `https://discord.com/oauth2/authorize?client_id=${interaction.application_id}`,
+                      style: ButtonStyle.Link,
+                    },
+                    {
+                      type: ComponentType.Button,
+                      label: 'Support Server',
+                      emoji: toComponentEmoji('Discord'),
+                      url: 'https://discord.gg/Y67yNmsPuf',
+                      style: ButtonStyle.Link,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          flags: MessageFlags.IsComponentsV2,
+        });
+
+        break;
+      }
+      case 'usage': {
+        const now = new Date();
+
+        const day = now.toISOString().slice(0, 10);
+        const hour = `${day}:${String(now.getHours()).padStart(2, '0')}`;
+        const minute = `${hour}:${String(now.getMinutes()).padStart(2, '0')}`;
+        const today = (await redis.get(`analytics:commands:day:${day}`)) ?? '0';
+        const lastHour = (await redis.get(`analytics:commands:hour:${hour}`)) ?? '0';
+        const lastMinute = (await redis.get(`analytics:commands:minute:${minute}`)) ?? '0';
+
+        const commandsUsage = [];
+
+        for await (const keys of redis.scanIterator({
+          MATCH: `analytics:commands:*:day:${day}`,
+        })) {
+          for (const key of keys) {
+            const data = await redis.hGetAll(key);
+
+            if (data.id) {
+              commandsUsage.push(data);
+            }
+          }
+        }
+
+        const topCommands = commandsUsage
+          .sort((a, b) => Number(b.uses) - Number(a.uses))
+          .slice(0, 5)
+          .map((command) => `</${command.name}:${command.id}> - ${Number(command.uses).toLocaleString('en-US')} uses`)
+          .join('\n');
+
+        await api.interactions.editReply(interaction.application_id, interaction.token, {
+          components: [
+            {
+              type: ComponentType.Container,
+              components: [
+                {
+                  type: ComponentType.TextDisplay,
+                  content: `-# **Today's command usage:**\n> Today: ${today}\n> Last Hour: ${lastHour}\n> Last Minute: ${lastMinute}\n\n-# **Today's top commands:**\n${topCommands}`,
+                },
+                {
+                  type: ComponentType.Separator,
+                },
+                {
+                  type: ComponentType.ActionRow,
+                  components: [
+                    {
+                      type: ComponentType.StringSelect,
+                      custom_id: `debug-pages_${userId}`,
+                      options: [
+                        {
+                          label: 'About',
+                          value: 'about',
+                        },
+                        {
+                          label: 'Usage',
+                          value: 'usage',
+                        },
+                        {
+                          label: 'Credits',
+                          value: 'credits',
+                          default: true,
                         },
                       ],
                     },
@@ -97,7 +195,7 @@ createComponent({
               components: [
                 {
                   type: ComponentType.TextDisplay,
-                  content: `-# **Development:**\n> ${hyperlink('https://discord.com/users/782946852278501407', '@mloetta')} - Lead Developer\n> ${hyperlink('https://discord.com/users/775273108671430677', '@h0gtt')} - Contributor\n-# **Design:**\n> ${hyperlink('https://merpix.de/', 'Merpix')}\n-# **Additional:**\n> ${hyperlink('https://discord.com/users/808606684837576714', '@mineturtle2.')} - Made most of the emojis\n> ${hyperlink('https://discord.com/users/1031965725423849492', '@wolfypro')} - Host Provider`,
+                  content: `-# **Development:**\n> ${hyperlink('https://discord.com/users/782946852278501407', '@mloetta')} - Lead Developer\n> ${hyperlink('https://discord.com/users/775273108671430677', '@h0gtt')} - Contributor\n\n-# **Design:**\n> ${hyperlink('https://merpix.de/', 'Merpix')}\n\n-# **Additional:**\n> ${hyperlink('https://discord.com/users/808606684837576714', '@mineturtle2.')} - Made most of the emojis\n> ${hyperlink('https://discord.com/users/1031965725423849492', '@wolfypro')} - Host Provider`,
                 },
                 {
                   type: ComponentType.Separator,
@@ -112,6 +210,10 @@ createComponent({
                         {
                           label: 'About',
                           value: 'about',
+                        },
+                        {
+                          label: 'Usage',
+                          value: 'usage',
                         },
                         {
                           label: 'Credits',

@@ -42,6 +42,7 @@ import { getChatInputOption, localizeCommand, parseCommandOptions, parseComponen
 import path from 'path';
 import { verify } from 'discord-verify/node';
 import { loadFonts } from '../utils/card';
+import { redis } from '../utils/redis';
 
 process.on('uncaughtException', console.error);
 process.on('unhandledRejection', console.error);
@@ -204,6 +205,38 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
   const devIds = env.get('dev_ids', true).toArray();
 
   if ('dev' in command && command.dev === true && !devIds.includes(interaction.user?.id ?? interaction.member?.user.id)) return;
+
+  const now = new Date();
+
+  const day = now.toISOString().slice(0, 10);
+  const hour = `${day}:${String(now.getHours()).padStart(2, '0')}`;
+  const minute = `${hour}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  const keys = [`analytics:commands:day:${day}`, `analytics:commands:hour:${hour}`, `analytics:commands:minute:${minute}`];
+
+  for (const key of keys) {
+    const exists = await redis.exists(key);
+
+    await redis.incr(key);
+
+    if (!exists) {
+      await redis.expire(key, 60 * 60 * 24);
+    }
+  }
+
+  const commandKey = `analytics:commands:usage:${interaction.data.id}:day:${day}`;
+
+  if (!(await redis.exists(commandKey))) {
+    await redis.hSet(commandKey, {
+      id: interaction.data.id,
+      name: interaction.data.name,
+      uses: 0,
+    });
+
+    await redis.expire(commandKey, 60 * 60 * 24);
+  }
+
+  await redis.hIncrBy(commandKey, 'uses', 1);
 
   try {
     switch (interaction.data.type) {

@@ -55,6 +55,10 @@ createApplicationCommand({
                       default: true,
                     },
                     {
+                      label: 'Usage',
+                      value: 'usage',
+                    },
+                    {
                       label: 'Credits',
                       value: 'credits',
                     },

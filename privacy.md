@@ -4,7 +4,7 @@ Last Updated: August 2, 2026
 
 This Privacy Policy explains how **Pocket Tool** collects, uses, stores, and protects user data.
 
-By using the app, you agree to the practices described in this Privacy Policy.
+By using Pocket Tool, you agree to the practices described in this Privacy Policy.
 
 ---
 
@@ -12,7 +12,8 @@ By using the app, you agree to the practices described in this Privacy Policy.
 
 Pocket Tool may collect and store the following information:
 
-- Interaction trigger logs
+- Interaction trigger logs, such as command and component interactions
+- Command usage analytics, including command names, command IDs, and usage counts
 
 We only collect data necessary for operating and improving the service.
 
@@ -27,6 +28,7 @@ Collected information may be used to:
 - Improve performance and reliability
 - Prevent abuse and malicious activity
 - Monitor errors and diagnose issues
+- Analyze command usage for improving the service
 
 ---
 
@@ -45,7 +47,7 @@ We are not responsible for the privacy practices of third-party services.
 
 ---
 
-# 5. Data Sharing
+# 4. Data Sharing
 
 We do not sell, rent, or trade user data.
 
@@ -57,7 +59,7 @@ Data may only be shared:
 
 ---
 
-# 6. Data Retention
+# 5. Data Retention
 
 Data is retained only for as long as necessary to operate the service and maintain functionality.
 
@@ -65,7 +67,7 @@ Users may request deletion of their stored data.
 
 ---
 
-# 7. Data Security
+# 6. Data Security
 
 We implement reasonable security measures intended to protect stored information from unauthorized access, loss, misuse, or disclosure.
 
@@ -73,7 +75,7 @@ However, no method of electronic storage or transmission is completely secure.
 
 ---
 
-# 8. User Rights
+# 7. User Rights
 
 Users may request:
 
@@ -85,13 +87,13 @@ Requests can be made through the contact methods listed below.
 
 ---
 
-# 9. Children's Privacy
+# 8. Children's Privacy
 
 Pocket Tool is not intended for users under the minimum age required by Discord's Terms of Service.
 
 ---
 
-# 10. Changes to This Policy
+# 9. Changes to This Policy
 
 This Privacy Policy may be updated at any time.
 
@@ -99,7 +101,7 @@ Continued use of the service after changes become effective constitutes acceptan
 
 ---
 
-# 11. Contact
+# 10. Contact
 
 For privacy-related questions or requests:
 
