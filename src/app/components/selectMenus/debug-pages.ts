@@ -2,7 +2,7 @@ import { ButtonStyle, ComponentType, MessageFlags, type APIMessageComponentSelec
 import createComponent from '../../../helpers/component';
 import { InteractableComponentType, TimestampStyle } from '../../../types/types';
 import { msToReadableTime, toComponentEmoji } from '../../../utils/utils';
-import { highlight, hyperlink, timestamp } from '../../../utils/markdown';
+import { hyperlink, timestamp } from '../../../utils/markdown';
 import { commands, components } from '../..';
 import { redis } from '../../../utils/redis';
 
