@@ -3,6 +3,7 @@ import createApplicationCommand from '../../../helpers/command';
 import env from '../../../utils/env';
 import { emoji, truncate } from '../../../utils/markdown';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
+import { getOpusDurationSecs, getOpusWaveform } from '../../../utils/opus';
 
 createApplicationCommand({
   type: ApplicationCommandType.Message,
@@ -86,8 +87,8 @@ createApplicationCommand({
         {
           id: 0,
           filename: 'tts.opus',
-          waveform: 'AAAAAA==',
-          duration_secs: 1,
+          waveform: await getOpusWaveform(buffer),
+          duration_secs: await getOpusDurationSecs(buffer),
         },
       ],
       files: [
