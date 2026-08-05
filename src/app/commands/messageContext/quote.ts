@@ -14,7 +14,7 @@ import {
   type ModalSubmitLabelComponent,
 } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
-import { cdn, emoji } from '../../../utils/markdown';
+import { cdn, emoji, hyperlink } from '../../../utils/markdown';
 import {
   CARD_COLORS,
   CARD_EFFECTS,
@@ -129,9 +129,10 @@ createApplicationCommand({
     });
 
     const originalMessage = await api.interactions.editReply(interaction.application_id, interaction.token, {
+      content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
       files: [
         {
-          name: `quote.gif`,
+          name: 'quote.gif',
           data: image,
         },
       ],
@@ -246,13 +247,6 @@ createApplicationCommand({
               emoji: toComponentEmoji('Spark'),
               style: ButtonStyle.Secondary,
             },
-            {
-              type: ComponentType.Button,
-              url: `https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`,
-              label: 'View Original',
-              emoji: toComponentEmoji('Quote'),
-              style: ButtonStyle.Link,
-            },
           ],
         },
       ],
@@ -290,9 +284,10 @@ createApplicationCommand({
           });
 
           await api.interactions.editReply(interaction.application_id, interaction.token, {
+            content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
             files: [
               {
-                name: `quote.gif`,
+                name: 'quote.gif',
                 data: image,
               },
             ],
@@ -406,13 +401,6 @@ createApplicationCommand({
                     label: 'Surprise Me!',
                     emoji: toComponentEmoji('Spark'),
                     style: ButtonStyle.Secondary,
-                  },
-                  {
-                    type: ComponentType.Button,
-                    url: `https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`,
-                    label: 'View Original',
-                    emoji: toComponentEmoji('Quote'),
-                    style: ButtonStyle.Link,
                   },
                 ],
               },
@@ -460,9 +448,10 @@ createApplicationCommand({
           });
 
           await api.interactions.editReply(interaction.application_id, interaction.token, {
+            content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
             files: [
               {
-                name: `quote.gif`,
+                name: 'quote.gif',
                 data: image,
               },
             ],
@@ -576,13 +565,6 @@ createApplicationCommand({
                     label: 'Surprise Me!',
                     emoji: toComponentEmoji('Spark'),
                     style: ButtonStyle.Secondary,
-                  },
-                  {
-                    type: ComponentType.Button,
-                    url: `https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`,
-                    label: 'View Original',
-                    emoji: toComponentEmoji('Quote'),
-                    style: ButtonStyle.Link,
                   },
                 ],
               },
@@ -632,9 +614,10 @@ createApplicationCommand({
           });
 
           await api.interactions.editReply(interaction.application_id, interaction.token, {
+            content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
             files: [
               {
-                name: `quote.gif`,
+                name: 'quote.gif',
                 data: image,
               },
             ],
@@ -748,13 +731,6 @@ createApplicationCommand({
                     label: 'Surprise Me!',
                     emoji: toComponentEmoji('Spark'),
                     style: ButtonStyle.Secondary,
-                  },
-                  {
-                    type: ComponentType.Button,
-                    url: `https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`,
-                    label: 'View Original',
-                    emoji: toComponentEmoji('Quote'),
-                    style: ButtonStyle.Link,
                   },
                 ],
               },
@@ -784,9 +760,10 @@ createApplicationCommand({
           });
 
           await api.interactions.editReply(interaction.application_id, interaction.token, {
+            content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
             files: [
               {
-                name: `quote.gif`,
+                name: 'quote.gif',
                 data: image,
               },
             ],
@@ -901,13 +878,6 @@ createApplicationCommand({
                     emoji: toComponentEmoji('Spark'),
                     style: ButtonStyle.Secondary,
                   },
-                  {
-                    type: ComponentType.Button,
-                    url: `https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`,
-                    label: 'View Original',
-                    emoji: toComponentEmoji('Quote'),
-                    style: ButtonStyle.Link,
-                  },
                 ],
               },
             ],
@@ -931,9 +901,10 @@ createApplicationCommand({
         });
 
         await api.interactions.editReply(interaction.application_id, interaction.token, {
+          content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
           files: [
             {
-              name: `quote.gif`,
+              name: 'quote.gif',
               data: image,
             },
           ],
@@ -1047,13 +1018,6 @@ createApplicationCommand({
                   label: 'Surprise Me!',
                   emoji: toComponentEmoji('Spark'),
                   style: ButtonStyle.Secondary,
-                },
-                {
-                  type: ComponentType.Button,
-                  url: `https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`,
-                  label: 'View Original',
-                  emoji: toComponentEmoji('Quote'),
-                  style: ButtonStyle.Link,
                 },
               ],
             },
@@ -1104,9 +1068,10 @@ createApplicationCommand({
         });
 
         await api.interactions.editReply(interaction.application_id, interaction.token, {
+          content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
           files: [
             {
-              name: `quote.gif`,
+              name: 'quote.gif',
               data: image,
             },
           ],
@@ -1220,13 +1185,6 @@ createApplicationCommand({
                   label: 'Surprise Me!',
                   emoji: toComponentEmoji('Spark'),
                   style: ButtonStyle.Secondary,
-                },
-                {
-                  type: ComponentType.Button,
-                  url: `https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`,
-                  label: 'View Original',
-                  emoji: toComponentEmoji('Quote'),
-                  style: ButtonStyle.Link,
                 },
               ],
             },
@@ -1274,9 +1232,10 @@ createApplicationCommand({
         });
 
         await api.interactions.editReply(interaction.application_id, interaction.token, {
+          content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
           files: [
             {
-              name: `quote.gif`,
+              name: 'quote.gif',
               data: image,
             },
           ],
@@ -1391,13 +1350,6 @@ createApplicationCommand({
                   emoji: toComponentEmoji('Spark'),
                   style: ButtonStyle.Secondary,
                 },
-                {
-                  type: ComponentType.Button,
-                  url: `https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`,
-                  label: 'View Original',
-                  emoji: toComponentEmoji('Quote'),
-                  style: ButtonStyle.Link,
-                },
               ],
             },
           ],
@@ -1407,9 +1359,10 @@ createApplicationCommand({
 
     collector.on('end', async () => {
       await api.interactions.editReply(interaction.application_id, interaction.token, {
+        content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
         files: [
           {
-            name: `quote.gif`,
+            name: 'quote.gif',
             data: image,
           },
         ],
@@ -1461,6 +1414,7 @@ createApplicationCommand({
                       ]
                     : []),
                 ],
+                disabled: true,
               },
             ],
           },
@@ -1494,6 +1448,7 @@ createApplicationCommand({
                       ]
                     : []),
                 ],
+                disabled: true,
               },
             ],
           },
@@ -1526,13 +1481,6 @@ createApplicationCommand({
                 emoji: toComponentEmoji('Spark'),
                 style: ButtonStyle.Secondary,
                 disabled: true,
-              },
-              {
-                type: ComponentType.Button,
-                url: `https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`,
-                label: 'View Original',
-                emoji: toComponentEmoji('Quote'),
-                style: ButtonStyle.Link,
               },
             ],
           },
