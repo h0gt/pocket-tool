@@ -3,7 +3,7 @@ import createApplicationCommand from '../../../helpers/command';
 import env from '../../../utils/env';
 import { emoji, truncate } from '../../../utils/markdown';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
-import { getOpusDurationSecs, getOpusWaveform } from '../../../utils/opus';
+import { decodeOpusBytes, getWaveform } from '../../../utils/opus';
 
 createApplicationCommand({
   type: ApplicationCommandType.Message,
@@ -81,14 +81,15 @@ createApplicationCommand({
     });
 
     const buffer = Buffer.from(audio.audioBase64, 'base64');
+    const decoded = await decodeOpusBytes(buffer);
 
     await api.interactions.editReply(interaction.application_id, interaction.token, {
       attachments: [
         {
           id: 0,
           filename: 'tts.opus',
-          waveform: await getOpusWaveform(buffer),
-          duration_secs: await getOpusDurationSecs(buffer),
+          waveform: getWaveform(decoded),
+          duration_secs: decoded.samplesDecoded / decoded.sampleRate,
         },
       ],
       files: [

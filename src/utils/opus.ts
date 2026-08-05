@@ -1,6 +1,6 @@
 import { OggOpusDecoder, type OggOpusDecodedAudio } from 'ogg-opus-decoder';
 
-async function decodeOpusBytes(opusBytes: Uint8Array): Promise<OggOpusDecodedAudio> {
+export async function decodeOpusBytes(opusBytes: Uint8Array): Promise<OggOpusDecodedAudio> {
   const isOggContainer = opusBytes.length > 4 && opusBytes[0] === 0x4f && opusBytes[1] === 0x67 && opusBytes[2] === 0x67 && opusBytes[3] === 0x53;
 
   if (!isOggContainer) {
@@ -19,32 +19,25 @@ async function decodeOpusBytes(opusBytes: Uint8Array): Promise<OggOpusDecodedAud
   }
 }
 
-export async function getOpusDurationSecs(opusBytes: Uint8Array): Promise<number> {
-  const { samplesDecoded, sampleRate } = await decodeOpusBytes(opusBytes);
-
-  return samplesDecoded / sampleRate;
-}
-
-export async function getOpusWaveform(opusBytes: Uint8Array): Promise<string> {
-  const { channelData, samplesDecoded, sampleRate } = await decodeOpusBytes(opusBytes);
-
-  const left = channelData[0];
-  const right = channelData[1];
-
-  if (!left || !right) {
-    throw new Error('Missing left or right channel');
+export function getWaveform({ channelData, samplesDecoded, sampleRate }: OggOpusDecodedAudio): string {
+  if (channelData.length === 0) {
+    throw new Error('No audio channels found');
   }
 
-  let mono: Float32Array;
+  let mono = channelData[0]!;
 
-  if (right && right.length === left.length) {
-    mono = new Float32Array(left.length);
+  if (channelData.length > 1) {
+    mono = new Float32Array(channelData[0]!.length);
 
-    for (let i = 0; i < left.length; i++) {
-      mono[i] = ((left[i] ?? 0) + (right[i] ?? 0)) / 2;
+    for (let i = 0; i < mono.length; i++) {
+      let sum = 0;
+
+      for (const channel of channelData) {
+        sum += channel[i] ?? 0;
+      }
+
+      mono[i] = sum / channelData.length;
     }
-  } else {
-    mono = left;
   }
 
   const durationSecs = samplesDecoded / sampleRate;
@@ -70,6 +63,7 @@ export async function getOpusWaveform(opusBytes: Uint8Array): Promise<string> {
     const rms = count > 0 ? Math.sqrt(sumOfSquares / count) : 0;
     const dbfs = rms > 0 ? 20 * Math.log10(rms) : FLOOR_DBFS;
     const normalized = Math.max(0, Math.min(1, (dbfs - FLOOR_DBFS) / -FLOOR_DBFS));
+
     bytes[i] = Math.round(normalized * 255);
   }
 
