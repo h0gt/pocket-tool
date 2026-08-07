@@ -19,6 +19,8 @@ import {
   type APIModalSubmitInteraction,
   type APIPrimaryEntryPointCommandInteraction,
   type APIUserApplicationCommandInteraction,
+  type RESTPutAPIApplicationCommandsJSONBody,
+  type RESTPutAPIApplicationGuildCommandsJSONBody,
   type Snowflake,
 } from '@discordjs/core/http-only';
 import { Hono } from 'hono';
@@ -38,7 +40,7 @@ import {
   type UserContextMenuCommand,
 } from '../types/types';
 import { emoji, hyperlink, timestamp } from '../utils/markdown';
-import { getChatInputOption, localizeCommand, parseCommandOptions, parseComponentArgs, readDirectory } from '../utils/utils';
+import { getChatInputOption, parseCommandOptions, parseComponentArgs, readDirectory, resolveCommand } from '../utils/utils';
 import path from 'path';
 import { verify } from 'discord-verify/node';
 import { loadFonts } from '../utils/card';
@@ -147,18 +149,18 @@ console.log(`Pocket Tool listening on port ${env.get('port').toNumber() ?? 3000}
 if (env.get('register_commands').toBoolean() === true) {
   console.log('Refreshing application (/) commands');
 
-  for (const command of commands.values()) {
-    if (command.type !== ApplicationCommandType.ChatInput) continue;
+  commands.forEach((c) => {
+    if (c.type !== ApplicationCommandType.ChatInput) return;
 
-    command.options ??= [];
+    c.options ??= [];
 
-    const subcommands = command.options.flatMap((option) => {
+    const subcommands = c.options.flatMap((option) => {
       if (option.type === ApplicationCommandOptionType.Subcommand) return [option];
       if (option.type === ApplicationCommandOptionType.SubcommandGroup) return option.options ?? [];
       return [];
     });
 
-    const targets = subcommands.length > 0 ? subcommands.map((s) => (s.options ??= [])) : [command.options];
+    const targets = subcommands.length > 0 ? subcommands.map((s) => (s.options ??= [])) : [c.options];
 
     for (const options of targets) {
       if (!options.some((o) => o.name === 'incognito')) {
@@ -169,28 +171,42 @@ if (env.get('register_commands').toBoolean() === true) {
         } satisfies BooleanChatInputOption);
       }
     }
-  }
+  });
 
-  const globalCommands = Array.from(commands.values())
-    .filter((c) => !('guilds' in c))
-    .map(localizeCommand);
+  const applicationId = atob(env.get('token', true).toString().split('.')[0]!);
+
+  const globalCommands: RESTPutAPIApplicationCommandsJSONBody = [];
+  const commandsForGuilds = new Collection<string, RESTPutAPIApplicationGuildCommandsJSONBody>();
+
+  commands.forEach((c) => {
+    const resolved = resolveCommand(c);
+
+    if (!('guilds' in c)) {
+      globalCommands.push(resolved);
+
+      return;
+    }
+
+    for (const guildId of c.guilds ?? []) {
+      if (resolved.type === ApplicationCommandType.PrimaryEntryPoint) return;
+
+      const list = commandsForGuilds.get(guildId) ?? [];
+      list.push(resolved);
+      commandsForGuilds.set(guildId, list);
+    }
+  });
 
   if (globalCommands.length > 0) {
     await api.applicationCommands.bulkOverwriteGlobalCommands(atob(env.get('token', true).toString().split('.')[0]!), globalCommands);
   }
 
-  const guildCommands = Array.from(commands.values()).filter((c) => 'guilds' in c);
-  const guildIds = [...new Set(guildCommands.flatMap((c) => ('guilds' in c ? c.guilds : [])))];
+  if (globalCommands.length > 0) {
+    await api.applicationCommands.bulkOverwriteGlobalCommands(applicationId, globalCommands);
+  }
 
-  if (guildCommands.length > 0) {
-    const applicationId = atob(env.get('token', true).toString().split('.')[0]!);
-
-    for (const guildId of guildIds) {
-      const commandsForGuild = guildCommands.filter((c) => ('guilds' in c && c.guilds ? c.guilds.includes(guildId!) : false)).map(localizeCommand);
-
-      if (commandsForGuild.length > 0) {
-        await api.applicationCommands.bulkOverwriteGuildCommands(applicationId, guildId!, commandsForGuild);
-      }
+  for (const [guildId, commandsForGuild] of commandsForGuilds) {
+    if (commandsForGuild.length > 0) {
+      await api.applicationCommands.bulkOverwriteGuildCommands(applicationId, guildId, commandsForGuild);
     }
   }
 

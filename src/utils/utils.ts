@@ -9,8 +9,9 @@ import {
   InteractionType,
   type APIApplicationCommandInteractionDataOption,
   type APIChatInputApplicationCommandInteraction,
-  type APIEmoji,
   type APIMessageComponentEmoji,
+  type RESTPostAPIApplicationCommandsJSONBody,
+  type RESTPostAPIApplicationGuildCommandsJSONBody,
   type Snowflake,
 } from '@discordjs/core/http-only';
 
@@ -128,23 +129,27 @@ function resolveOption(option: ChatInputOption): any {
   };
 }
 
-export function localizeCommand(command: ApplicationCommand): any {
+export function resolveCommand(command: ApplicationCommand): RESTPostAPIApplicationCommandsJSONBody | RESTPostAPIApplicationGuildCommandsJSONBody {
+  const name = resolveLocalization(command.name);
+
   if (command.type === ApplicationCommandType.ChatInput) {
     const description = resolveLocalization(command.description);
 
     return {
       ...command,
-      ...resolveLocalization(command.name),
+      name: name.value,
+      name_localizations: name.localizations,
       description: description.value,
       description_localizations: description.localizations,
       options: command.options?.map(resolveOption),
     };
+  } else {
+    return {
+      ...command,
+      name: name.value,
+      name_localizations: name.localizations,
+    };
   }
-
-  return {
-    ...command,
-    ...resolveLocalization(command.name),
-  };
 }
 
 export function parseCommandOptions(
