@@ -23,7 +23,9 @@ export async function readDirectory(folder: string): Promise<void> {
 
     const fullPath = join(folder, filename);
 
-    await import(pathToFileURL(fullPath).href).catch((error) => console.log(`Cannot import file (${fullPath}) for reason:`, error));
+    await import(pathToFileURL(fullPath).href).catch((error) =>
+      console.log(`Cannot import file (${fullPath}) for reason:`, error),
+    );
   }
 }
 
@@ -129,7 +131,9 @@ function resolveOption(option: ChatInputOption): any {
   };
 }
 
-export function resolveCommand(command: ApplicationCommand): RESTPostAPIApplicationCommandsJSONBody | RESTPostAPIApplicationGuildCommandsJSONBody {
+export function resolveCommand(
+  command: ApplicationCommand,
+): RESTPostAPIApplicationCommandsJSONBody | RESTPostAPIApplicationGuildCommandsJSONBody {
   const name = resolveLocalization(command.name);
 
   if (command.type === ApplicationCommandType.ChatInput) {
@@ -199,7 +203,10 @@ export function parseCommandOptions(
   return args;
 }
 
-export function parseComponentArgs<Args extends readonly string[]>(component: Component<any>, args: string[]): Record<Args[number], string> {
+export function parseComponentArgs<Args extends readonly string[]>(
+  component: Component<any>,
+  args: string[],
+): Record<Args[number], string> {
   const result = {} as Record<Args[number], string>;
 
   const keys = component.args;
@@ -228,7 +235,10 @@ export function getChatInputOption(
   for (const option of options) {
     if (option.name === name) return option;
 
-    if (option.type === ApplicationCommandOptionType.Subcommand || option.type === ApplicationCommandOptionType.SubcommandGroup) {
+    if (
+      option.type === ApplicationCommandOptionType.Subcommand ||
+      option.type === ApplicationCommandOptionType.SubcommandGroup
+    ) {
       const found = getChatInputOption(option.options ?? [], name);
 
       if (found) return found;
@@ -240,7 +250,10 @@ export function getAutocompleteFocusedOption(
   options: APIApplicationCommandInteractionDataOption[],
 ): (APIApplicationCommandInteractionDataOption & { value: any }) | undefined {
   for (const option of options) {
-    if (option.type === ApplicationCommandOptionType.Subcommand || option.type === ApplicationCommandOptionType.SubcommandGroup) {
+    if (
+      option.type === ApplicationCommandOptionType.Subcommand ||
+      option.type === ApplicationCommandOptionType.SubcommandGroup
+    ) {
       const found = getAutocompleteFocusedOption(option.options ?? []);
 
       if (found) return found;

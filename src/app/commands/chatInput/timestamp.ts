@@ -73,7 +73,9 @@ createApplicationCommand({
   async run(interaction, options, api) {
     const { time, style } = options;
 
-    const date = parseDate(time, new Date(), { forwardDate: true });
+    const date = parseDate(`${time} UTC`, new Date(), {
+      forwardDate: true,
+    });
 
     if (!date) {
       await api.interactions.editReply(interaction.application_id, interaction.token, {

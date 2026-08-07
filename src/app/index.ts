@@ -40,7 +40,13 @@ import {
   type UserContextMenuCommand,
 } from '../types/types';
 import { emoji, hyperlink, timestamp } from '../utils/markdown';
-import { getChatInputOption, parseCommandOptions, parseComponentArgs, readDirectory, resolveCommand } from '../utils/utils';
+import {
+  getChatInputOption,
+  parseCommandOptions,
+  parseComponentArgs,
+  readDirectory,
+  resolveCommand,
+} from '../utils/utils';
 import path from 'path';
 import { verify } from 'discord-verify/node';
 import { loadFonts } from '../utils/card';
@@ -72,7 +78,13 @@ app.post('/interactions', async (c) => {
 
   if (!signature || !timestamp) return c.body('missing signature or timestamp', 400);
 
-  const isValid = await verify(rawBody, signature, timestamp, env.get('discord_public_key', true).toString(), crypto.subtle);
+  const isValid = await verify(
+    rawBody,
+    signature,
+    timestamp,
+    env.get('discord_public_key', true).toString(),
+    crypto.subtle,
+  );
 
   if (!isValid) return c.body('invalid request signature', 401);
 
@@ -197,7 +209,10 @@ if (env.get('register_commands').toBoolean() === true) {
   });
 
   if (globalCommands.length > 0) {
-    await api.applicationCommands.bulkOverwriteGlobalCommands(atob(env.get('token', true).toString().split('.')[0]!), globalCommands);
+    await api.applicationCommands.bulkOverwriteGlobalCommands(
+      atob(env.get('token', true).toString().split('.')[0]!),
+      globalCommands,
+    );
   }
 
   if (globalCommands.length > 0) {
@@ -220,7 +235,8 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
 
   const devIds = env.get('dev_ids', true).toArray();
 
-  if ('dev' in command && command.dev === true && !devIds.includes(interaction.user?.id ?? interaction.member?.user.id)) return;
+  if ('dev' in command && command.dev === true && !devIds.includes(interaction.user?.id ?? interaction.member?.user.id))
+    return;
 
   const now = new Date();
 
@@ -228,7 +244,11 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
   const hour = `${day}:${String(now.getHours()).padStart(2, '0')}`;
   const minute = `${hour}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-  const keys = [`analytics:commands:day:${day}`, `analytics:commands:hour:${hour}`, `analytics:commands:minute:${minute}`];
+  const keys = [
+    `analytics:commands:day:${day}`,
+    `analytics:commands:hour:${hour}`,
+    `analytics:commands:minute:${minute}`,
+  ];
 
   for (const key of keys) {
     const exists = await redis.exists(key);
@@ -259,7 +279,8 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
       case ApplicationCommandType.ChatInput: {
         const chatInput = command as ChatInputCommand;
 
-        if (!cooldowns.has(interaction.data.name)) cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
+        if (!cooldowns.has(interaction.data.name))
+          cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
 
         const now = new Date().getTime();
         const timestamps = cooldowns.get(interaction.data.name)!;
@@ -292,7 +313,12 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
 
         const incognito =
-          (getChatInputOption(interaction.data.options ?? [], 'incognito') as APIApplicationCommandInteractionDataBooleanOption)?.value === true;
+          (
+            getChatInputOption(
+              interaction.data.options ?? [],
+              'incognito',
+            ) as APIApplicationCommandInteractionDataBooleanOption
+          )?.value === true;
 
         if (chatInput.acknowledge === true) {
           await api.interactions.defer(interaction.id, interaction.token, {
@@ -310,7 +336,8 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
       case ApplicationCommandType.Message: {
         const messageContext = command as MessageContextMenuCommand;
 
-        if (!cooldowns.has(interaction.data.name)) cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
+        if (!cooldowns.has(interaction.data.name))
+          cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
 
         const now = new Date().getTime();
         const timestamps = cooldowns.get(interaction.data.name)!;
@@ -354,7 +381,8 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
       case ApplicationCommandType.User: {
         const userContext = command as UserContextMenuCommand;
 
-        if (!cooldowns.has(interaction.data.name)) cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
+        if (!cooldowns.has(interaction.data.name))
+          cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
 
         const now = new Date().getTime();
         const timestamps = cooldowns.get(interaction.data.name)!;

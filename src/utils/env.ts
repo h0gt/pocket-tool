@@ -23,13 +23,15 @@ class EnvParser {
   }
 
   toArray(): any[] {
-    if (this.value[0] !== '[' && this.value[this.value.length - 1] !== ']') throw new Error(`Item '${this.key}' is not a valid array`);
+    if (this.value[0] !== '[' && this.value[this.value.length - 1] !== ']')
+      throw new Error(`Item '${this.key}' is not a valid array`);
 
     return JSON.parse(this.value);
   }
 
   toObject(): object {
-    if (this.value[0] !== '{' && this.value[this.value.length - 1] !== '}') throw new Error(`Item '${this.key}' is not a valid object`);
+    if (this.value[0] !== '{' && this.value[this.value.length - 1] !== '}')
+      throw new Error(`Item '${this.key}' is not a valid object`);
 
     return JSON.parse(this.value);
   }

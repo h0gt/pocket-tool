@@ -92,7 +92,12 @@ createApplicationCommand({
                   type: ComponentType.Thumbnail,
                   media: {
                     url: member.avatar
-                      ? cdn(`guilds/${interaction.guild_id}/users/${user.id}/avatars/${member.avatar}`, 4096, 'webp', true)
+                      ? cdn(
+                          `guilds/${interaction.guild_id}/users/${user.id}/avatars/${member.avatar}`,
+                          4096,
+                          'webp',
+                          true,
+                        )
                       : cdn(`/avatars/${user.id}/${user.avatar}`, 4096, 'webp', true),
                   },
                 },

@@ -1,4 +1,9 @@
-import { ApplicationCommandType, ComponentType, MessageFlags, type APIMessageComponentEmoji } from '@discordjs/core/http-only';
+import {
+  ApplicationCommandType,
+  ComponentType,
+  MessageFlags,
+  type APIMessageComponentEmoji,
+} from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
 import { cdn, emoji, highlight, hyperlink, timestamp } from '../../../utils/markdown';
 import { getTimestampFromSnowflake } from '../../../utils/utils';
@@ -50,7 +55,12 @@ createApplicationCommand({
                 type: ComponentType.Thumbnail,
                 media: {
                   url: member?.avatar
-                    ? cdn(`guilds/${interaction.guild_id}/users/${user.id}/avatars/${member.avatar}`, 4096, 'webp', true)
+                    ? cdn(
+                        `guilds/${interaction.guild_id}/users/${user.id}/avatars/${member.avatar}`,
+                        4096,
+                        'webp',
+                        true,
+                      )
                     : cdn(`/avatars/${user.id}/${user.avatar}`, 4096, 'webp', true),
                 },
               },

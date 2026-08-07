@@ -252,9 +252,13 @@ createApplicationCommand({
       ],
     });
 
-    const collector = createCollector<APIMessageComponentSelectMenuInteraction | APIMessageComponentButtonInteraction | APIModalSubmitInteraction>({
+    const collector = createCollector<
+      APIMessageComponentSelectMenuInteraction | APIMessageComponentButtonInteraction | APIModalSubmitInteraction
+    >({
       key: 'quote',
-      filter: (i) => i.message?.id === originalMessage.id && (i.user?.id ?? i.member?.user.id) === (interaction.user?.id ?? interaction.member?.user.id),
+      filter: (i) =>
+        i.message?.id === originalMessage.id &&
+        (i.user?.id ?? i.member?.user.id) === (interaction.user?.id ?? interaction.member?.user.id),
       duration: 5 * 60 * 1000,
     });
 
@@ -1029,7 +1033,10 @@ createApplicationCommand({
         const size =
           (i as APIModalSubmitInteraction).data.components?.[0]?.type === ComponentType.Label
             ? parseInt(
-                (((i as APIModalSubmitInteraction).data.components[0] as ModalSubmitLabelComponent).component as APIModalSubmitTextInputComponent).value,
+                (
+                  ((i as APIModalSubmitInteraction).data.components[0] as ModalSubmitLabelComponent)
+                    .component as APIModalSubmitTextInputComponent
+                ).value,
                 10,
               )
             : undefined;
@@ -1195,7 +1202,10 @@ createApplicationCommand({
 
         const color =
           (i as APIModalSubmitInteraction).data.components?.[0]?.type === ComponentType.Label
-            ? (((i as APIModalSubmitInteraction).data.components[0] as ModalSubmitLabelComponent).component as APIModalSubmitTextInputComponent).value
+            ? (
+                ((i as APIModalSubmitInteraction).data.components[0] as ModalSubmitLabelComponent)
+                  .component as APIModalSubmitTextInputComponent
+              ).value
             : undefined;
 
         if (color === undefined || !isHex(color)) {

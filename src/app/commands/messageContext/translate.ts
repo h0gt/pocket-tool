@@ -1,4 +1,10 @@
-import { ApplicationCommandType, ApplicationIntegrationType, ComponentType, InteractionContextType, MessageFlags } from '@discordjs/core/http-only';
+import {
+  ApplicationCommandType,
+  ApplicationIntegrationType,
+  ComponentType,
+  InteractionContextType,
+  MessageFlags,
+} from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
 import { emoji } from '../../../utils/markdown';
 import { makeRequest } from '../../../utils/request';

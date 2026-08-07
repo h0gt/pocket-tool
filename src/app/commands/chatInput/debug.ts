@@ -37,7 +37,7 @@ createApplicationCommand({
             },
             {
               type: ComponentType.TextDisplay,
-              content: `> Commands: **${commands.size}**\n> Components: **${components.size}**\n> Installs: **${app.approximate_user_install_count}**\n> Uptime: **${msToReadableTime(process.uptime() * 1000)} (${timestamp(Math.floor(new Date().getTime() - process.uptime() * 1000), TimestampStyle.ShortDate)})**`,
+              content: `> Commands: **${commands.size}**\n> Components: **${components.size}**\n> Installs: **${app.approximate_user_install_count}**\n> Uptime: **${msToReadableTime(process.uptime() * 1000)} (${timestamp(Math.floor(new Date().getTime() - process.uptime() * 1000), TimestampStyle.LongDateShortTime)})**`,
             },
             {
               type: ComponentType.Separator,

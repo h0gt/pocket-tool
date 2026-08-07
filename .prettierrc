@@ -3,8 +3,9 @@
   "singleQuote": true,
   "tabWidth": 2,
   "trailingComma": "all",
-  "printWidth": 160,
+  "printWidth": 120,
   "arrowParens": "always",
   "endOfLine": "lf",
-  "bracketSpacing": true
+  "bracketSpacing": true,
+  "quoteProps": "as-needed"
 }

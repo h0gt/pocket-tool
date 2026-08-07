@@ -398,7 +398,15 @@ function drawSplitAvatar(ctx: SKRSContext2D, avatar: LoadedImage | undefined, ef
   ctx.fillRect(fadeStart, 0, panelWidth - fadeStart, HEIGHT);
 }
 
-function drawImageCover(ctx: SKRSContext2D, image: LoadedImage, x: number, y: number, width: number, height: number, effects: ReadonlySet<Effect>): void {
+function drawImageCover(
+  ctx: SKRSContext2D,
+  image: LoadedImage,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  effects: ReadonlySet<Effect>,
+): void {
   const scale = Math.max(width / image.width, height / image.height);
   const sourceWidth = width / scale;
   const sourceHeight = height / scale;
@@ -444,7 +452,17 @@ function drawImageCover(ctx: SKRSContext2D, image: LoadedImage, x: number, y: nu
     ctx.scale(-1, 1);
   }
 
-  ctx.drawImage(source, drawSourceX, drawSourceY, drawSourceWidth, drawSourceHeight, x - overscan, y - overscan, width + overscan * 2, height + overscan * 2);
+  ctx.drawImage(
+    source,
+    drawSourceX,
+    drawSourceY,
+    drawSourceWidth,
+    drawSourceHeight,
+    x - overscan,
+    y - overscan,
+    width + overscan * 2,
+    height + overscan * 2,
+  );
   ctx.restore();
 }
 
@@ -466,7 +484,12 @@ async function drawQuote(
   emojiImages: Record<string, LoadedImage>,
 ): Promise<void> {
   const selectedFont = CARD_FONTS[options.font];
-  let fontSize = typeof options.size === 'number' ? options.size : options.size === 'auto' ? smartFontSize(options.quote) : CARD_SIZES[options.size].pixels;
+  let fontSize =
+    typeof options.size === 'number'
+      ? options.size
+      : options.size === 'auto'
+        ? smartFontSize(options.quote)
+        : CARD_SIZES[options.size].pixels;
   const minFontSize = 20;
   const maxLines = 7;
   let lines: RichLine[] = [];
@@ -502,7 +525,8 @@ async function drawQuote(
   ctx.fillStyle = color;
   ctx.font = resolveFont(selectedFont, fontSize);
 
-  for (const [index, line] of lines.entries()) await drawRichLine(ctx, line, drawX, startY + index * lineHeight, area.align, fontSize, emojiImages);
+  for (const [index, line] of lines.entries())
+    await drawRichLine(ctx, line, drawX, startY + index * lineHeight, area.align, fontSize, emojiImages);
 
   const creditY = startY + lines.length * lineHeight + 14;
 
@@ -615,7 +639,9 @@ function breakLongRichWord(ctx: SKRSContext2D, spans: RichLine, maxWidth: number
   const chunks: RichLine[] = [];
   let current: RichLine = [];
 
-  const atoms = spans.flatMap((span): RichSpan[] => (span.type === 'emoji' ? [span] : [...span.value].map((value) => ({ type: 'text', value }))));
+  const atoms = spans.flatMap((span): RichSpan[] =>
+    span.type === 'emoji' ? [span] : [...span.value].map((value) => ({ type: 'text', value })),
+  );
 
   for (const atom of atoms) {
     const candidate = [...current, atom];

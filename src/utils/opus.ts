@@ -1,7 +1,12 @@
 import { OggOpusDecoder, type OggOpusDecodedAudio } from 'ogg-opus-decoder';
 
 export async function decodeOpusBytes(opusBytes: Uint8Array): Promise<OggOpusDecodedAudio> {
-  const isOggContainer = opusBytes.length > 4 && opusBytes[0] === 0x4f && opusBytes[1] === 0x67 && opusBytes[2] === 0x67 && opusBytes[3] === 0x53;
+  const isOggContainer =
+    opusBytes.length > 4 &&
+    opusBytes[0] === 0x4f &&
+    opusBytes[1] === 0x67 &&
+    opusBytes[2] === 0x67 &&
+    opusBytes[3] === 0x53;
 
   if (!isOggContainer) {
     throw new Error('Invalid Ogg Opus container');

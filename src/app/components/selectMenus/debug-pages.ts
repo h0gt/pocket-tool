@@ -1,4 +1,9 @@
-import { ButtonStyle, ComponentType, MessageFlags, type APIMessageComponentSelectMenuInteraction } from '@discordjs/core/http-only';
+import {
+  ButtonStyle,
+  ComponentType,
+  MessageFlags,
+  type APIMessageComponentSelectMenuInteraction,
+} from '@discordjs/core/http-only';
 import createComponent from '../../../helpers/component';
 import { InteractableComponentType, TimestampStyle } from '../../../types/types';
 import { msToReadableTime, toComponentEmoji } from '../../../utils/utils';
@@ -38,7 +43,7 @@ createComponent({
                 },
                 {
                   type: ComponentType.TextDisplay,
-                  content: `> Commands: **${commands.size}**\n> Components: **${components.size}**\n> Installs: **${app.approximate_user_install_count}**\n> Uptime: **${msToReadableTime(process.uptime() * 1000)} (${timestamp(Math.floor(new Date().getTime() - process.uptime() * 1000), TimestampStyle.ShortDate)})**`,
+                  content: `> Commands: **${commands.size}**\n> Components: **${components.size}**\n> Installs: **${app.approximate_user_install_count}**\n> Uptime: **${msToReadableTime(process.uptime() * 1000)} (${timestamp(Math.floor(new Date().getTime() - process.uptime() * 1000), TimestampStyle.LongDateShortTime)})**`,
                 },
                 {
                   type: ComponentType.Separator,
@@ -121,7 +126,9 @@ createComponent({
         const topCommands = commandsUsage
           .sort((a, b) => Number(b.uses) - Number(a.uses))
           .slice(0, 5)
-          .map((command) => `> </${command.name}:${command.id}>: **${Number(command.uses).toLocaleString('en-US')} uses**`)
+          .map(
+            (command) => `> </${command.name}:${command.id}>: **${Number(command.uses).toLocaleString('en-US')} uses**`,
+          )
           .join('\n');
 
         await api.interactions.editReply(interaction.application_id, interaction.token, {

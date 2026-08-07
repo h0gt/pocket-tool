@@ -1,6 +1,9 @@
 import { RequestMethod, ResponseType, type RequestOptions, type RequestResponse } from '../types/types';
 
-export async function makeRequest<Type extends ResponseType>(url: string, options: RequestOptions<Type>): Promise<RequestResponse[Type]> {
+export async function makeRequest<Type extends ResponseType>(
+  url: string,
+  options: RequestOptions<Type>,
+): Promise<RequestResponse[Type]> {
   const parsedUrl = new URL(url);
 
   if (options.params) {
