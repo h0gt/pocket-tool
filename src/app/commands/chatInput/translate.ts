@@ -119,6 +119,8 @@ createApplicationCommand({
       type: 'language',
     });
 
+    const translated = res[0].map(([text]: [string]) => text).join('');
+
     await api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
         {
@@ -133,7 +135,7 @@ createApplicationCommand({
             },
             {
               type: ComponentType.TextDisplay,
-              content: `${res[0][0][0]}${to === undefined ? "\n-# Target language was selected based on the user's locale" : ''}`,
+              content: `${translated}${to === undefined ? `\n\n-# ${emoji('Exclamation')} Target language was selected based on the user's locale` : ''}`,
             },
           ],
         },
