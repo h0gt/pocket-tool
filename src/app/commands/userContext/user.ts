@@ -1,9 +1,4 @@
-import {
-  ApplicationCommandType,
-  ComponentType,
-  MessageFlags,
-  type APIMessageComponentEmoji,
-} from '@discordjs/core/http-only';
+import { ApplicationCommandType, ComponentType, MessageFlags } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
 import { cdn, emoji, highlight, hyperlink, timestamp } from '../../../utils/markdown';
 import { getTimestampFromSnowflake } from '../../../utils/utils';
@@ -61,7 +56,9 @@ createApplicationCommand({
                         'webp',
                         true,
                       )
-                    : cdn(`/avatars/${user.id}/${user.avatar}`, 4096, 'webp', true),
+                    : user.avatar
+                      ? cdn(`/avatars/${user.id}/${user.avatar}`, 4096, 'webp', true)
+                      : cdn(`/embed/avatars/${Number(BigInt(user.id) >> 22n) % 6}`, 4096, 'png'),
                 },
               },
             },

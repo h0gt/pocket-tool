@@ -98,7 +98,9 @@ createApplicationCommand({
                           'webp',
                           true,
                         )
-                      : cdn(`/avatars/${user.id}/${user.avatar}`, 4096, 'webp', true),
+                      : user.avatar
+                        ? cdn(`/avatars/${user.id}/${user.avatar}`, 4096, 'webp', true)
+                        : cdn(`/embed/avatars/${Number(BigInt(user.id) >> 22n) % 6}`, 4096, 'png'),
                   },
                 },
               },
@@ -138,7 +140,9 @@ createApplicationCommand({
                 accessory: {
                   type: ComponentType.Thumbnail,
                   media: {
-                    url: cdn(`/avatars/${user.id}/${user.avatar}`, 4096, 'webp', true),
+                    url: user.avatar
+                      ? cdn(`/avatars/${user.id}/${user.avatar}`, 4096, 'webp', true)
+                      : cdn(`/embed/avatars/${Number(BigInt(user.id) >> 22n) % 6}`, 4096, 'png'),
                   },
                 },
               },
