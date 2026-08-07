@@ -2,7 +2,7 @@ import { join } from 'path';
 import { pathToFileURL } from 'url';
 import { readdir } from 'fs/promises';
 import { Emoji } from '../types/emojis';
-import type { ApplicationCommand, ChatInputOption, Component, Localization } from '../types/types';
+import type { ApplicationCommand, Component } from '../types/types';
 import {
   ApplicationCommandOptionType,
   ApplicationCommandType,
@@ -106,52 +106,36 @@ export function toReactionEmoji(name: keyof typeof Emoji): string {
   return emoji.replace(/<a?:(.+):(\d+)>/, '$1:$2');
 }
 
-function resolveLocalization(loc: Localization) {
-  if (typeof loc === 'string') return { value: loc, localizations: undefined };
-
-  const { global, ...rest } = loc;
-
-  return {
-    value: global,
-    localizations: Object.keys(rest).length ? rest : undefined,
-  };
-}
-
-function resolveOption(option: ChatInputOption): any {
-  const name = resolveLocalization(option.name);
-  const description = resolveLocalization(option.description);
-
-  return {
-    ...option,
-    name: name.value,
-    description: description.value,
-    name_localizations: name.localizations,
-    description_localizations: description.localizations,
-    ...('options' in option && option.options ? { options: option.options.map(resolveOption) } : {}),
-  };
-}
-
-export function resolveCommand(
+export function transformCommand(
   command: ApplicationCommand,
 ): RESTPostAPIApplicationCommandsJSONBody | RESTPostAPIApplicationGuildCommandsJSONBody {
-  const name = resolveLocalization(command.name);
-
   if (command.type === ApplicationCommandType.ChatInput) {
-    const description = resolveLocalization(command.description);
-
     return {
-      ...command,
-      name: name.value,
-      name_localizations: name.localizations,
-      description: description.value,
-      description_localizations: description.localizations,
-      options: command.options?.map(resolveOption),
+      type: command.type,
+      name: command.name,
+      name_localizations: command.name_localizations,
+      description: command.description,
+      description_localizations: command.description_localizations,
+      options: command.options ?? [],
+      default_member_permissions: command.default_member_permissions?.toString(),
+      nsfw: command.nsfw,
+      integration_types: command.integration_types,
+      contexts: command.contexts,
     };
   } else {
     return {
-      ...command,
-      name: name.value,
-      name_localizations: name.localizations,
+      type: command.type,
+      name: command.name,
+      name_localizations: command.name_localizations,
+      ...('default_member_permissions' in command && command.default_member_permissions !== undefined
+        ? { default_member_permissions: command.default_member_permissions.toString() }
+        : {}),
+      ...('nsfw' in command && command.nsfw !== undefined ? { nsfw: command.nsfw } : {}),
+      ...('integration_types' in command && command.integration_types !== undefined
+        ? { integration_types: command.integration_types }
+        : {}),
+      ...('contexts' in command && command.contexts !== undefined ? { contexts: command.contexts } : {}),
+      ...('handler' in command && command.handler !== undefined ? { handler: command.handler } : {}),
     };
   }
 }

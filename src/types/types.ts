@@ -21,28 +21,30 @@ import type {
   InteractionContextType,
   LocalizationMap,
   Snowflake,
+  PermissionFlagsBits,
 } from '@discordjs/core/http-only';
 import { EventEmitter } from 'events';
 
-export type Localization = (Partial<Record<keyof LocalizationMap, string>> & { global: string }) | string;
-
 export interface BaseNonPrimaryEntryPointCommand<Type extends ApplicationCommandType> {
   type: Type;
-  name: Localization;
+  name: string;
+  name_localizations?: LocalizationMap;
   integration_types?: ApplicationIntegrationType[];
   contexts?: InteractionContextType[];
-  default_member_permissions?: string;
+  default_member_permissions?: (typeof PermissionFlagsBits)[keyof typeof PermissionFlagsBits];
   cooldown?: number;
   guilds?: Snowflake[];
   dev?: boolean;
   acknowledge?: boolean;
   ephemeral?: boolean;
+  nsfw?: boolean;
 }
 
 export interface ChatInputCommand<
   Options extends ChatInputOption[] = ChatInputOption[],
 > extends BaseNonPrimaryEntryPointCommand<ApplicationCommandType.ChatInput> {
-  description: Localization;
+  description: string;
+  description_localizations?: LocalizationMap;
   options?: Options;
   run: (
     interaction: APIChatInputApplicationCommandInteraction,
@@ -67,8 +69,10 @@ export type ChatInputOption =
 
 export type BaseChatInputOption<Type extends ApplicationCommandOptionType = ApplicationCommandOptionType> = {
   type: Type;
-  name: Localization;
-  description: Localization;
+  name: string;
+  name_localizations?: LocalizationMap;
+  description: string;
+  description_localizations?: LocalizationMap;
   required?: boolean;
 };
 
@@ -80,35 +84,56 @@ export type ChannelChatInputOption = BaseChatInputOption<ApplicationCommandOptio
   channel_types?: ApplicationCommandOptionAllowedChannelType[];
 };
 
-export type IntegerChatInputOption = BaseChatInputOption<ApplicationCommandOptionType.Integer> & {
-  max_value?: number;
-  min_value?: number;
-  choices?: Record<string, number>;
-  autocomplete?: boolean;
-};
+export type IntegerChatInputOption =
+  | (BaseChatInputOption<ApplicationCommandOptionType.Integer> & {
+      max_value?: number;
+      min_value?: number;
+      choices?: ChatInputOptionChoice<ApplicationCommandOptionType.Integer>[];
+      autocomplete?: false;
+    })
+  | (BaseChatInputOption<ApplicationCommandOptionType.Integer> & {
+      max_value?: number;
+      min_value?: number;
+      choices?: never;
+      autocomplete: true;
+    });
 
 export type MentionableChatInputOption = BaseChatInputOption<ApplicationCommandOptionType.Mentionable>;
 
-export type NumberChatInputOption = BaseChatInputOption<ApplicationCommandOptionType.Number> & {
-  max_value?: number;
-  min_value?: number;
-  choices?: ChatInputOptionChoice<ApplicationCommandOptionType.Number>[];
-  autocomplete?: boolean;
-};
+export type NumberChatInputOption =
+  | (BaseChatInputOption<ApplicationCommandOptionType.Number> & {
+      max_value?: number;
+      min_value?: number;
+      choices?: ChatInputOptionChoice<ApplicationCommandOptionType.Number>[];
+      autocomplete?: false;
+    })
+  | (BaseChatInputOption<ApplicationCommandOptionType.Number> & {
+      max_value?: number;
+      min_value?: number;
+      choices?: never;
+      autocomplete: true;
+    });
 
 export type RoleChatInputOption = BaseChatInputOption<ApplicationCommandOptionType.Role>;
 
-export type StringChatInputOption = BaseChatInputOption<ApplicationCommandOptionType.String> & {
-  max_length?: number;
-  min_length?: number;
-  choices?: ChatInputOptionChoice<ApplicationCommandOptionType.String>[];
-  autocomplete?: boolean;
-};
+export type StringChatInputOption =
+  | (BaseChatInputOption<ApplicationCommandOptionType.String> & {
+      max_length?: number;
+      min_length?: number;
+      choices?: ChatInputOptionChoice<ApplicationCommandOptionType.String>[];
+      autocomplete?: false;
+    })
+  | (BaseChatInputOption<ApplicationCommandOptionType.String> & {
+      max_length?: number;
+      min_length?: number;
+      choices?: never;
+      autocomplete: true;
+    });
 
 export type UserChatInputOption = BaseChatInputOption<ApplicationCommandOptionType.User>;
 
 export type SubcommandChatInputOption = BaseChatInputOption<ApplicationCommandOptionType.Subcommand> & {
-  options?: ChatInputOption[];
+  options?: Exclude<ChatInputOption, SubcommandChatInputOption | SubcommandGroupChatInputOption>[];
 };
 
 export type SubcommandGroupChatInputOption = BaseChatInputOption<ApplicationCommandOptionType.SubcommandGroup> & {
@@ -116,7 +141,8 @@ export type SubcommandGroupChatInputOption = BaseChatInputOption<ApplicationComm
 };
 
 export type ChatInputOptionChoice<Type extends ApplicationCommandOptionType> = {
-  name: Localization;
+  name: string;
+  name_localizations?: LocalizationMap;
   value: Type extends ApplicationCommandOptionType.String
     ? string
     : Type extends ApplicationCommandOptionType.Number
@@ -184,7 +210,8 @@ export interface MessageContextMenuCommand extends BaseNonPrimaryEntryPointComma
 
 export interface PrimaryEntryPointCommand {
   type: ApplicationCommandType.PrimaryEntryPoint;
-  name: Localization;
+  name: string;
+  name_localizations?: LocalizationMap;
   handler: EntryPointCommandHandlerType;
   run?: (interaction: APIPrimaryEntryPointCommandInteraction, api: API) => Promise<void>;
 }

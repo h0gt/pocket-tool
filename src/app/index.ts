@@ -45,7 +45,7 @@ import {
   parseCommandOptions,
   parseComponentArgs,
   readDirectory,
-  resolveCommand,
+  transformCommand,
 } from '../utils/utils';
 import path from 'path';
 import { verify } from 'discord-verify/node';
@@ -191,7 +191,7 @@ if (env.get('register_commands').toBoolean() === true) {
   const commandsForGuilds = new Collection<string, RESTPutAPIApplicationGuildCommandsJSONBody>();
 
   commands.forEach((c) => {
-    const resolved = resolveCommand(c);
+    const resolved = transformCommand(c);
 
     if (!('guilds' in c)) {
       globalCommands.push(resolved);
