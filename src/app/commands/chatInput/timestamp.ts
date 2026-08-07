@@ -7,8 +7,11 @@ import {
   MessageFlags,
 } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
-import { parseDate } from 'chrono-node';
-import { emoji } from '../../../utils/markdown';
+import { parse } from 'chrono-node';
+import { emoji, timestamp } from '../../../utils/markdown';
+import type { TimestampStyle } from '../../../types/types';
+import { getAutocompleteFocusedOption } from '../../../utils/utils';
+import { Temporal } from '@js-temporal/polyfill';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
@@ -25,9 +28,16 @@ createApplicationCommand({
     },
     {
       type: ApplicationCommandOptionType.String,
+      name: 'timezone',
+      description: 'The timezone to use for the timestamp',
+      required: false,
+      autocomplete: true,
+    },
+    {
+      type: ApplicationCommandOptionType.String,
       name: 'style',
       description: 'The timestamp style to use',
-      required: true,
+      required: false,
       choices: [
         {
           name: 'Short Time',
@@ -70,12 +80,32 @@ createApplicationCommand({
   ],
   cooldown: 3,
   acknowledge: true,
-  async run(interaction, options, api) {
-    const { time, style } = options;
+  async autocomplete(interaction, api) {
+    const focused = getAutocompleteFocusedOption(interaction.data.options);
+    const value = String(focused?.value ?? '').toLowerCase();
 
-    const date = parseDate(`${time} UTC`, new Date(), {
-      forwardDate: true,
-    });
+    const now = new Date();
+
+    const choices = Intl.supportedValuesOf('timeZone')
+      .map((z) => ({
+        name: `${z} (${new Intl.DateTimeFormat('en-US', {
+          timeZone: z,
+          timeZoneName: 'short',
+        })
+          .format(now)
+          .split(', ')
+          .pop()})`,
+        value: z,
+      }))
+      .filter((c) => c.name.toLowerCase().includes(value))
+      .slice(0, 25);
+
+    await api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
+  },
+  async run(interaction, options, api) {
+    const { time, timezone, style } = options;
+
+    const date = parseDate(time, timezone ?? 'UTC');
 
     if (!date) {
       await api.interactions.editReply(interaction.application_id, interaction.token, {
@@ -100,10 +130,29 @@ createApplicationCommand({
       components: [
         {
           type: ComponentType.TextDisplay,
-          content: `<t:${Math.floor(date.getTime() / 1000)}:${style}>`,
+          content: timestamp(date, (style ?? 'f') as TimestampStyle),
         },
       ],
       flags: MessageFlags.IsComponentsV2,
     });
   },
 });
+
+function parseDate(time: string, timezone: string): number {
+  const reference = Temporal.Now.zonedDateTimeISO(timezone);
+  const parsed = parse(time, new Date(reference.epochMilliseconds))[0];
+
+  if (!parsed) throw new Error('Invalid date provided');
+
+  const date = Temporal.ZonedDateTime.from({
+    timeZone: timezone,
+    year: parsed.start.get('year')!,
+    month: parsed.start.get('month')!,
+    day: parsed.start.get('day')!,
+    hour: parsed.start.get('hour') ?? 0,
+    minute: parsed.start.get('minute') ?? 0,
+    second: parsed.start.get('second') ?? 0,
+  });
+
+  return date.epochMilliseconds;
+}

@@ -8,8 +8,8 @@ import {
 } from '@discordjs/core';
 import createApplicationCommand from '../../../helpers/command';
 import { getAutocompleteFocusedOption } from '../../../utils/utils';
-import { DateTime } from 'luxon';
 import { emoji } from '../../../utils/markdown';
+import { Temporal } from '@js-temporal/polyfill';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
@@ -53,7 +53,19 @@ createApplicationCommand({
   async run(interaction, options, api) {
     const { zone } = options;
 
-    const time = DateTime.now().setZone(zone);
+    const time = Temporal.Now.zonedDateTimeISO(zone);
+
+    const formatted = `${time.toLocaleString('en-US', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })} at ${time.toLocaleString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    })}`;
 
     await api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
@@ -62,7 +74,7 @@ createApplicationCommand({
           components: [
             {
               type: ComponentType.TextDisplay,
-              content: `${emoji('Clock')} **${zone}:** ${time.toFormat("cccc d LLLL yyyy 'at' HH:mm:ss")}`,
+              content: `${emoji('Clock')} **${zone}:** ${formatted}`,
             },
           ],
         },
