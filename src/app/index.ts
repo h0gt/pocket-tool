@@ -237,9 +237,11 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
 
   const now = Temporal.Now.zonedDateTimeISO('America/Sao_Paulo');
 
-  const day = now.toPlainDate().toString();
-  const hour = `${day}:${String(now.hour).padStart(2, '0')}`;
-  const minute = `${hour}:${String(now.minute).padStart(2, '0')}`;
+  const analyticsDate = now.hour < 21 ? now.subtract({ days: 1 }) : now;
+
+  const day = analyticsDate.toPlainDate().toString();
+  const hour = String(now.hour).padStart(2, '0');
+  const minute = String(now.minute).padStart(2, '0');
 
   let nextReset = now.with({
     hour: 21,
@@ -256,8 +258,8 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
 
   const keys = [
     `analytics:commands:day:${day}`,
-    `analytics:commands:hour:${hour}`,
-    `analytics:commands:minute:${minute}`,
+    `analytics:commands:hour:${day}:${hour}`,
+    `analytics:commands:minute:${day}:${hour}:${minute}`,
   ];
 
   for (const key of keys) {

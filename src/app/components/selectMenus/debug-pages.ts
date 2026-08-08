@@ -10,6 +10,7 @@ import { msToReadableTime, toComponentEmoji } from '../../../utils/utils';
 import { hyperlink, timestamp } from '../../../utils/markdown';
 import { commands, components } from '../..';
 import { redis } from '../../../utils/redis';
+import { Temporal } from '@js-temporal/polyfill';
 
 createComponent({
   type: InteractableComponentType.SelectMenu,
@@ -112,7 +113,7 @@ createComponent({
               components: [
                 {
                   type: ComponentType.TextDisplay,
-                  content: `**Statistics**\n> Commands: **${commands.size}**\n> Components: **${components.size}**\n> Installs: **${app.approximate_user_install_count}**\n> Uptime: **${msToReadableTime(process.uptime() * 1000)} (${timestamp(Math.floor(new Date().getTime() - process.uptime() * 1000), TimestampStyle.LongDateShortTime)})**`,
+                  content: `-# **Statistics**\n> Commands: **${commands.size}**\n> Components: **${components.size}**\n> Installs: **${app.approximate_user_install_count}**\n> Uptime: **${msToReadableTime(process.uptime() * 1000)} (${timestamp(Math.floor(new Date().getTime() - process.uptime() * 1000), TimestampStyle.LongDateShortTime)})**`,
                 },
                 {
                   type: ComponentType.Separator,
@@ -173,19 +174,23 @@ createComponent({
         break;
       }
       case 'usage': {
-        const now = new Date();
+        const now = Temporal.Now.zonedDateTimeISO('America/Sao_Paulo');
 
-        const day = now.toISOString().slice(0, 10);
-        const hour = `${day}:${String(now.getHours()).padStart(2, '0')}`;
-        const minute = `${hour}:${String(now.getMinutes()).padStart(2, '0')}`;
+        const analyticsDate = now.hour < 21 ? now.subtract({ days: 1 }) : now;
+
+        const day = analyticsDate.toPlainDate().toString();
+        const hour = String(now.hour).padStart(2, '0');
+        const minute = String(now.minute).padStart(2, '0');
+
         const today = (await redis.get(`analytics:commands:day:${day}`)) ?? '0';
-        const lastHour = (await redis.get(`analytics:commands:hour:${hour}`)) ?? '0';
-        const lastMinute = (await redis.get(`analytics:commands:minute:${minute}`)) ?? '0';
+        const lastHour = (await redis.get(`analytics:commands:hour:${day}:${hour}`)) ?? '0';
+        const lastMinute = (await redis.get(`analytics:commands:minute:${day}:${hour}:${minute}`)) ?? '0';
 
         const commandsUsage = [];
 
         for await (const keys of redis.scanIterator({
-          MATCH: `analytics:commands:*:day:${day}`,
+          MATCH: `analytics:commands:usage:*:day:${day}`,
+          COUNT: 100,
         })) {
           for (const key of keys) {
             const data = await redis.hGetAll(key);
