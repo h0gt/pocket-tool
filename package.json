@@ -1,5 +1,5 @@
 {
-  "name": "pocket-tool-http",
+  "name": "pocket-tool",
   "module": "src/app/index.ts",
   "type": "module",
   "private": true,
