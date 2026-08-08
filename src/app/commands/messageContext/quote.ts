@@ -1390,6 +1390,8 @@ createApplicationCommand({
     });
 
     collector.on('end', async () => {
+      sessions.delete(interaction.token);
+
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
         files: [

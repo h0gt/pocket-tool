@@ -8,7 +8,6 @@ import {
   TextInputStyle,
   type APIComponentInActionRow,
   type APIMessageComponentButtonInteraction,
-  type APIMessageTopLevelComponent,
   type APIModalSubmitInteraction,
   type APIModalSubmitTextInputComponent,
   type ModalSubmitLabelComponent,
@@ -29,25 +28,26 @@ createApplicationCommand({
   cooldown: 3,
   acknowledge: true,
   async run(interaction, options, api) {
-    const commands = await api.applicationCommands.getGlobalCommands(interaction.application_id);
+    const globalCommands = await api.applicationCommands.getGlobalCommands(interaction.application_id);
 
     const perPage = 5;
 
-    const pages = new List(
+    const list = new List(
       true,
-      ...Array.from({ length: Math.ceil(commands.length / perPage) }, (_, index) =>
-        commands.slice(index * perPage, index * perPage + perPage),
+      ...Array.from({ length: Math.ceil(globalCommands.length / perPage) }, (_, index) =>
+        globalCommands.slice(index * perPage, index * perPage + perPage),
       ),
     );
 
-    let currentPages = pages;
+    let pages = list;
+    let query: string | null = null;
 
-    const page = currentPages.current ?? [];
+    const page = pages.current ?? [];
 
-    const commandList = page
+    let commands = page
       .map(
         (c, index) =>
-          `**${currentPages.pointer * perPage + index + 1}.** </${c.name}:${c.id}>${c.description ? `\n-# ${c.description}` : ''}`,
+          `**${pages.pointer * perPage + index + 1}.** </${c.name}:${c.id}>${c.description ? `\n-# ${c.description}` : ''}`,
       )
       .join('\n\n');
 
@@ -79,14 +79,14 @@ createApplicationCommand({
           components: [
             {
               type: ComponentType.TextDisplay,
-              content: commandList,
+              content: commands,
             },
             {
               type: ComponentType.Separator,
             },
             {
               type: ComponentType.TextDisplay,
-              content: `-# Page **${currentPages.pointer + 1}** of **${currentPages.length}**`,
+              content: `-# Page **${pages.pointer + 1}** of **${pages.length}**`,
             },
             {
               type: ComponentType.ActionRow,
@@ -126,12 +126,12 @@ createApplicationCommand({
         case 'commands-prev': {
           await api.interactions.deferMessageUpdate(i.id, i.token);
 
-          currentPages.back();
+          pages.back();
 
-          const commandList = (currentPages.current ?? [])
+          commands = (pages.current ?? [])
             .map(
               (c, index) =>
-                `**${currentPages.pointer * perPage + index + 1}.** </${c.name}:${c.id}>${c.description ? `\n-# ${c.description}` : ''}`,
+                `**${pages.pointer * perPage + index + 1}.** </${c.name}:${c.id}>${c.description ? `\n-# ${c.description}` : ''}`,
             )
             .join('\n\n');
 
@@ -146,7 +146,9 @@ createApplicationCommand({
                       {
                         type: ComponentType.TextDisplay,
                         content:
-                          '### Command Browser\n-# Find all the available commands through pagination or search for a specific one',
+                          pages !== pages
+                            ? `### Command Browser\n-# Search results for **${query}**`
+                            : '### Command Browser\n-# Find all the available commands through pagination or search for a specific one',
                       },
                     ],
                     accessory: {
@@ -163,14 +165,14 @@ createApplicationCommand({
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: commandList,
+                    content: commands,
                   },
                   {
                     type: ComponentType.Separator,
                   },
                   {
                     type: ComponentType.TextDisplay,
-                    content: `-# Page **${currentPages.pointer + 1}** of **${currentPages.length}**`,
+                    content: `-# Page **${pages.pointer + 1}** of **${pages.length}**`,
                   },
                   {
                     type: ComponentType.ActionRow,
@@ -181,7 +183,7 @@ createApplicationCommand({
                         emoji: toComponentEmoji('Previous'),
                         style: ButtonStyle.Secondary,
                       },
-                      ...(currentPages !== pages
+                      ...(pages !== pages
                         ? ([
                             {
                               type: ComponentType.Button,
@@ -210,12 +212,12 @@ createApplicationCommand({
         case 'commands-next': {
           await api.interactions.deferMessageUpdate(i.id, i.token);
 
-          currentPages.next();
+          pages.next();
 
-          const commandList = (currentPages.current ?? [])
+          commands = (pages.current ?? [])
             .map(
               (c, index) =>
-                `**${currentPages.pointer * perPage + index + 1}.** </${c.name}:${c.id}>${c.description ? `\n-# ${c.description}` : ''}`,
+                `**${pages.pointer * perPage + index + 1}.** </${c.name}:${c.id}>${c.description ? `\n-# ${c.description}` : ''}`,
             )
             .join('\n\n');
 
@@ -230,7 +232,9 @@ createApplicationCommand({
                       {
                         type: ComponentType.TextDisplay,
                         content:
-                          '### Command Browser\n-# Find all the available commands through pagination or search for a specific one',
+                          pages !== pages
+                            ? `### Command Browser\n-# Search results for **${query}**`
+                            : '### Command Browser\n-# Find all the available commands through pagination or search for a specific one',
                       },
                     ],
                     accessory: {
@@ -247,14 +251,14 @@ createApplicationCommand({
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: commandList,
+                    content: commands,
                   },
                   {
                     type: ComponentType.Separator,
                   },
                   {
                     type: ComponentType.TextDisplay,
-                    content: `-# Page **${currentPages.pointer + 1}** of **${currentPages.length}**`,
+                    content: `-# Page **${pages.pointer + 1}** of **${pages.length}**`,
                   },
                   {
                     type: ComponentType.ActionRow,
@@ -265,7 +269,7 @@ createApplicationCommand({
                         emoji: toComponentEmoji('Previous'),
                         style: ButtonStyle.Secondary,
                       },
-                      ...(currentPages !== pages
+                      ...(pages !== pages
                         ? ([
                             {
                               type: ComponentType.Button,
@@ -323,11 +327,9 @@ createApplicationCommand({
                 ).value
               : undefined;
 
-          if (!name) return;
+          if (!name?.trim().toLowerCase()) return;
 
-          const query = name.trim().toLowerCase();
-
-          const results = commands.filter((c) => c.name.trim().toLowerCase().includes(query));
+          const results = globalCommands.filter((c) => c.name.trim().toLowerCase().includes(name.trim().toLowerCase()));
 
           if (results.length === 0) {
             await api.interactions.followUp(interaction.application_id, interaction.token, {
@@ -348,17 +350,18 @@ createApplicationCommand({
             return;
           }
 
-          currentPages = new List(
+          pages = new List(
             true,
             ...Array.from({ length: Math.ceil(results.length / perPage) }, (_, index) =>
               results.slice(index * perPage, index * perPage + perPage),
             ),
           );
+          query = name.trim().toLowerCase();
 
-          const commandList = (currentPages.current ?? [])
+          commands = (pages.current ?? [])
             .map(
               (c, index) =>
-                `**${currentPages.pointer * perPage + index + 1}.** </${c.name}:${c.id}>${c.description ? `\n-# ${c.description}` : ''}`,
+                `**${pages.pointer * perPage + index + 1}.** </${c.name}:${c.id}>${c.description ? `\n-# ${c.description}` : ''}`,
             )
             .join('\n\n');
 
@@ -389,14 +392,14 @@ createApplicationCommand({
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: commandList,
+                    content: commands,
                   },
                   {
                     type: ComponentType.Separator,
                   },
                   {
                     type: ComponentType.TextDisplay,
-                    content: `-# Page **${currentPages.pointer + 1}** of **${currentPages.length}**`,
+                    content: `-# Page **${pages.pointer + 1}** of **${pages.length}**`,
                   },
                   {
                     type: ComponentType.ActionRow,
@@ -432,12 +435,13 @@ createApplicationCommand({
         case 'commands-back': {
           await api.interactions.deferMessageUpdate(i.id, i.token);
 
-          currentPages = pages;
+          pages = pages;
+          query = null;
 
-          const commandList = (currentPages.current ?? [])
+          commands = (pages.current ?? [])
             .map(
               (c, index) =>
-                `**${currentPages.pointer * perPage + index + 1}.** </${c.name}:${c.id}>${c.description ? `\n-# ${c.description}` : ''}`,
+                `**${pages.pointer * perPage + index + 1}.** </${c.name}:${c.id}>${c.description ? `\n-# ${c.description}` : ''}`,
             )
             .join('\n\n');
 
@@ -469,14 +473,14 @@ createApplicationCommand({
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: commandList,
+                    content: commands,
                   },
                   {
                     type: ComponentType.Separator,
                   },
                   {
                     type: ComponentType.TextDisplay,
-                    content: `-# Page **${currentPages.pointer + 1}** of **${currentPages.length}**`,
+                    content: `-# Page **${pages.pointer + 1}** of **${pages.length}**`,
                   },
                   {
                     type: ComponentType.ActionRow,
@@ -518,7 +522,9 @@ createApplicationCommand({
                   {
                     type: ComponentType.TextDisplay,
                     content:
-                      '### Command Browser\n-# Find all the available commands through pagination or search for a specific one',
+                      pages !== pages
+                        ? `### Command Browser\n-# Search results for **${query}**`
+                        : '### Command Browser\n-# Find all the available commands through pagination or search for a specific one',
                   },
                 ],
                 accessory: {
@@ -536,14 +542,14 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: commandList,
+                content: commands,
               },
               {
                 type: ComponentType.Separator,
               },
               {
                 type: ComponentType.TextDisplay,
-                content: `-# Page **${currentPages.pointer + 1}** of **${currentPages.length}**`,
+                content: `-# Page **${pages.pointer + 1}** of **${pages.length}**`,
               },
               {
                 type: ComponentType.ActionRow,
@@ -555,7 +561,7 @@ createApplicationCommand({
                     style: ButtonStyle.Secondary,
                     disabled: true,
                   },
-                  ...(currentPages !== pages
+                  ...(pages !== pages
                     ? ([
                         {
                           type: ComponentType.Button,
