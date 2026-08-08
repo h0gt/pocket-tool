@@ -553,6 +553,7 @@ createApplicationCommand({
                     custom_id: 'commands-prev',
                     emoji: toComponentEmoji('Previous'),
                     style: ButtonStyle.Secondary,
+                    disabled: true,
                   },
                   ...(currentPages !== pages
                     ? ([
@@ -561,6 +562,7 @@ createApplicationCommand({
                           custom_id: 'commands-back',
                           emoji: toComponentEmoji('Home'),
                           style: ButtonStyle.Secondary,
+                          disabled: true,
                         },
                       ] satisfies APIComponentInActionRow[])
                     : []),
@@ -569,6 +571,7 @@ createApplicationCommand({
                     custom_id: 'commands-next',
                     emoji: toComponentEmoji('Next'),
                     style: ButtonStyle.Secondary,
+                    disabled: true,
                   },
                 ],
               },
