@@ -140,18 +140,46 @@ createApplicationCommand({
 
 function parseDate(time: string, timezone: string): number {
   const reference = Temporal.Now.zonedDateTimeISO(timezone);
-  const parsed = parse(time, new Date(reference.epochMilliseconds))[0];
 
-  if (!parsed) throw new Error('Invalid date provided');
+  const referenceDate = new Date(
+    Date.UTC(
+      reference.year,
+      reference.month - 1,
+      reference.day,
+      reference.hour,
+      reference.minute,
+      reference.second,
+      reference.millisecond,
+    ),
+  );
+
+  const parsed = parse(time, referenceDate)[0];
+
+  if (!parsed) {
+    throw new Error('Invalid date provided');
+  }
+
+  const year = parsed.start.get('year')!;
+  const month = parsed.start.get('month')!;
+  const day = parsed.start.get('day')!;
+
+  const hour = parsed.start.get('hour') ?? 0;
+  const minute = parsed.start.get('minute') ?? 0;
+  const second = parsed.start.get('second') ?? 0;
+
+  const millisecond = parsed.start.get('millisecond') ?? 0;
 
   const date = Temporal.ZonedDateTime.from({
     timeZone: timezone,
-    year: parsed.start.get('year')!,
-    month: parsed.start.get('month')!,
-    day: parsed.start.get('day')!,
-    hour: parsed.start.get('hour') ?? 0,
-    minute: parsed.start.get('minute') ?? 0,
-    second: parsed.start.get('second') ?? 0,
+    year,
+    month,
+    day,
+    hour,
+    minute,
+    second,
+    millisecond,
+    microsecond: 0,
+    nanosecond: 0,
   });
 
   return date.epochMilliseconds;
