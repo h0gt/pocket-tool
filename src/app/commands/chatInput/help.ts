@@ -6,6 +6,7 @@ import {
   InteractionContextType,
   MessageFlags,
   TextInputStyle,
+  type APIComponentInActionRow,
   type APIMessageComponentButtonInteraction,
   type APIMessageTopLevelComponent,
   type APIModalSubmitInteraction,
@@ -155,28 +156,6 @@ createApplicationCommand({
                       style: ButtonStyle.Secondary,
                     },
                   },
-                  ...(currentPages !== pages
-                    ? ([
-                        {
-                          type: ComponentType.Separator,
-                        },
-                        {
-                          type: ComponentType.Section,
-                          components: [
-                            {
-                              type: ComponentType.TextDisplay,
-                              content: 'Want to return to the home page? Use the button on the right',
-                            },
-                          ],
-                          accessory: {
-                            type: ComponentType.Button,
-                            custom_id: 'commands-back',
-                            emoji: toComponentEmoji('Home'),
-                            style: ButtonStyle.Secondary,
-                          },
-                        },
-                      ] satisfies APIMessageTopLevelComponent[])
-                    : []),
                 ],
               },
               {
@@ -202,6 +181,16 @@ createApplicationCommand({
                         emoji: toComponentEmoji('Previous'),
                         style: ButtonStyle.Secondary,
                       },
+                      ...(currentPages !== pages
+                        ? ([
+                            {
+                              type: ComponentType.Button,
+                              custom_id: 'commands-back',
+                              emoji: toComponentEmoji('Home'),
+                              style: ButtonStyle.Secondary,
+                            },
+                          ] satisfies APIComponentInActionRow[])
+                        : []),
                       {
                         type: ComponentType.Button,
                         custom_id: 'commands-next',
@@ -251,28 +240,6 @@ createApplicationCommand({
                       style: ButtonStyle.Secondary,
                     },
                   },
-                  ...(currentPages !== pages
-                    ? ([
-                        {
-                          type: ComponentType.Separator,
-                        },
-                        {
-                          type: ComponentType.Section,
-                          components: [
-                            {
-                              type: ComponentType.TextDisplay,
-                              content: 'Want to return to the home page? Use the button on the right',
-                            },
-                          ],
-                          accessory: {
-                            type: ComponentType.Button,
-                            custom_id: 'commands-back',
-                            emoji: toComponentEmoji('Home'),
-                            style: ButtonStyle.Secondary,
-                          },
-                        },
-                      ] satisfies APIMessageTopLevelComponent[])
-                    : []),
                 ],
               },
               {
@@ -298,6 +265,16 @@ createApplicationCommand({
                         emoji: toComponentEmoji('Previous'),
                         style: ButtonStyle.Secondary,
                       },
+                      ...(currentPages !== pages
+                        ? ([
+                            {
+                              type: ComponentType.Button,
+                              custom_id: 'commands-back',
+                              emoji: toComponentEmoji('Home'),
+                              style: ButtonStyle.Secondary,
+                            },
+                          ] satisfies APIComponentInActionRow[])
+                        : []),
                       {
                         type: ComponentType.Button,
                         custom_id: 'commands-next',
@@ -405,24 +382,6 @@ createApplicationCommand({
                       style: ButtonStyle.Secondary,
                     },
                   },
-                  {
-                    type: ComponentType.Separator,
-                  },
-                  {
-                    type: ComponentType.Section,
-                    components: [
-                      {
-                        type: ComponentType.TextDisplay,
-                        content: 'Wish to go back to the home page? Click the button on the right',
-                      },
-                    ],
-                    accessory: {
-                      type: ComponentType.Button,
-                      custom_id: 'commands-back',
-                      emoji: toComponentEmoji('Home'),
-                      style: ButtonStyle.Secondary,
-                    },
-                  },
                 ],
               },
               {
@@ -446,6 +405,12 @@ createApplicationCommand({
                         type: ComponentType.Button,
                         custom_id: 'commands-prev',
                         emoji: toComponentEmoji('Previous'),
+                        style: ButtonStyle.Secondary,
+                      },
+                      {
+                        type: ComponentType.Button,
+                        custom_id: 'commands-back',
+                        emoji: toComponentEmoji('Home'),
                         style: ButtonStyle.Secondary,
                       },
                       {
@@ -564,32 +529,6 @@ createApplicationCommand({
                   disabled: true,
                 },
               },
-              ...(currentPages !== pages
-                ? ([
-                    {
-                      type: ComponentType.Separator,
-                    },
-                    {
-                      type: ComponentType.Section,
-                      components: [
-                        {
-                          type: ComponentType.TextDisplay,
-                          content: 'Want to return to the home page? Use the button on the right',
-                        },
-                      ],
-                      accessory: {
-                        type: ComponentType.Button,
-                        custom_id: 'commands-back',
-                        emoji: toComponentEmoji('Home'),
-                        style: ButtonStyle.Secondary,
-                        disabled: true,
-                      },
-                    },
-                    {
-                      type: ComponentType.Separator,
-                    },
-                  ] satisfies APIMessageTopLevelComponent[])
-                : []),
             ],
           },
           {
@@ -615,6 +554,16 @@ createApplicationCommand({
                     emoji: toComponentEmoji('Previous'),
                     style: ButtonStyle.Secondary,
                   },
+                  ...(currentPages !== pages
+                    ? ([
+                        {
+                          type: ComponentType.Button,
+                          custom_id: 'commands-back',
+                          emoji: toComponentEmoji('Home'),
+                          style: ButtonStyle.Secondary,
+                        },
+                      ] satisfies APIComponentInActionRow[])
+                    : []),
                   {
                     type: ComponentType.Button,
                     custom_id: 'commands-next',
