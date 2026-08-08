@@ -51,6 +51,7 @@ import path from 'path';
 import { verify } from 'discord-verify/node';
 import { loadFonts } from '../utils/card';
 import { redis } from '../utils/redis';
+import { Temporal } from '@js-temporal/polyfill';
 
 process.on('uncaughtException', console.error);
 process.on('unhandledRejection', console.error);
@@ -215,10 +216,6 @@ if (env.get('register_commands').toBoolean() === true) {
     );
   }
 
-  if (globalCommands.length > 0) {
-    await api.applicationCommands.bulkOverwriteGlobalCommands(applicationId, globalCommands);
-  }
-
   for (const [guildId, commandsForGuild] of commandsForGuilds) {
     if (commandsForGuild.length > 0) {
       await api.applicationCommands.bulkOverwriteGuildCommands(applicationId, guildId, commandsForGuild);
@@ -238,11 +235,24 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
   if ('dev' in command && command.dev === true && !devIds.includes(interaction.user?.id ?? interaction.member?.user.id))
     return;
 
-  const now = new Date();
+  const now = Temporal.Now.zonedDateTimeISO('America/Sao_Paulo');
 
-  const day = now.toISOString().slice(0, 10);
-  const hour = `${day}:${String(now.getHours()).padStart(2, '0')}`;
-  const minute = `${hour}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const day = now.toPlainDate().toString();
+  const hour = `${day}:${String(now.hour).padStart(2, '0')}`;
+  const minute = `${hour}:${String(now.minute).padStart(2, '0')}`;
+
+  let nextReset = now.with({
+    hour: 21,
+    minute: 0,
+    second: 0,
+    millisecond: 0,
+    microsecond: 0,
+    nanosecond: 0,
+  });
+
+  if (Temporal.ZonedDateTime.compare(now, nextReset) >= 0) nextReset = nextReset.add({ days: 1 });
+
+  const secondsUntilReset = Math.ceil((nextReset.epochMilliseconds - now.epochMilliseconds) / 1000);
 
   const keys = [
     `analytics:commands:day:${day}`,
@@ -256,7 +266,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
     await redis.incr(key);
 
     if (!exists) {
-      await redis.expire(key, 60 * 60 * 24);
+      await redis.expire(key, secondsUntilReset);
     }
   }
 
@@ -269,7 +279,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
       uses: 0,
     });
 
-    await redis.expire(commandKey, 60 * 60 * 24);
+    await redis.expire(commandKey, secondsUntilReset);
   }
 
   await redis.hIncrBy(commandKey, 'uses', 1);
@@ -490,7 +500,7 @@ async function handleButtonComponent(interaction: APIMessageComponentButtonInter
   const button = components.get(customId) as ButtonComponent;
 
   if (!button) {
-    for (const collector of collectors) await collector.collect(interaction);
+    for (const collector of collectors) collector.collect(interaction);
 
     return;
   }
@@ -515,7 +525,7 @@ async function handleSelectMenuComponent(interaction: APIMessageComponentSelectM
   const selectMenu = components.get(customId) as SelectMenuComponent;
 
   if (!selectMenu) {
-    for (const collector of collectors) await collector.collect(interaction);
+    for (const collector of collectors) collector.collect(interaction);
 
     return;
   }
@@ -540,7 +550,7 @@ async function handleModalSubmit(interaction: APIModalSubmitInteraction, api: AP
   const modal = components.get(customId) as ModalComponent;
 
   if (!modal) {
-    for (const collector of collectors) await collector.collect(interaction);
+    for (const collector of collectors) collector.collect(interaction);
 
     return;
   }

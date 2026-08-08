@@ -18,7 +18,11 @@ export enum Emoji {
   Role = '<:role:1533283748903129098>',
   Translate = '<:translate:1533284546097840228>',
   Quote = '<:quote:1533288342052016138>',
-  // Twitter
+  Search = '<:search:1535622633058598942>',
+  // pagination
+  Previous = '<:previous:1535622582454194228>',
+  Next = '<:next:1535622608429654037>',
+  // twitter
   Bookmark = '<:twitter_bookmark:1504947779548479669>',
   Like = '<:twitter_like:1504947769717162076>',
   Repost = '<:twitter_repost:1504947753745121421>',

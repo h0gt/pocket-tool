@@ -19,13 +19,14 @@ export default function createCollector<Type>(options: CollectorOptions<Type>) {
   emitter.collect = async (item: Type) => {
     if (stopped) return;
 
-    const pass = filter ? await filter(item) : true;
+    const pass = filter ? filter(item) : true;
     if (!pass) return;
 
     collected.push(item);
-    if (max && collected.length === max) emitter.end('max reached');
 
     emitter.emit('collect', item);
+
+    if (max && collected.length >= max) return emitter.end('max reached');
 
     if (duration && timeout) clearTimeout(timeout);
     timeout = setTimeout(() => emitter.end('expired'), duration);

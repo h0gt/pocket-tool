@@ -27,8 +27,6 @@ createComponent({
 
     switch (page) {
       case 'about': {
-        const app = await api.applications.getCurrent();
-
         await api.interactions.editReply(interaction.application_id, interaction.token, {
           components: [
             {
@@ -36,14 +34,15 @@ createComponent({
               components: [
                 {
                   type: ComponentType.TextDisplay,
-                  content: `### Pocket Tool, your lightweight, fast, and versatile Discord app\n-# Developed by **${hyperlink('https://discord.com/users/782946852278501407', '@mloetta')}**`,
+                  content: `### Welcome to Pocket Tool!\nYou can view all the available commands by running </help:1504215560865448037>`,
                 },
                 {
                   type: ComponentType.Separator,
                 },
                 {
                   type: ComponentType.TextDisplay,
-                  content: `> Commands: **${commands.size}**\n> Components: **${components.size}**\n> Installs: **${app.approximate_user_install_count}**\n> Uptime: **${msToReadableTime(process.uptime() * 1000)} (${timestamp(Math.floor(new Date().getTime() - process.uptime() * 1000), TimestampStyle.LongDateShortTime)})**`,
+                  content:
+                    '### How to report bugs?\nTo report bugs, join our __support server__ and create a post at https://discord.com/channels/1533439024637939792/1533485684961054781',
                 },
                 {
                   type: ComponentType.Separator,
@@ -58,6 +57,80 @@ createComponent({
                         {
                           label: 'About',
                           value: 'about',
+                          default: true,
+                        },
+                        {
+                          label: 'Stats',
+                          value: 'stats',
+                        },
+                        {
+                          label: 'Usage',
+                          value: 'usage',
+                        },
+                        {
+                          label: 'Credits',
+                          value: 'credits',
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  type: ComponentType.ActionRow,
+                  components: [
+                    {
+                      type: ComponentType.Button,
+                      label: 'Add to Your Apps!',
+                      emoji: toComponentEmoji('Link'),
+                      url: `https://discord.com/oauth2/authorize?client_id=${interaction.application_id}`,
+                      style: ButtonStyle.Link,
+                    },
+                    {
+                      type: ComponentType.Button,
+                      label: 'Support Server',
+                      emoji: toComponentEmoji('Discord'),
+                      url: 'https://discord.gg/Y67yNmsPuf',
+                      style: ButtonStyle.Link,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          flags: MessageFlags.IsComponentsV2,
+        });
+
+        break;
+      }
+      case 'stats': {
+        const app = await api.applications.getCurrent();
+
+        await api.interactions.editReply(interaction.application_id, interaction.token, {
+          components: [
+            {
+              type: ComponentType.Container,
+              components: [
+                {
+                  type: ComponentType.TextDisplay,
+                  content: `**Statistics**\n> Commands: **${commands.size}**\n> Components: **${components.size}**\n> Installs: **${app.approximate_user_install_count}**\n> Uptime: **${msToReadableTime(process.uptime() * 1000)} (${timestamp(Math.floor(new Date().getTime() - process.uptime() * 1000), TimestampStyle.LongDateShortTime)})**`,
+                },
+                {
+                  type: ComponentType.Separator,
+                },
+                {
+                  type: ComponentType.ActionRow,
+                  components: [
+                    {
+                      type: ComponentType.StringSelect,
+                      custom_id: `debug-pages_${userId}`,
+                      options: [
+                        {
+                          label: 'About',
+                          value: 'about',
+                        },
+                        {
+                          label: 'Stats',
+                          value: 'stats',
                           default: true,
                         },
                         {
@@ -155,6 +228,10 @@ createComponent({
                           value: 'about',
                         },
                         {
+                          label: 'Stats',
+                          value: 'stats',
+                        },
+                        {
                           label: 'Usage',
                           value: 'usage',
                           default: true,
@@ -217,6 +294,10 @@ createComponent({
                         {
                           label: 'About',
                           value: 'about',
+                        },
+                        {
+                          label: 'Stats',
+                          value: 'stats',
                         },
                         {
                           label: 'Usage',
