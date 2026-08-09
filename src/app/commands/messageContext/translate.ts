@@ -9,6 +9,7 @@ import createApplicationCommand from '../../../helpers/command';
 import { emoji } from '../../../utils/markdown';
 import { makeRequest } from '../../../utils/request';
 import { RequestMethod, ResponseType } from '../../../types/types';
+import { SUPPORTED_LANGUAGES } from '../../../types/languages';
 
 createApplicationCommand({
   type: ApplicationCommandType.Message,
@@ -70,11 +71,10 @@ createApplicationCommand({
       },
     });
 
-    const languages = new Intl.DisplayNames(['en-US'], {
-      type: 'language',
-    });
-
     const translated = res[0].map(([text]: [string]) => text).join('');
+
+    const sourceLanguage = SUPPORTED_LANGUAGES.find((language) => language.code === res[2])!;
+    const targetLanguage = SUPPORTED_LANGUAGES.find((language) => language.code === interaction.locale)!;
 
     await api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
@@ -83,7 +83,7 @@ createApplicationCommand({
           components: [
             {
               type: ComponentType.TextDisplay,
-              content: `> ${emoji('Translate')} Translated from **${languages.of(res[2])}** to **${languages.of(interaction.locale)}**`,
+              content: `> ${emoji('Translate')} Translated from **${sourceLanguage.flag ? `${sourceLanguage.flag} ` : ''}${sourceLanguage.name}** to **${targetLanguage.flag ? `${targetLanguage.flag} ` : ''}${targetLanguage.name}**`,
             },
             {
               type: ComponentType.Separator,

@@ -4,7 +4,6 @@ import {
   ApplicationIntegrationType,
   ComponentType,
   InteractionContextType,
-  Locale,
   MessageFlags,
 } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../helpers/command';
@@ -12,6 +11,7 @@ import { getAutocompleteFocusedOption } from '../../../utils/utils';
 import { makeRequest } from '../../../utils/request';
 import { RequestMethod, ResponseType } from '../../../types/types';
 import { emoji } from '../../../utils/markdown';
+import { SUPPORTED_LANGUAGES } from '../../../types/languages';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
@@ -47,32 +47,33 @@ createApplicationCommand({
     const focused = getAutocompleteFocusedOption(interaction.data.options);
     const value = String(focused?.value).toLowerCase() ?? '';
 
+    const languages = SUPPORTED_LANGUAGES.filter((language) => {
+      return language.name.toLowerCase().includes(value) || language.code.toLowerCase().includes(value);
+    });
+
     switch (focused?.name) {
       case 'from': {
         const choices = [
           {
-            name: 'Auto',
+            name: 'Auto Detect',
             value: 'auto',
           },
-          ...Object.entries(Locale).map(([key, value]) => ({
-            name: key,
-            value,
+          ...languages.map((language) => ({
+            name: language.name,
+            value: language.code,
           })),
-        ]
-          .filter((c) => c.name.toLowerCase().includes(value))
-          .slice(0, 25);
+        ].slice(0, 25);
 
         await api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
 
         break;
       }
       case 'to': {
-        const choices = Object.entries(Locale)
-          .map(([key, value]) => ({
-            name: key,
-            value,
+        const choices = languages
+          .map((language) => ({
+            name: language.name,
+            value: language.code,
           }))
-          .filter((c) => c.name.toLowerCase().includes(value))
           .slice(0, 25);
 
         await api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
@@ -117,11 +118,10 @@ createApplicationCommand({
       },
     });
 
-    const languages = new Intl.DisplayNames(['en-US'], {
-      type: 'language',
-    });
-
     const translated = res[0].map(([text]: [string]) => text).join('');
+
+    const sourceLanguage = SUPPORTED_LANGUAGES.find((language) => language.code === res[2])!;
+    const targetLanguage = SUPPORTED_LANGUAGES.find((language) => language.code === (to ?? interaction.locale))!;
 
     await api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
@@ -130,7 +130,7 @@ createApplicationCommand({
           components: [
             {
               type: ComponentType.TextDisplay,
-              content: `> ${emoji('Translate')} Translated from **${languages.of(res[2])}** to **${languages.of(to ?? interaction.locale)}**`,
+              content: `> ${emoji('Translate')} Translated from **${sourceLanguage.flag ? `${sourceLanguage.flag} ` : ''}${sourceLanguage.name}** to **${targetLanguage.flag ? `${targetLanguage.flag} ` : ''}${targetLanguage.name}**`,
             },
             {
               type: ComponentType.Separator,
