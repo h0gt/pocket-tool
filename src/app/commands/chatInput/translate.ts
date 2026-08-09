@@ -115,7 +115,7 @@ createApplicationCommand({
       },
     });
 
-    const languages = new Intl.DisplayNames([interaction.locale], {
+    const languages = new Intl.DisplayNames(['en-US'], {
       type: 'language',
     });
 
@@ -128,7 +128,7 @@ createApplicationCommand({
           components: [
             {
               type: ComponentType.TextDisplay,
-              content: `> ${emoji('Translate')} Translated from **${languages.of(res[2])}** to **${languages.of(to ?? interaction.locale.split('-')[0]!)}**`,
+              content: `> ${emoji('Translate')} Translated from **${languages.of(res[2])}** to **${languages.of(to ?? interaction.locale)}**`,
             },
             {
               type: ComponentType.Separator,
