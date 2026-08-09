@@ -18,7 +18,7 @@
     "@discordjs/rest": "^2.6.3",
     "@elevenlabs/elevenlabs-js": "^2.62.0",
     "@js-temporal/polyfill": "^0.5.1",
-    "@napi-rs/canvas": "^1.0.3",
+    "@napi-rs/canvas": "^1.0.5",
     "@supabase/supabase-js": "^2.112.2",
     "@tolga1452/toolbox.js": "^2.0.1",
     "@twemoji/api": "^17.0.3",
