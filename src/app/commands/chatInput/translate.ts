@@ -116,7 +116,7 @@ createApplicationCommand({
       params: {
         client: 'gtx',
         sl: from ?? 'auto',
-        tl: to ?? interaction.locale,
+        tl: to ?? interaction.locale.split('-')[0]!,
         dt: 't',
         q: query,
       },
@@ -125,7 +125,7 @@ createApplicationCommand({
     const translated = res[0].map(([t]: [string]) => t).join('');
 
     const sourceLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === res[2])!;
-    const targetLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === (to ?? interaction.locale))!;
+    const targetLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === (to ?? interaction.locale.split('-')[0]))!;
 
     await api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
