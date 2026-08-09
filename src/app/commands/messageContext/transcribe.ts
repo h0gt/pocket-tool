@@ -4,16 +4,17 @@ import {
   ComponentType,
   InteractionContextType,
   MessageFlags,
-} from '@discordjs/core/http-only';
+} from '@discordjs/core';
 import createApplicationCommand from '../../../helpers/command';
+import { codeblock, emoji, truncate } from '../../../utils/markdown';
 import env from '../../../utils/env';
-import { emoji, truncate } from '../../../utils/markdown';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
-import { decodeOpusBytes, getWaveform } from '../../../utils/opus';
+import { makeRequest } from '../../../utils/request';
+import { RequestMethod, ResponseType } from '../../../types/types';
 
 createApplicationCommand({
   type: ApplicationCommandType.Message,
-  name: 'Text To Speech',
+  name: 'Speech to Text',
   integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   cooldown: 5,
@@ -21,12 +22,12 @@ createApplicationCommand({
   async run(interaction, api) {
     const message = interaction.data.resolved.messages[interaction.data.target_id];
 
-    if (!message || !message.content.trim()) {
+    if (!message || message.attachments.length === 0) {
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Please select a text message to convert to speech`,
+            content: `${emoji('Exclamation')} Please select a voice message to convert to speech`,
           },
           {
             type: ComponentType.Separator,
@@ -57,6 +58,25 @@ createApplicationCommand({
       return;
     }
 
+    const voice = message.attachments.find((attachment) => attachment.content_type?.startsWith('audio/'));
+
+    if (!voice) {
+      await api.interactions.editReply(interaction.application_id, interaction.token, {
+        components: [
+          {
+            type: ComponentType.TextDisplay,
+            content: `${emoji('Exclamation')} Please select a voice message to convert to speech`,
+          },
+          {
+            type: ComponentType.Separator,
+          },
+        ],
+        flags: MessageFlags.IsComponentsV2,
+      });
+
+      return;
+    }
+
     const elevenLabsApiKey = env.get('eleven_labs_api_key').toString();
 
     if (!elevenLabsApiKey) {
@@ -78,15 +98,21 @@ createApplicationCommand({
       return;
     }
 
-    const elevenlabs = new ElevenLabsClient({ apiKey: elevenLabsApiKey });
-
-    const audio = await elevenlabs.textToSpeech.convertWithTimestamps('M563YhMmA0S8vEYwkgYa', {
-      text: truncate(message.content.trim(), 500),
-      modelId: 'eleven_flash_v2_5',
-      outputFormat: 'opus_48000_192',
+    const buffer = await makeRequest(voice.url, {
+      method: RequestMethod.GET,
+      response: ResponseType.BUFFER,
     });
 
-    if (!audio) {
+    const elevenlabs = new ElevenLabsClient({ apiKey: elevenLabsApiKey });
+
+    const transcript = await elevenlabs.speechToText.convert({
+      modelId: 'scribe_v2',
+      file: new Blob([buffer], {
+        type: voice.content_type ?? 'audio/ogg',
+      }),
+    });
+
+    if (!transcript) {
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
@@ -94,7 +120,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} Failed to generate TTS audio`,
+                content: `${emoji('Wrong')} Failed to transcribe voice message`,
               },
             ],
           },
@@ -105,25 +131,19 @@ createApplicationCommand({
       return;
     }
 
-    const buffer = Buffer.from(audio.audioBase64, 'base64');
-    const decoded = await decodeOpusBytes(buffer);
-
     await api.interactions.editReply(interaction.application_id, interaction.token, {
-      attachments: [
+      components: [
         {
-          id: 0,
-          filename: 'tts.opus',
-          waveform: getWaveform(decoded),
-          duration_secs: decoded.samplesDecoded / decoded.sampleRate,
+          type: ComponentType.Container,
+          components: [
+            {
+              type: ComponentType.TextDisplay,
+              content: codeblock('ansi', truncate(transcript.text, 3995)),
+            },
+          ],
         },
       ],
-      files: [
-        {
-          name: 'tts.opus',
-          data: buffer,
-        },
-      ],
-      flags: MessageFlags.IsVoiceMessage,
+      flags: MessageFlags.IsComponentsV2,
     });
   },
 });

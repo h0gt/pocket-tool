@@ -122,6 +122,25 @@ createApplicationCommand({
       outputFormat: 'opus_48000_192',
     });
 
+    if (!audio) {
+      await api.interactions.editReply(interaction.application_id, interaction.token, {
+        components: [
+          {
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Wrong')} Failed to generate TTS audio`,
+              },
+            ],
+          },
+        ],
+        flags: MessageFlags.IsComponentsV2,
+      });
+
+      return;
+    }
+
     const buffer = Buffer.from(audio.audioBase64, 'base64');
     const decoded = await decodeOpusBytes(buffer);
 

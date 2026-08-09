@@ -327,7 +327,7 @@ createApplicationCommand({
                 ).value
               : undefined;
 
-          if (!name?.trim().toLowerCase()) return;
+          if (!name || !name.trim().toLowerCase()) return;
 
           const results = globalCommands.filter((c) => c.name.trim().toLowerCase().includes(name.trim().toLowerCase()));
 
