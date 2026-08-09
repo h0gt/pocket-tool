@@ -52,6 +52,7 @@ import { verify } from 'discord-verify/node';
 import { loadFonts } from '../utils/card';
 import { redis } from '../utils/redis';
 import { Temporal } from '@js-temporal/polyfill';
+import { MESSAGE_BLOCK_REASONS } from '../types/error';
 
 process.on('uncaughtException', console.error);
 process.on('unhandledRejection', console.error);
@@ -170,10 +171,10 @@ if (env.get('register_commands').toBoolean() === true) {
     const targets = subcommands.length > 0 ? subcommands.map((s) => (s.options ??= [])) : [c.options];
 
     for (const options of targets) {
-      if (!options.some((o) => o.name === 'incognito')) {
+      if (!options.some((o) => o.name === 'ephemeral')) {
         options.push({
           type: ApplicationCommandOptionType.Boolean,
-          name: 'incognito',
+          name: 'ephemeral',
           description: 'Whether the response should only be visible to you',
         } satisfies BooleanChatInputOption);
       }
@@ -280,197 +281,328 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
 
   await redis.hIncrBy(commandKey, 'uses', 1);
 
-  try {
-    switch (interaction.data.type) {
-      case ApplicationCommandType.ChatInput: {
-        const chatInput = command as ChatInputCommand;
+  switch (interaction.data.type) {
+    case ApplicationCommandType.ChatInput: {
+      const chatInput = command as ChatInputCommand;
 
-        if (!cooldowns.has(interaction.data.name))
-          cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
+      if (!cooldowns.has(interaction.data.name))
+        cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
 
-        const now = new Date().getTime();
-        const timestamps = cooldowns.get(interaction.data.name)!;
-        const cooldown = (chatInput.cooldown ?? 0) * 1000;
+      const now = new Date().getTime();
+      const timestamps = cooldowns.get(interaction.data.name)!;
+      const cooldown = (chatInput.cooldown ?? 0) * 1000;
 
-        if (timestamps.has((interaction.user?.id ?? interaction.member?.user.id)!)) {
-          const expiration = timestamps.get((interaction.user?.id ?? interaction.member?.user.id)!)! + cooldown;
+      if (timestamps.has((interaction.user?.id ?? interaction.member?.user.id)!)) {
+        const expiration = timestamps.get((interaction.user?.id ?? interaction.member?.user.id)!)! + cooldown;
 
-          if (now < expiration) {
-            await api.interactions.reply(interaction.id, interaction.token, {
-              components: [
-                {
-                  type: ComponentType.Container,
-                  components: [
-                    {
-                      type: ComponentType.TextDisplay,
-                      content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
-                    },
-                  ],
-                },
-              ],
-              flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-            });
-
-            return;
-          }
-        }
-
-        timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now);
-        setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
-
-        const incognito =
-          (
-            getChatInputOption(
-              interaction.data.options ?? [],
-              'incognito',
-            ) as APIApplicationCommandInteractionDataBooleanOption
-          )?.value === true;
-
-        if (chatInput.acknowledge === true) {
-          await api.interactions.defer(interaction.id, interaction.token, {
-            flags: chatInput.ephemeral || incognito ? MessageFlags.Ephemeral : undefined,
+        if (now < expiration) {
+          await api.interactions.reply(interaction.id, interaction.token, {
+            components: [
+              {
+                type: ComponentType.Container,
+                components: [
+                  {
+                    type: ComponentType.TextDisplay,
+                    content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                  },
+                ],
+              },
+            ],
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
           });
-        }
 
+          return;
+        }
+      }
+
+      timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now);
+      setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
+
+      const ephemeral =
+        (
+          getChatInputOption(
+            interaction.data.options ?? [],
+            'ephemeral',
+          ) as APIApplicationCommandInteractionDataBooleanOption
+        )?.value === true;
+
+      if (chatInput.acknowledge === true) {
+        await api.interactions.defer(interaction.id, interaction.token, {
+          flags: chatInput.ephemeral || ephemeral ? MessageFlags.Ephemeral : undefined,
+        });
+      }
+
+      try {
         await chatInput.run(
           interaction as APIChatInputApplicationCommandInteraction,
           parseCommandOptions(interaction as APIChatInputApplicationCommandInteraction),
           api,
         );
-        break;
-      }
-      case ApplicationCommandType.Message: {
-        const messageContext = command as MessageContextMenuCommand;
+      } catch (error) {
+        const code = (error as any).code;
+        const err = MESSAGE_BLOCK_REASONS[code as keyof typeof MESSAGE_BLOCK_REASONS];
 
-        if (!cooldowns.has(interaction.data.name))
-          cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
+        if (err) {
+          if (chatInput.acknowledge === true)
+            await api.interactions.deleteReply(interaction.application_id, interaction.token);
 
-        const now = new Date().getTime();
-        const timestamps = cooldowns.get(interaction.data.name)!;
-        const cooldown = (messageContext.cooldown ?? 0) * 1000;
+          await api.interactions.followUp(interaction.application_id, interaction.token, {
+            content: `-# </${interaction.data.name}:${interaction.data.id}> was blocked due to ${hyperlink(err.article, err.reason)} - please try again with **ephemeral** enabled`,
+            flags: MessageFlags.Ephemeral,
+          });
 
-        if (timestamps.has((interaction.user?.id ?? interaction.member?.user.id)!)) {
-          const expiration = timestamps.get((interaction.user?.id ?? interaction.member?.user.id)!)!;
-
-          if (now < expiration) {
-            await api.interactions.reply(interaction.id, interaction.token, {
-              components: [
-                {
-                  type: ComponentType.Container,
-                  components: [
-                    {
-                      type: ComponentType.TextDisplay,
-                      content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
-                    },
-                  ],
-                },
-              ],
-              flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-            });
-
-            return;
-          }
+          return;
         }
 
-        timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now);
-        setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
+        console.error(`Command ${interaction.data.name} encountered an error:`, error);
 
-        if (messageContext.acknowledge) {
-          await api.interactions.defer(interaction.id, interaction.token, {
-            flags: messageContext.ephemeral ? MessageFlags.Ephemeral : undefined,
+        if (chatInput.acknowledge === true) {
+          await api.interactions.editReply(interaction.application_id, interaction.token, {
+            components: [
+              {
+                type: ComponentType.Container,
+                components: [
+                  {
+                    type: ComponentType.TextDisplay,
+                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}**`,
+                  },
+                ],
+              },
+            ],
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+          });
+        } else {
+          await api.interactions.reply(interaction.id, interaction.token, {
+            components: [
+              {
+                type: ComponentType.Container,
+                components: [
+                  {
+                    type: ComponentType.TextDisplay,
+                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}**`,
+                  },
+                ],
+              },
+            ],
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
           });
         }
 
-        await messageContext.run(interaction as APIMessageApplicationCommandInteraction, api);
-        break;
+        return;
       }
-      case ApplicationCommandType.User: {
-        const userContext = command as UserContextMenuCommand;
 
-        if (!cooldowns.has(interaction.data.name))
-          cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
-
-        const now = new Date().getTime();
-        const timestamps = cooldowns.get(interaction.data.name)!;
-        const cooldown = (userContext.cooldown ?? 0) * 1000;
-
-        if (timestamps.has((interaction.user?.id ?? interaction.member?.user.id)!)) {
-          const expiration = timestamps.get((interaction.user?.id ?? interaction.member?.user.id)!)!;
-
-          if (now < expiration) {
-            await api.interactions.reply(interaction.id, interaction.token, {
-              components: [
-                {
-                  type: ComponentType.Container,
-                  components: [
-                    {
-                      type: ComponentType.TextDisplay,
-                      content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
-                    },
-                  ],
-                },
-              ],
-              flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-            });
-
-            return;
-          }
-        }
-
-        timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now);
-        setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
-
-        if (userContext.acknowledge) {
-          await api.interactions.defer(interaction.id, interaction.token, {
-            flags: userContext.ephemeral ? MessageFlags.Ephemeral : undefined,
-          });
-        }
-
-        await userContext.run(interaction as APIUserApplicationCommandInteraction, api);
-        break;
-      }
-      case ApplicationCommandType.PrimaryEntryPoint: {
-        const primaryEntryPoint = command as PrimaryEntryPointCommand;
-
-        if (primaryEntryPoint.run) {
-          await primaryEntryPoint.run(interaction as APIPrimaryEntryPointCommandInteraction, api);
-        }
-        break;
-      }
+      break;
     }
-  } catch (error) {
-    console.error(`Command ${interaction.data.name} encountered an error:`, error);
+    case ApplicationCommandType.Message: {
+      const messageContext = command as MessageContextMenuCommand;
 
-    if ('acknowledge' in command && command.acknowledge === true) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
-        components: [
-          {
-            type: ComponentType.Container,
+      if (!cooldowns.has(interaction.data.name))
+        cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
+
+      const now = new Date().getTime();
+      const timestamps = cooldowns.get(interaction.data.name)!;
+      const cooldown = (messageContext.cooldown ?? 0) * 1000;
+
+      if (timestamps.has((interaction.user?.id ?? interaction.member?.user.id)!)) {
+        const expiration = timestamps.get((interaction.user?.id ?? interaction.member?.user.id)!)!;
+
+        if (now < expiration) {
+          await api.interactions.reply(interaction.id, interaction.token, {
             components: [
               {
-                type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}**`,
+                type: ComponentType.Container,
+                components: [
+                  {
+                    type: ComponentType.TextDisplay,
+                    content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                  },
+                ],
               },
             ],
-          },
-        ],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
-    } else {
-      await api.interactions.reply(interaction.id, interaction.token, {
-        components: [
-          {
-            type: ComponentType.Container,
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+          });
+
+          return;
+        }
+      }
+
+      timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now);
+      setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
+
+      if (messageContext.acknowledge) {
+        await api.interactions.defer(interaction.id, interaction.token, {
+          flags: messageContext.ephemeral ? MessageFlags.Ephemeral : undefined,
+        });
+      }
+
+      try {
+        await messageContext.run(interaction as APIMessageApplicationCommandInteraction, api);
+      } catch (error) {
+        const code = (error as any).code;
+        const err = MESSAGE_BLOCK_REASONS[code as keyof typeof MESSAGE_BLOCK_REASONS];
+
+        if (err) {
+          if (messageContext.acknowledge === true)
+            await api.interactions.deleteReply(interaction.application_id, interaction.token);
+
+          await api.interactions.followUp(interaction.application_id, interaction.token, {
+            content: `-# </${interaction.data.name}:${interaction.data.id}> was blocked due to ${hyperlink(err.article, err.reason)}`,
+            flags: MessageFlags.Ephemeral,
+          });
+
+          return;
+        }
+
+        console.error(`Command ${interaction.data.name} encountered an error:`, error);
+
+        if (messageContext.acknowledge === true) {
+          await api.interactions.editReply(interaction.application_id, interaction.token, {
             components: [
               {
-                type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}**`,
+                type: ComponentType.Container,
+                components: [
+                  {
+                    type: ComponentType.TextDisplay,
+                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}**`,
+                  },
+                ],
               },
             ],
-          },
-        ],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+          });
+        } else {
+          await api.interactions.reply(interaction.id, interaction.token, {
+            components: [
+              {
+                type: ComponentType.Container,
+                components: [
+                  {
+                    type: ComponentType.TextDisplay,
+                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}**`,
+                  },
+                ],
+              },
+            ],
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+          });
+        }
+
+        return;
+      }
+
+      break;
+    }
+    case ApplicationCommandType.User: {
+      const userContext = command as UserContextMenuCommand;
+
+      if (!cooldowns.has(interaction.data.name))
+        cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
+
+      const now = new Date().getTime();
+      const timestamps = cooldowns.get(interaction.data.name)!;
+      const cooldown = (userContext.cooldown ?? 0) * 1000;
+
+      if (timestamps.has((interaction.user?.id ?? interaction.member?.user.id)!)) {
+        const expiration = timestamps.get((interaction.user?.id ?? interaction.member?.user.id)!)!;
+
+        if (now < expiration) {
+          await api.interactions.reply(interaction.id, interaction.token, {
+            components: [
+              {
+                type: ComponentType.Container,
+                components: [
+                  {
+                    type: ComponentType.TextDisplay,
+                    content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                  },
+                ],
+              },
+            ],
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+          });
+
+          return;
+        }
+      }
+
+      timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now);
+      setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
+
+      if (userContext.acknowledge) {
+        await api.interactions.defer(interaction.id, interaction.token, {
+          flags: userContext.ephemeral ? MessageFlags.Ephemeral : undefined,
+        });
+      }
+
+      try {
+        await userContext.run(interaction as APIUserApplicationCommandInteraction, api);
+      } catch (error) {
+        const code = (error as any).code;
+        const err = MESSAGE_BLOCK_REASONS[code as keyof typeof MESSAGE_BLOCK_REASONS];
+
+        if (err) {
+          if (userContext.acknowledge === true)
+            await api.interactions.deleteReply(interaction.application_id, interaction.token);
+
+          await api.interactions.followUp(interaction.application_id, interaction.token, {
+            content: `-# </${interaction.data.name}:${interaction.data.id}> was blocked due to ${hyperlink(err.article, err.reason)}`,
+            flags: MessageFlags.Ephemeral,
+          });
+
+          return;
+        }
+
+        console.error(`Command ${interaction.data.name} encountered an error:`, error);
+
+        if (userContext.acknowledge === true) {
+          await api.interactions.editReply(interaction.application_id, interaction.token, {
+            components: [
+              {
+                type: ComponentType.Container,
+                components: [
+                  {
+                    type: ComponentType.TextDisplay,
+                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}**`,
+                  },
+                ],
+              },
+            ],
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+          });
+        } else {
+          await api.interactions.reply(interaction.id, interaction.token, {
+            components: [
+              {
+                type: ComponentType.Container,
+                components: [
+                  {
+                    type: ComponentType.TextDisplay,
+                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}**`,
+                  },
+                ],
+              },
+            ],
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+          });
+        }
+
+        return;
+      }
+
+      break;
+    }
+    case ApplicationCommandType.PrimaryEntryPoint: {
+      const primaryEntryPoint = command as PrimaryEntryPointCommand;
+
+      if (primaryEntryPoint.run) {
+        try {
+          await primaryEntryPoint.run(interaction as APIPrimaryEntryPointCommandInteraction, api);
+        } catch (error) {
+          console.error(`Command ${interaction.data.name} encountered an error:`, error);
+        }
+      }
+
+      break;
     }
   }
 }
