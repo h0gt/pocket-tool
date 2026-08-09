@@ -7,7 +7,7 @@ import {
   Locale,
   MessageFlags,
 } from '@discordjs/core/http-only';
-import createApplicationCommand from '../../../helpers/command';
+import createApplicationCommand from '../../../builders/command';
 import { getAutocompleteFocusedOption } from '../../../utils/utils';
 import env from '../../../utils/env';
 import { emoji } from '../../../utils/markdown';

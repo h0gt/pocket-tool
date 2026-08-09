@@ -6,7 +6,7 @@ import {
   InteractionContextType,
   MessageFlags,
 } from '@discordjs/core/http-only';
-import createApplicationCommand from '../../../helpers/command';
+import createApplicationCommand from '../../../builders/command';
 import { parse } from 'chrono-node';
 import { emoji, timestamp } from '../../../utils/markdown';
 import type { TimestampStyle } from '../../../types/types';

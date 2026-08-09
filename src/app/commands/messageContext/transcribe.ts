@@ -5,7 +5,7 @@ import {
   InteractionContextType,
   MessageFlags,
 } from '@discordjs/core';
-import createApplicationCommand from '../../../helpers/command';
+import createApplicationCommand from '../../../builders/command';
 import { codeblock, emoji, truncate } from '../../../utils/markdown';
 import env from '../../../utils/env';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';

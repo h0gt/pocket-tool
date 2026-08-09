@@ -13,7 +13,7 @@ import {
   type APIModalSubmitTextInputComponent,
   type ModalSubmitLabelComponent,
 } from '@discordjs/core/http-only';
-import createApplicationCommand from '../../../helpers/command';
+import createApplicationCommand from '../../../builders/command';
 import { cdn, emoji, hyperlink } from '../../../utils/markdown';
 import {
   CARD_COLORS,
@@ -26,7 +26,7 @@ import {
   type FontKey,
   type SizeKey,
 } from '../../../utils/card';
-import createCollector from '../../../helpers/collector';
+import createCollector from '../../../builders/collector';
 import { collectors } from '../..';
 import { Collection } from '@discordjs/collection';
 import { makeRequest } from '../../../utils/request';

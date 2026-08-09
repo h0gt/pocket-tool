@@ -6,7 +6,7 @@ import {
   InteractionContextType,
   MessageFlags,
 } from '@discordjs/core';
-import createApplicationCommand from '../../../helpers/command';
+import createApplicationCommand from '../../../builders/command';
 import { getAutocompleteFocusedOption } from '../../../utils/utils';
 import { emoji } from '../../../utils/markdown';
 import { Temporal } from '@js-temporal/polyfill';

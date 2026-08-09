@@ -4,7 +4,7 @@ import {
   MessageFlags,
   type APIMessageComponentSelectMenuInteraction,
 } from '@discordjs/core/http-only';
-import createComponent from '../../../helpers/component';
+import createComponent from '../../../builders/component';
 import { InteractableComponentType, TimestampStyle } from '../../../types/types';
 import { msToReadableTime, toComponentEmoji } from '../../../utils/utils';
 import { hyperlink, timestamp } from '../../../utils/markdown';

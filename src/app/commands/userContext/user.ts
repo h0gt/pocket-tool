@@ -1,5 +1,5 @@
 import { ApplicationCommandType, ComponentType, MessageFlags } from '@discordjs/core/http-only';
-import createApplicationCommand from '../../../helpers/command';
+import createApplicationCommand from '../../../builders/command';
 import { cdn, emoji, highlight, hyperlink, timestamp } from '../../../utils/markdown';
 import { getTimestampFromSnowflake } from '../../../utils/utils';
 import { TimestampStyle } from '../../../types/types';

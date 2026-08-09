@@ -1,5 +1,5 @@
 import { ApplicationCommandType, ApplicationIntegrationType, InteractionContextType } from '@discordjs/core/http-only';
-import createApplicationCommand from '../../../helpers/command';
+import createApplicationCommand from '../../../builders/command';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,

@@ -5,7 +5,7 @@ import {
   InteractionContextType,
   MessageFlags,
 } from '@discordjs/core/http-only';
-import createApplicationCommand from '../../../helpers/command';
+import createApplicationCommand from '../../../builders/command';
 import { emoji } from '../../../utils/markdown';
 import { makeRequest } from '../../../utils/request';
 import { RequestMethod, ResponseType } from '../../../types/types';

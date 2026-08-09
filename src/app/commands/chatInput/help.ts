@@ -12,9 +12,9 @@ import {
   type APIModalSubmitTextInputComponent,
   type ModalSubmitLabelComponent,
 } from '@discordjs/core';
-import createApplicationCommand from '../../../helpers/command';
+import createApplicationCommand from '../../../builders/command';
 import List from '../../../utils/list';
-import createCollector from '../../../helpers/collector';
+import createCollector from '../../../builders/collector';
 import { collectors } from '../..';
 import { toComponentEmoji } from '../../../utils/utils';
 import { emoji } from '../../../utils/markdown';

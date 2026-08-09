@@ -9,7 +9,7 @@ import {
   type APIComponentInMessageActionRow,
   type APIInteractionDataResolvedGuildMember,
 } from '@discordjs/core/http-only';
-import createApplicationCommand from '../../../helpers/command';
+import createApplicationCommand from '../../../builders/command';
 import { cdn, emoji } from '../../../utils/markdown';
 
 createApplicationCommand({

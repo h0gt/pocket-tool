@@ -6,7 +6,7 @@ import {
   InteractionContextType,
   MessageFlags,
 } from '@discordjs/core/http-only';
-import createApplicationCommand from '../../../helpers/command';
+import createApplicationCommand from '../../../builders/command';
 import { toComponentEmoji } from '../../../utils/utils';
 
 createApplicationCommand({
