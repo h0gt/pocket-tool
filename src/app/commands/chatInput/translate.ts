@@ -63,6 +63,7 @@ createApplicationCommand({
           .slice(0, 25);
 
         await api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
+
         break;
       }
       case 'to': {
@@ -75,6 +76,7 @@ createApplicationCommand({
           .slice(0, 25);
 
         await api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
+
         break;
       }
     }

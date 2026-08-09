@@ -122,33 +122,27 @@ app.post('/interactions', async (c) => {
   }
 
   switch (interaction.type) {
-    case InteractionType.Ping: {
+    case InteractionType.Ping:
       return c.json({ type: InteractionResponseType.Pong });
-    }
-    case InteractionType.ApplicationCommand: {
+    case InteractionType.ApplicationCommand:
       await handleApplicationCommand(interaction, api);
       break;
-    }
-    case InteractionType.ApplicationCommandAutocomplete: {
+    case InteractionType.ApplicationCommandAutocomplete:
       await handleChatInputCommandAutocomplete(interaction, api);
       break;
-    }
-    case InteractionType.MessageComponent: {
+    case InteractionType.MessageComponent:
       if (interaction.data.component_type === ComponentType.Button) {
         await handleButtonComponent(interaction as APIMessageComponentButtonInteraction, api);
       } else {
         await handleSelectMenuComponent(interaction as APIMessageComponentSelectMenuInteraction, api);
       }
       break;
-    }
-    case InteractionType.ModalSubmit: {
+    case InteractionType.ModalSubmit:
       await handleModalSubmit(interaction as APIModalSubmitInteraction, api);
       break;
-    }
-    default: {
+    default:
       console.log('unknown interaction type:', (interaction as any).type);
       break;
-    }
   }
 });
 

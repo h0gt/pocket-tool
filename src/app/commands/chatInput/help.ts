@@ -146,7 +146,7 @@ createApplicationCommand({
                       {
                         type: ComponentType.TextDisplay,
                         content:
-                          pages !== pages
+                          query !== null
                             ? `### Command Browser\n-# Search results for **${query}**`
                             : '### Command Browser\n-# Find all the available commands through pagination or search for a specific one',
                       },
@@ -183,7 +183,7 @@ createApplicationCommand({
                         emoji: toComponentEmoji('Previous'),
                         style: ButtonStyle.Secondary,
                       },
-                      ...(pages !== pages
+                      ...(query !== null
                         ? ([
                             {
                               type: ComponentType.Button,
@@ -232,7 +232,7 @@ createApplicationCommand({
                       {
                         type: ComponentType.TextDisplay,
                         content:
-                          pages !== pages
+                          query !== null
                             ? `### Command Browser\n-# Search results for **${query}**`
                             : '### Command Browser\n-# Find all the available commands through pagination or search for a specific one',
                       },
@@ -269,7 +269,7 @@ createApplicationCommand({
                         emoji: toComponentEmoji('Previous'),
                         style: ButtonStyle.Secondary,
                       },
-                      ...(pages !== pages
+                      ...(query !== null
                         ? ([
                             {
                               type: ComponentType.Button,
@@ -356,6 +356,7 @@ createApplicationCommand({
               results.slice(index * perPage, index * perPage + perPage),
             ),
           );
+
           query = name.trim().toLowerCase();
 
           commands = (pages.current ?? [])
@@ -435,7 +436,7 @@ createApplicationCommand({
         case 'commands-back': {
           await api.interactions.deferMessageUpdate(i.id, i.token);
 
-          pages = pages;
+          pages = list;
           query = null;
 
           commands = (pages.current ?? [])
@@ -522,7 +523,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.TextDisplay,
                     content:
-                      pages !== pages
+                      query !== null
                         ? `### Command Browser\n-# Search results for **${query}**`
                         : '### Command Browser\n-# Find all the available commands through pagination or search for a specific one',
                   },
@@ -561,7 +562,7 @@ createApplicationCommand({
                     style: ButtonStyle.Secondary,
                     disabled: true,
                   },
-                  ...(pages !== pages
+                  ...(query !== null
                     ? ([
                         {
                           type: ComponentType.Button,
