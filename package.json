@@ -29,7 +29,6 @@
     "i18next": "^26.3.6",
     "i18next-fs-backend": "^2.6.7",
     "ogg-opus-decoder": "^1.7.3",
-    "openai": "^7.4.0",
     "redis": "^6.2.0",
     "sharp": "^0.35.3"
   }
