@@ -1390,6 +1390,8 @@ createApplicationCommand({
     });
 
     collector.on('end', async () => {
+      const session = sessions.get(interaction.token)!;
+
       sessions.delete(interaction.token);
 
       await api.interactions.editReply(interaction.application_id, interaction.token, {
@@ -1412,7 +1414,7 @@ createApplicationCommand({
                   label: item.label,
                   description: item.description,
                   value,
-                  default: value === sessions.get(interaction.token)!.font,
+                  default: value === session.font,
                 })),
                 disabled: true,
               },
@@ -1430,19 +1432,19 @@ createApplicationCommand({
                     label: item.label,
                     description: item.description,
                     value,
-                    default: value === sessions.get(interaction.token)!.size,
+                    default: value === session.size,
                   })),
                   {
                     label: 'Custom Font Size',
                     description: 'Provide a custom font size',
                     value: 'custom',
                   },
-                  ...(!(sessions.get(interaction.token)!.size in CARD_SIZES)
+                  ...(!(session.size in CARD_SIZES)
                     ? [
                         {
-                          label: `Custom Text Size: ${sessions.get(interaction.token)!.size}px`,
+                          label: `Custom Text Size: ${session.size}px`,
                           description: 'Currently selected custom size',
-                          value: String(sessions.get(interaction.token)!.size),
+                          value: String(session.size),
                           default: true,
                         },
                       ]
@@ -1464,19 +1466,19 @@ createApplicationCommand({
                     label: item.label,
                     description: item.description,
                     value,
-                    default: value === sessions.get(interaction.token)!.color,
+                    default: value === session.color,
                   })),
                   {
                     label: 'Custom Text Color',
                     description: 'Provide a custom text color',
                     value: 'custom',
                   },
-                  ...(!(sessions.get(interaction.token)!.color in CARD_COLORS)
+                  ...(!(session.color in CARD_COLORS)
                     ? [
                         {
-                          label: `Custom Text Color: ${sessions.get(interaction.token)!.color}`,
+                          label: `Custom Text Color: ${session.color}`,
                           description: 'Currently selected custom color',
-                          value: sessions.get(interaction.token)!.color,
+                          value: session.color,
                           default: true,
                         },
                       ]
@@ -1499,7 +1501,7 @@ createApplicationCommand({
                   label: item.label,
                   description: item.description,
                   value,
-                  default: sessions.get(interaction.token)!.effects.includes(value as EffectKey),
+                  default: session.effects.includes(value as EffectKey),
                 })),
                 disabled: true,
               },
