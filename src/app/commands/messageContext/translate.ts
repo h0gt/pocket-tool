@@ -73,8 +73,8 @@ createApplicationCommand({
 
     const translated = res[0].map(([text]: [string]) => text).join('');
 
-    const sourceLanguage = SUPPORTED_LANGUAGES.find((language) => language.code === res[2])!;
-    const targetLanguage = SUPPORTED_LANGUAGES.find((language) => language.code === interaction.locale)!;
+    const sourceLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === res[2])!;
+    const targetLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === interaction.locale)!;
 
     await api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [

@@ -47,8 +47,8 @@ createApplicationCommand({
     const focused = getAutocompleteFocusedOption(interaction.data.options);
     const value = String(focused?.value).toLowerCase() ?? '';
 
-    const languages = SUPPORTED_LANGUAGES.filter((language) => {
-      return language.name.toLowerCase().includes(value) || language.code.toLowerCase().includes(value);
+    const languages = SUPPORTED_LANGUAGES.filter((l) => {
+      return l.name.toLowerCase().includes(value) || l.code.toLowerCase().includes(value);
     });
 
     switch (focused?.name) {
@@ -58,9 +58,9 @@ createApplicationCommand({
             name: 'Auto Detect',
             value: 'auto',
           },
-          ...languages.map((language) => ({
-            name: language.name,
-            value: language.code,
+          ...languages.map((l) => ({
+            name: l.name,
+            value: l.code,
           })),
         ].slice(0, 25);
 
@@ -69,12 +69,16 @@ createApplicationCommand({
         break;
       }
       case 'to': {
-        const choices = languages
-          .map((language) => ({
-            name: language.name,
-            value: language.code,
-          }))
-          .slice(0, 25);
+        const choices = [
+          {
+            name: 'Use my locale',
+            value: 'auto',
+          },
+          ...languages.map((l) => ({
+            name: l.name,
+            value: l.code,
+          })),
+        ].slice(0, 25);
 
         await api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
 
@@ -118,10 +122,10 @@ createApplicationCommand({
       },
     });
 
-    const translated = res[0].map(([text]: [string]) => text).join('');
+    const translated = res[0].map(([t]: [string]) => t).join('');
 
-    const sourceLanguage = SUPPORTED_LANGUAGES.find((language) => language.code === res[2])!;
-    const targetLanguage = SUPPORTED_LANGUAGES.find((language) => language.code === (to ?? interaction.locale))!;
+    const sourceLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === res[2])!;
+    const targetLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === (to ?? interaction.locale))!;
 
     await api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [

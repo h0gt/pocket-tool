@@ -15,6 +15,7 @@ import env from '../../../utils/env';
 import { emoji, hyperlink, timestamp } from '../../../utils/markdown';
 import { makeRequest } from '../../../utils/request';
 import { RequestMethod, ResponseType, TimestampStyle } from '../../../types/types';
+import { SUPPORTED_LANGUAGES } from '../../../types/languages';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
@@ -43,18 +44,20 @@ createApplicationCommand({
     const focused = getAutocompleteFocusedOption(interaction.data.options);
     const value = String(focused?.value).toLowerCase() ?? '';
 
+    const languages = SUPPORTED_LANGUAGES.filter((l) => {
+      return l.name.toLowerCase().includes(value) || l.code.toLowerCase().includes(value);
+    });
+
     const choices = [
       {
-        name: 'Auto',
+        name: 'Use my locale',
         value: 'auto',
       },
-      ...Object.entries(Locale).map(([key, value]) => ({
-        name: key,
-        value,
+      ...languages.map((l) => ({
+        name: l.name,
+        value: l.code,
       })),
-    ]
-      .filter((c) => c.name.toLowerCase().includes(value))
-      .slice(0, 25);
+    ].slice(0, 25);
 
     await api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
   },
@@ -130,10 +133,10 @@ createApplicationCommand({
 
     let content = res.hasText ? res.displayText : undefined;
 
-    let translated = false;
+    let isTranslated = false;
 
     if (language && content) {
-      const translator = await makeRequest('https://translate.googleapis.com/translate_a/single', {
+      const translated = await makeRequest('https://translate.googleapis.com/translate_a/single', {
         method: RequestMethod.GET,
         response: ResponseType.JSON,
         params: {
@@ -145,8 +148,8 @@ createApplicationCommand({
         },
       });
 
-      content = translator[0][0][0];
-      translated = true;
+      content = translated[0].map(([t]: [string]) => t).join('');
+      isTranslated = true;
     }
 
     for (const hashtag of res.hashtags) {
@@ -169,7 +172,7 @@ createApplicationCommand({
             ? ([
                 {
                   type: ComponentType.TextDisplay,
-                  content: `-# *In reply to ${hyperlink(`https://x.com/${res.parentPost?.author.username}/status/${res.parentPost?.id}`, 'this tweet')}, posted by ${hyperlink(`https://x.com/${res.parentPost?.author.username}`, `@${res.parentPost?.author.username}`)}*`,
+                  content: `-# *Replying to ${hyperlink(`https://x.com/${res.parentPost?.author.username}/status/${res.parentPost?.id}`, 'this tweet')}, posted by ${hyperlink(`https://x.com/${res.parentPost?.author.username}`, `@${res.parentPost?.author.username}`)}*`,
                 },
               ] satisfies APIMessageTopLevelComponent[])
             : []),
@@ -192,7 +195,7 @@ createApplicationCommand({
                   },
                 ] satisfies APIMessageTopLevelComponent[])
               : []),
-            ...(translated
+            ...(isTranslated
               ? ([
                   {
                     type: ComponentType.TextDisplay,
