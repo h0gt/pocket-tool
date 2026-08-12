@@ -53,6 +53,7 @@ import { loadFonts } from '../utils/card';
 import { redis } from '../utils/redis';
 import { Temporal } from '@js-temporal/polyfill';
 import { MESSAGE_BLOCK_REASONS } from '../types/error';
+import { subtle } from 'crypto';
 
 process.on('uncaughtException', console.error);
 process.on('unhandledRejection', console.error);
@@ -63,13 +64,11 @@ export const components = new Collection<string, Component>();
 export const cooldowns = new Collection<string, Collection<Snowflake, number>>();
 export const collectors = new Set<Collector<any>>();
 
-await readDirectory(path.join(process.cwd(), 'src', 'app', 'commands'));
+await readDirectory(path.join(process.cwd(), 'src', 'app', 'commands')).then(() => loadFonts());
 await readDirectory(path.join(process.cwd(), 'src', 'app', 'components'));
 
 const rest = new REST().setToken(env.get('token', true).toString());
 const api = new API(rest);
-
-loadFonts();
 
 const app = new Hono();
 
@@ -80,13 +79,7 @@ app.post('/interactions', async (c) => {
 
   if (!signature || !timestamp) return c.body('missing signature or timestamp', 400);
 
-  const isValid = await verify(
-    rawBody,
-    signature,
-    timestamp,
-    env.get('discord_public_key', true).toString(),
-    crypto.subtle,
-  );
+  const isValid = await verify(rawBody, signature, timestamp, env.get('discord_public_key', true).toString(), subtle);
 
   if (!isValid) return c.body('invalid request signature', 401);
 
@@ -230,93 +223,9 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
   if ('dev' in command && command.dev === true && !devIds.includes(interaction.user?.id ?? interaction.member?.user.id))
     return;
 
-  const now = Temporal.Now.zonedDateTimeISO('America/Sao_Paulo');
-
-  const analyticsDate = now.hour < 21 ? now.subtract({ days: 1 }) : now;
-
-  const day = analyticsDate.toPlainDate().toString();
-  const hour = String(now.hour).padStart(2, '0');
-  const minute = String(now.minute).padStart(2, '0');
-
-  let nextReset = now.with({
-    hour: 21,
-    minute: 0,
-    second: 0,
-    millisecond: 0,
-    microsecond: 0,
-    nanosecond: 0,
-  });
-
-  if (Temporal.ZonedDateTime.compare(now, nextReset) >= 0) nextReset = nextReset.add({ days: 1 });
-
-  const secondsUntilReset = Math.ceil((nextReset.epochMilliseconds - now.epochMilliseconds) / 1000);
-
-  const keys = [
-    `analytics:commands:day:${day}`,
-    `analytics:commands:hour:${day}:${hour}`,
-    `analytics:commands:minute:${day}:${hour}:${minute}`,
-  ];
-
-  for (const key of keys) {
-    const exists = await redis.exists(key);
-
-    await redis.incr(key);
-
-    if (!exists) {
-      await redis.expire(key, secondsUntilReset);
-    }
-  }
-
-  const commandKey = `analytics:commands:usage:${interaction.data.id}:day:${day}`;
-
-  if (!(await redis.exists(commandKey))) {
-    await redis.hSet(commandKey, {
-      id: interaction.data.id,
-      name: interaction.data.name,
-      uses: 0,
-    });
-
-    await redis.expire(commandKey, secondsUntilReset);
-  }
-
-  await redis.hIncrBy(commandKey, 'uses', 1);
-
   switch (interaction.data.type) {
     case ApplicationCommandType.ChatInput: {
       const chatInput = command as ChatInputCommand;
-
-      if (!cooldowns.has(interaction.data.name))
-        cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
-
-      const now = new Date().getTime();
-      const timestamps = cooldowns.get(interaction.data.name)!;
-      const cooldown = (chatInput.cooldown ?? 0) * 1000;
-
-      if (timestamps.has((interaction.user?.id ?? interaction.member?.user.id)!)) {
-        const expiration = timestamps.get((interaction.user?.id ?? interaction.member?.user.id)!)! + cooldown;
-
-        if (now < expiration) {
-          await api.interactions.reply(interaction.id, interaction.token, {
-            components: [
-              {
-                type: ComponentType.Container,
-                components: [
-                  {
-                    type: ComponentType.TextDisplay,
-                    content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
-                  },
-                ],
-              },
-            ],
-            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-          });
-
-          return;
-        }
-      }
-
-      timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now);
-      setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
 
       const ephemeral =
         (
@@ -332,6 +241,56 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         });
       }
 
+      if (!cooldowns.has(interaction.data.name))
+        cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
+
+      const now = new Date().getTime();
+      const timestamps = cooldowns.get(interaction.data.name)!;
+      const cooldown = (chatInput.cooldown ?? 0) * 1000;
+
+      if (timestamps.has((interaction.user?.id ?? interaction.member?.user.id)!)) {
+        const expiration = timestamps.get((interaction.user?.id ?? interaction.member?.user.id)!)! + cooldown;
+
+        if (now < expiration) {
+          if (chatInput.acknowledge) {
+            await api.interactions.editReply(interaction.application_id, interaction.token, {
+              components: [
+                {
+                  type: ComponentType.Container,
+                  components: [
+                    {
+                      type: ComponentType.TextDisplay,
+                      content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                    },
+                  ],
+                },
+              ],
+              flags: MessageFlags.IsComponentsV2,
+            });
+          } else {
+            await api.interactions.reply(interaction.id, interaction.token, {
+              components: [
+                {
+                  type: ComponentType.Container,
+                  components: [
+                    {
+                      type: ComponentType.TextDisplay,
+                      content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                    },
+                  ],
+                },
+              ],
+              flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+            });
+          }
+
+          return;
+        }
+      }
+
+      timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now);
+      setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
+
       try {
         await chatInput.run(
           interaction as APIChatInputApplicationCommandInteraction,
@@ -343,8 +302,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         const err = MESSAGE_BLOCK_REASONS[code as keyof typeof MESSAGE_BLOCK_REASONS];
 
         if (err) {
-          if (chatInput.acknowledge === true)
-            await api.interactions.deleteReply(interaction.application_id, interaction.token);
+          if (chatInput.acknowledge) await api.interactions.deleteReply(interaction.application_id, interaction.token);
 
           await api.interactions.followUp(interaction.application_id, interaction.token, {
             content: `-# </${interaction.data.name}:${interaction.data.id}> was blocked due to ${hyperlink(err.article, err.reason)} - please try again with **ephemeral** enabled`,
@@ -356,7 +314,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
 
         console.error(`Command ${interaction.data.name} encountered an error:`, error);
 
-        if (chatInput.acknowledge === true) {
+        if (chatInput.acknowledge) {
           await api.interactions.editReply(interaction.application_id, interaction.token, {
             components: [
               {
@@ -396,6 +354,12 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
     case ApplicationCommandType.Message: {
       const messageContext = command as MessageContextMenuCommand;
 
+      if (messageContext.acknowledge) {
+        await api.interactions.defer(interaction.id, interaction.token, {
+          flags: messageContext.ephemeral ? MessageFlags.Ephemeral : undefined,
+        });
+      }
+
       if (!cooldowns.has(interaction.data.name))
         cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
 
@@ -407,20 +371,37 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         const expiration = timestamps.get((interaction.user?.id ?? interaction.member?.user.id)!)!;
 
         if (now < expiration) {
-          await api.interactions.reply(interaction.id, interaction.token, {
-            components: [
-              {
-                type: ComponentType.Container,
-                components: [
-                  {
-                    type: ComponentType.TextDisplay,
-                    content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
-                  },
-                ],
-              },
-            ],
-            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-          });
+          if (messageContext.acknowledge) {
+            await api.interactions.editReply(interaction.application_id, interaction.token, {
+              components: [
+                {
+                  type: ComponentType.Container,
+                  components: [
+                    {
+                      type: ComponentType.TextDisplay,
+                      content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                    },
+                  ],
+                },
+              ],
+              flags: MessageFlags.IsComponentsV2,
+            });
+          } else {
+            await api.interactions.reply(interaction.id, interaction.token, {
+              components: [
+                {
+                  type: ComponentType.Container,
+                  components: [
+                    {
+                      type: ComponentType.TextDisplay,
+                      content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                    },
+                  ],
+                },
+              ],
+              flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+            });
+          }
 
           return;
         }
@@ -429,12 +410,6 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
       timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now);
       setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
 
-      if (messageContext.acknowledge) {
-        await api.interactions.defer(interaction.id, interaction.token, {
-          flags: messageContext.ephemeral ? MessageFlags.Ephemeral : undefined,
-        });
-      }
-
       try {
         await messageContext.run(interaction as APIMessageApplicationCommandInteraction, api);
       } catch (error) {
@@ -442,7 +417,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         const err = MESSAGE_BLOCK_REASONS[code as keyof typeof MESSAGE_BLOCK_REASONS];
 
         if (err) {
-          if (messageContext.acknowledge === true)
+          if (messageContext.acknowledge)
             await api.interactions.deleteReply(interaction.application_id, interaction.token);
 
           await api.interactions.followUp(interaction.application_id, interaction.token, {
@@ -455,7 +430,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
 
         console.error(`Command ${interaction.data.name} encountered an error:`, error);
 
-        if (messageContext.acknowledge === true) {
+        if (messageContext.acknowledge) {
           await api.interactions.editReply(interaction.application_id, interaction.token, {
             components: [
               {
@@ -495,6 +470,12 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
     case ApplicationCommandType.User: {
       const userContext = command as UserContextMenuCommand;
 
+      if (userContext.acknowledge) {
+        await api.interactions.defer(interaction.id, interaction.token, {
+          flags: userContext.ephemeral ? MessageFlags.Ephemeral : undefined,
+        });
+      }
+
       if (!cooldowns.has(interaction.data.name))
         cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
 
@@ -506,20 +487,37 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         const expiration = timestamps.get((interaction.user?.id ?? interaction.member?.user.id)!)!;
 
         if (now < expiration) {
-          await api.interactions.reply(interaction.id, interaction.token, {
-            components: [
-              {
-                type: ComponentType.Container,
-                components: [
-                  {
-                    type: ComponentType.TextDisplay,
-                    content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
-                  },
-                ],
-              },
-            ],
-            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-          });
+          if (userContext.acknowledge) {
+            await api.interactions.editReply(interaction.application_id, interaction.token, {
+              components: [
+                {
+                  type: ComponentType.Container,
+                  components: [
+                    {
+                      type: ComponentType.TextDisplay,
+                      content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                    },
+                  ],
+                },
+              ],
+              flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+            });
+          } else {
+            await api.interactions.reply(interaction.id, interaction.token, {
+              components: [
+                {
+                  type: ComponentType.Container,
+                  components: [
+                    {
+                      type: ComponentType.TextDisplay,
+                      content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                    },
+                  ],
+                },
+              ],
+              flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+            });
+          }
 
           return;
         }
@@ -528,12 +526,6 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
       timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now);
       setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
 
-      if (userContext.acknowledge) {
-        await api.interactions.defer(interaction.id, interaction.token, {
-          flags: userContext.ephemeral ? MessageFlags.Ephemeral : undefined,
-        });
-      }
-
       try {
         await userContext.run(interaction as APIUserApplicationCommandInteraction, api);
       } catch (error) {
@@ -541,7 +533,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         const err = MESSAGE_BLOCK_REASONS[code as keyof typeof MESSAGE_BLOCK_REASONS];
 
         if (err) {
-          if (userContext.acknowledge === true)
+          if (userContext.acknowledge)
             await api.interactions.deleteReply(interaction.application_id, interaction.token);
 
           await api.interactions.followUp(interaction.application_id, interaction.token, {
@@ -554,7 +546,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
 
         console.error(`Command ${interaction.data.name} encountered an error:`, error);
 
-        if (userContext.acknowledge === true) {
+        if (userContext.acknowledge) {
           await api.interactions.editReply(interaction.application_id, interaction.token, {
             components: [
               {
@@ -605,6 +597,58 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
       break;
     }
   }
+
+  // analytics
+  const now = Temporal.Now.zonedDateTimeISO('America/Sao_Paulo');
+
+  const analyticsDate = now.hour < 21 ? now.subtract({ days: 1 }) : now;
+
+  const day = analyticsDate.toPlainDate().toString();
+  const hour = String(now.hour).padStart(2, '0');
+  const minute = String(now.minute).padStart(2, '0');
+
+  let nextReset = now.with({
+    hour: 21,
+    minute: 0,
+    second: 0,
+    millisecond: 0,
+    microsecond: 0,
+    nanosecond: 0,
+  });
+
+  if (Temporal.ZonedDateTime.compare(now, nextReset) >= 0) nextReset = nextReset.add({ days: 1 });
+
+  const secondsUntilReset = Math.ceil((nextReset.epochMilliseconds - now.epochMilliseconds) / 1000);
+
+  const keys = [
+    `analytics:commands:day:${day}`,
+    `analytics:commands:hour:${day}:${hour}`,
+    `analytics:commands:minute:${day}:${hour}:${minute}`,
+  ];
+
+  for (const key of keys) {
+    const exists = await redis.exists(key);
+
+    await redis.incr(key);
+
+    if (!exists) {
+      await redis.expire(key, secondsUntilReset);
+    }
+  }
+
+  const commandKey = `analytics:commands:usage:${interaction.data.id}:day:${day}`;
+
+  if (!(await redis.exists(commandKey))) {
+    await redis.hSet(commandKey, {
+      id: interaction.data.id,
+      name: interaction.data.name,
+      uses: 0,
+    });
+
+    await redis.expire(commandKey, secondsUntilReset);
+  }
+
+  await redis.hIncrBy(commandKey, 'uses', 1);
 }
 
 async function handleChatInputCommandAutocomplete(interaction: APIApplicationCommandAutocompleteInteraction, api: API) {

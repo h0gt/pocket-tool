@@ -1,13 +1,14 @@
 import { Collection } from '@discordjs/collection';
 import type { Collector, CollectorData, CollectorEvents, CollectorOptions } from '../types/types';
 import { EventEmitter } from 'events';
+import { randomUUID } from 'crypto';
 
 const collectors = new Collection<string, CollectorData<any>>();
 
 export default function createCollector<Type>(options: CollectorOptions<Type>) {
   const { key, duration, max, filter } = options;
 
-  const id = `${key}_${crypto.randomUUID()}`;
+  const id = `${key}_${randomUUID()}`;
   const collected: Type[] = [];
   let stopped = false;
   let timeout: NodeJS.Timeout | undefined;

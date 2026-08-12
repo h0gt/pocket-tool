@@ -38,13 +38,13 @@ You are fully responsible for how you use the service.
 
 # 4. Data Collection
 
-The app may collect and store:
+Pocket Tool may collect and store the following information:
 
-- Interaction trigger logs
+- OAuth2 login credentials (such as access tokens, refresh tokens and user ids)
+- Interaction trigger logs, such as command and component interactions
+- Command usage analytics, including command names, command IDs, and usage counts
 
-This data is used strictly for operating, maintaining, and improving the service.
-
-We do not sell user data.
+We only collect data necessary for operating and improving the service.
 
 ---
 

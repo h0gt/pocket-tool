@@ -41,7 +41,7 @@ export interface BaseNonPrimaryEntryPointCommand<Type extends ApplicationCommand
 }
 
 export interface ChatInputCommand<
-  Options extends ChatInputOption[] = ChatInputOption[],
+  Options extends ChatInputOptions = ChatInputOptions,
 > extends BaseNonPrimaryEntryPointCommand<ApplicationCommandType.ChatInput> {
   description: string;
   description_localizations?: LocalizationMap;
@@ -53,6 +53,8 @@ export interface ChatInputCommand<
   ) => Promise<void>;
   autocomplete?: (interaction: APIApplicationCommandAutocompleteInteraction, api: API) => Promise<void>;
 }
+
+export type ChatInputOptions = ChatInputOption[];
 
 export type ChatInputOption =
   | AttachmentChatInputOption
@@ -136,8 +138,10 @@ export type SubcommandChatInputOption = BaseChatInputOption<ApplicationCommandOp
   options?: Exclude<ChatInputOption, SubcommandChatInputOption | SubcommandGroupChatInputOption>[];
 };
 
+export type SubcommandChatInputOptions = SubcommandChatInputOption[];
+
 export type SubcommandGroupChatInputOption = BaseChatInputOption<ApplicationCommandOptionType.SubcommandGroup> & {
-  options?: SubcommandChatInputOption[];
+  options?: SubcommandChatInputOptions;
 };
 
 export type ChatInputOptionChoice<Type extends ApplicationCommandOptionType> = {
@@ -188,7 +192,7 @@ export type GetOptionValue<Option> = Option extends {
 }
   ? Option extends {
       type: SubCommandApplicationCommand;
-      options?: ChatInputOption[];
+      options?: ChatInputOptions;
     }
     ? BuildOptions<Option['options']>
     : Option['type'] extends keyof TypeToResolvedMap
@@ -196,9 +200,7 @@ export type GetOptionValue<Option> = Option extends {
       : never
   : never;
 
-export type GetChatInputCommandOptions<Options extends ChatInputOption[]> = Options extends ChatInputOption[]
-  ? { [Index in keyof BuildOptions<Options> as Index]: BuildOptions<Options>[Index] }
-  : never;
+export type GetChatInputCommandOptions<Options extends ChatInputOptions = ChatInputOptions> = BuildOptions<Options>;
 
 export interface UserContextMenuCommand extends BaseNonPrimaryEntryPointCommand<ApplicationCommandType.User> {
   run: (interaction: APIUserApplicationCommandInteraction, api: API) => Promise<void>;
@@ -216,10 +218,10 @@ export interface PrimaryEntryPointCommand {
   run?: (interaction: APIPrimaryEntryPointCommandInteraction, api: API) => Promise<void>;
 }
 
-export type NonPrimaryEntryPointCommand<Options extends ChatInputOption[] = ChatInputOption[]> =
+export type NonPrimaryEntryPointCommand<Options extends ChatInputOptions = ChatInputOptions> =
   ChatInputCommand<Options> | UserContextMenuCommand | MessageContextMenuCommand;
 
-export type ApplicationCommand<Options extends ChatInputOption[] = ChatInputOption[]> =
+export type ApplicationCommand<Options extends ChatInputOptions = ChatInputOptions> =
   NonPrimaryEntryPointCommand<Options> | PrimaryEntryPointCommand;
 
 export enum InteractableComponentType {
@@ -356,4 +358,18 @@ export interface CollectorData<Type> {
 export interface Collector<Type> extends EventEmitter<CollectorEvents<Type>> {
   collect(item: Type): Promise<void>;
   end(reason?: string): void;
+}
+
+export interface EncryptedOAuth2 {
+  iv: string;
+  tag: string;
+  algorithm: 'aes-256-gcm';
+  ciphertext: string;
+}
+
+export interface EncryptedOAuth2 {
+  iv: string;
+  tag: string;
+  algorithm: 'aes-256-gcm';
+  ciphertext: string;
 }

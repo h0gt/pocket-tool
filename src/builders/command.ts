@@ -1,8 +1,8 @@
 import { commands } from '../app/index';
-import type { ApplicationCommand, ChatInputOption } from '../types/types';
+import type { ApplicationCommand, ChatInputOptions } from '../types/types';
 
-export default function createApplicationCommand<const Options extends ChatInputOption[] = ChatInputOption[]>(
+export default function createApplicationCommand<const Options extends ChatInputOptions = ChatInputOptions>(
   command: ApplicationCommand<Options>,
 ): void {
-  commands.set(typeof command.name === 'string' ? command.name : command.name.global, command as ApplicationCommand);
+  commands.set(command.name, command as ApplicationCommand);
 }

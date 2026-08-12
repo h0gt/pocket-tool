@@ -12,6 +12,7 @@ By using Pocket Tool, you agree to the practices described in this Privacy Polic
 
 Pocket Tool may collect and store the following information:
 
+- OAuth2 login credentials (such as access tokens, refresh tokens and user ids)
 - Interaction trigger logs, such as command and component interactions
 - Command usage analytics, including command names, command IDs, and usage counts
 
