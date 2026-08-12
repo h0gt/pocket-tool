@@ -16,7 +16,7 @@ import { SUPPORTED_LANGUAGES } from '../../../types/languages';
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'translate',
-  description: 'Translates the given text to any language',
+  description: 'Translates the given text to pretty much any language',
   integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   options: [
