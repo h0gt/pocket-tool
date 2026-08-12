@@ -116,7 +116,7 @@ createApplicationCommand({
       params: {
         client: 'gtx',
         sl: from ?? 'auto',
-        tl: to ?? interaction.locale.split('-')[0]!,
+        tl: to === 'auto' ? interaction.locale.split('-')[0]! : (to ?? interaction.locale.split('-')[0]!),
         dt: 't',
         q: query,
       },
@@ -124,8 +124,15 @@ createApplicationCommand({
 
     const translated = res[0].map(([t]: [string]) => t).join('');
 
-    const sourceLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === res[2])!;
-    const targetLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === (to ?? interaction.locale.split('-')[0]))!;
+    const sourceCode = res[2];
+    const targetCode = to === 'auto' ? interaction.locale.split('-')[0]! : (to ?? interaction.locale.split('-')[0]!);
+
+    const sourceLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === sourceCode);
+    const targetLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === targetCode);
+
+    if (!sourceLanguage || !targetLanguage) {
+      throw new Error(`Unsupported language: source=${sourceCode}, target=${targetCode}`);
+    }
 
     await api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
@@ -141,7 +148,11 @@ createApplicationCommand({
             },
             {
               type: ComponentType.TextDisplay,
-              content: `${translated}${to === undefined ? `\n\n-# ${emoji('Exclamation')} Target language was selected based on the user's locale` : ''}`,
+              content: `${translated}${
+                to === undefined || to === 'auto'
+                  ? `\n\n-# ${emoji('Exclamation')} Target language was selected based on the user's locale`
+                  : ''
+              }`,
             },
           ],
         },

@@ -73,8 +73,12 @@ createApplicationCommand({
 
     const translated = res[0].map(([text]: [string]) => text).join('');
 
-    const sourceLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === res[2])!;
-    const targetLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === interaction.locale.split('-')[0])!;
+    const sourceLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === res[2]);
+    const targetLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === interaction.locale.split('-')[0]);
+
+    if (!sourceLanguage || !targetLanguage) {
+      throw new Error(`Unsupported language: source=${res[2]}, target=${interaction.locale.split('-')[0]}`);
+    }
 
     await api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
