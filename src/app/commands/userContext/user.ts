@@ -112,7 +112,11 @@ createApplicationCommand({
                 },
               },
             },
-            ...(connections.length > 0
+            ...(connections.filter(
+              (c) =>
+                c.visibility === ConnectionVisibility.Everyone &&
+                CONNECTION_SERVICES.find((s) => s.service === c.type)?.emoji,
+            ).length > 0
               ? ([
                   {
                     type: ComponentType.ActionRow,
@@ -138,7 +142,7 @@ createApplicationCommand({
                     ],
                   },
                 ] satisfies APIMessageTopLevelComponent[])
-              : ([] satisfies APIMessageTopLevelComponent[])),
+              : []),
             {
               type: ComponentType.Separator,
             },
