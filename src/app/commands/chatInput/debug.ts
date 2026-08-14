@@ -73,7 +73,7 @@ createApplicationCommand({
                   type: ComponentType.Button,
                   label: 'Add to Your Apps!',
                   emoji: toComponentEmoji('Link'),
-                  url: `https://discord.com/oauth2/authorize?client_id=${interaction.application_id}`,
+                  url: `https://pocket-tool.vercel.app/api/invite`,
                   style: ButtonStyle.Link,
                 },
                 {

@@ -6,10 +6,8 @@ function _sanitize(content: unknown): string {
   return String(content ?? '').replace(/`/g, 'ˋ');
 }
 
-const CDN = 'https://cdn.discordapp.com';
-
 export function cdn(route: string, size: number = 4096, format: string = 'webp', animated: boolean = false): string {
-  return `${CDN}${route}.${format}?size=${size}&animated=${animated}`;
+  return `https://cdn.discordapp.com${route}.${format}?size=${size}&animated=${animated}`;
 }
 
 export function codeblock(language: string, content: unknown): string {

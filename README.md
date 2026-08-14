@@ -10,8 +10,6 @@
 
 Pocket Tool is a **lightweight, fast, and versatile Discord app** designed to be your all-in-one utility companion. Whether you're looking to enhance productivity, access handy tools anywhere on Discord, or add fun features, Pocket Tool has you covered.
 
-> _You can also try [Pocket Tool Canary](https://discord.com/oauth2/authorize?client_id=1489363092071518324) to access the latest features early. Note that it may be unstable and occasionally offline._
-
 ## How do I self-host Pocket Tool?
 
 - [Bun](https://bun.com/)

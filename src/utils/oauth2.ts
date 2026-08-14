@@ -23,12 +23,12 @@ export async function getOauth2(user_id: string): Promise<any> {
   return data;
 }
 
-export function decryptOauth2(token: EncryptedOAuth2): string {
+export function decryptOauth2(data: EncryptedOAuth2): string {
   const key = Buffer.from(env.get('oauth2_encryption_key', true).toString(), 'base64');
 
-  const iv = Buffer.from(token.iv, 'base64');
-  const tag = Buffer.from(token.tag, 'base64');
-  const ciphertext = Buffer.from(token.ciphertext, 'base64');
+  const iv = Buffer.from(data.iv, 'base64');
+  const tag = Buffer.from(data.tag, 'base64');
+  const ciphertext = Buffer.from(data.ciphertext, 'base64');
 
   const decipher = createDecipheriv('aes-256-gcm', key, iv);
 
@@ -40,9 +40,7 @@ export function decryptOauth2(token: EncryptedOAuth2): string {
 export function encryptOauth2(token: string): EncryptedOAuth2 {
   const key = Buffer.from(env.get('oauth2_encryption_key', true).toString(), 'base64');
 
-  if (key.length !== 32) {
-    throw new Error('OAuth2 encryption key must be exactly 32 bytes');
-  }
+  if (key.length !== 32) throw new Error('OAuth2 encryption key must be exactly 32 bytes');
 
   const iv = randomBytes(12);
 

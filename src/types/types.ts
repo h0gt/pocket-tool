@@ -366,10 +366,3 @@ export interface EncryptedOAuth2 {
   algorithm: 'aes-256-gcm';
   ciphertext: string;
 }
-
-export interface EncryptedOAuth2 {
-  iv: string;
-  tag: string;
-  algorithm: 'aes-256-gcm';
-  ciphertext: string;
-}

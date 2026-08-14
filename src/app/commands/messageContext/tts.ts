@@ -21,24 +21,7 @@ createApplicationCommand({
   async run(interaction, api) {
     const message = interaction.data.resolved.messages[interaction.data.target_id];
 
-    if (!message || !message.content.trim()) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
-        components: [
-          {
-            type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Please select a text message to convert to speech`,
-          },
-          {
-            type: ComponentType.Separator,
-          },
-        ],
-        flags: MessageFlags.IsComponentsV2,
-      });
-
-      return;
-    }
-
-    if (message.message_snapshots && message.message_snapshots.length > 0) {
+    if (message?.message_snapshots && message.message_snapshots.length > 0) {
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
@@ -49,6 +32,23 @@ createApplicationCommand({
                 content: `${emoji('Exclamation')} Forwarded messages are currently not supported`,
               },
             ],
+          },
+        ],
+        flags: MessageFlags.IsComponentsV2,
+      });
+
+      return;
+    }
+
+    if (!message || !message.content.trim()) {
+      await api.interactions.editReply(interaction.application_id, interaction.token, {
+        components: [
+          {
+            type: ComponentType.TextDisplay,
+            content: `${emoji('Exclamation')} Please select a text message to convert to speech`,
+          },
+          {
+            type: ComponentType.Separator,
           },
         ],
         flags: MessageFlags.IsComponentsV2,

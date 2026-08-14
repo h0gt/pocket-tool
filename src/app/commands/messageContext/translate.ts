@@ -21,7 +21,7 @@ createApplicationCommand({
   async run(interaction, api) {
     const message = interaction.data.resolved.messages[interaction.data.target_id];
 
-    if (!message || !message.content.trim()) {
+    if (message?.message_snapshots && message.message_snapshots.length > 0) {
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
@@ -29,7 +29,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please select a text message to translate`,
+                content: `${emoji('Exclamation')} Forwarded messages are currently not supported`,
               },
             ],
           },
@@ -40,7 +40,7 @@ createApplicationCommand({
       return;
     }
 
-    if (message.message_snapshots && message.message_snapshots.length > 0) {
+    if (!message || !message.content.trim()) {
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
@@ -48,7 +48,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Forwarded messages are currently not supported`,
+                content: `${emoji('Exclamation')} Please select a text message to translate`,
               },
             ],
           },
