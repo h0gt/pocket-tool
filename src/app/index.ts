@@ -55,8 +55,6 @@ import {
 } from '../utils/utils';
 import path from 'path';
 import { verify } from 'discord-verify/node';
-import { loadFonts } from '../utils/card';
-import { collectors } from '../builders/collector';
 import { redis } from '../utils/redis';
 import { Temporal } from '@js-temporal/polyfill';
 import { MESSAGE_BLOCK_REASONS, SUPPORT } from '../types/constants';
@@ -70,7 +68,7 @@ export const components = new Collection<string, Component>();
 
 export const cooldowns = new Collection<string, Collection<Snowflake, number>>();
 
-await readDirectory(path.join(process.cwd(), 'src', 'app', 'commands')).then(() => loadFonts());
+await readDirectory(path.join(process.cwd(), 'src', 'app', 'commands'));
 await readDirectory(path.join(process.cwd(), 'src', 'app', 'components'));
 
 const rest = new REST().setToken(env.get('token', true).toString());

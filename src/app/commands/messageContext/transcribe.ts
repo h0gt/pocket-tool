@@ -8,7 +8,6 @@ import {
 import createApplicationCommand from '../../../builders/command';
 import { codeblock, emoji, truncate } from '../../../utils/markdown';
 import env from '../../../utils/env';
-import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 import { makeRequest } from '../../../utils/request';
 import { RequestMethod, ResponseType } from '../../../types/types';
 
@@ -102,6 +101,8 @@ createApplicationCommand({
       method: RequestMethod.GET,
       response: ResponseType.BUFFER,
     });
+
+    const { ElevenLabsClient } = await import('@elevenlabs/elevenlabs-js');
 
     const elevenlabs = new ElevenLabsClient({ apiKey: elevenLabsApiKey });
 

@@ -15,16 +15,11 @@ import {
 } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../builders/command';
 import { cdn, emoji, hyperlink } from '../../../utils/markdown';
-import {
-  CARD_COLORS,
-  CARD_EFFECTS,
-  CARD_FONTS,
-  CARD_SIZES,
-  renderQuoteCard,
-  type ColorKey,
-  type EffectKey,
-  type FontKey,
-  type SizeKey,
+import type {
+  ColorKey,
+  EffectKey,
+  FontKey,
+  SizeKey,
 } from '../../../utils/card';
 import createCollector from '../../../builders/collector';
 import { Collection } from '@discordjs/collection';
@@ -90,6 +85,23 @@ createApplicationCommand({
 
       return;
     }
+
+    const { CARD_COLORS, CARD_EFFECTS, CARD_FONTS, CARD_SIZES, renderQuoteCard } =
+      await import('../../../utils/card');
+
+    const randomizeSession = (session: Session): Session => {
+      const random = <T extends Record<string, unknown>>(obj: T): keyof T => {
+        const keys = Object.keys(obj) as (keyof T)[];
+        return keys[Math.floor(Math.random() * keys.length)]!;
+      };
+
+      session.font = random(CARD_FONTS) as FontKey;
+      session.size = random(CARD_SIZES) as SizeKey;
+      session.color = random(CARD_COLORS) as ColorKey;
+      session.effects = shuffle(Object.keys(CARD_EFFECTS) as EffectKey[]).slice(0, Math.floor(Math.random() * 4));
+
+      return session;
+    };
 
     const avatar = await makeRequest(
       message.author.avatar
@@ -2034,21 +2046,6 @@ createApplicationCommand({
     });
   },
 });
-
-function randomizeSession(sessions: Session): Session {
-  const random = <T extends Record<string, unknown>>(obj: T): keyof T => {
-    const keys = Object.keys(obj) as (keyof T)[];
-    return keys[Math.floor(Math.random() * keys.length)]!;
-  };
-
-  sessions.font = random(CARD_FONTS) as FontKey;
-  sessions.size = random(CARD_SIZES) as SizeKey;
-  sessions.color = random(CARD_COLORS) as ColorKey;
-
-  sessions.effects = shuffle(Object.keys(CARD_EFFECTS) as EffectKey[]).slice(0, Math.floor(Math.random() * 4));
-
-  return sessions;
-}
 
 export async function resolveContent(message: APIMessage) {
   const content = message.content.trim();
