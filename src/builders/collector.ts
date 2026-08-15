@@ -1,42 +1,52 @@
-import { Collection } from '@discordjs/collection';
-import type { Collector, CollectorData, CollectorEvents, CollectorOptions } from '../types/types';
+import type { Collector, CollectorEvents, CollectorOptions } from '../types/types';
 import { EventEmitter } from 'events';
-import { randomUUID } from 'crypto';
 
-const collectors = new Collection<string, CollectorData<any>>();
+export const activeCollectors = new Set<Collector<any>>();
 
 export default function createCollector<Type>(options: CollectorOptions<Type>) {
-  const { key, duration, max, filter } = options;
+  const { duration, max, filter } = options;
 
-  const id = `${key}_${randomUUID()}`;
-  const collected: Type[] = [];
+  let collectedCount = 0;
   let stopped = false;
   let timeout: NodeJS.Timeout | undefined;
 
   const emitter = new EventEmitter<CollectorEvents<Type>>() as Collector<Type>;
 
-  if (duration) timeout = setTimeout(() => emitter.end('expired'), duration);
+  const resetTimeout = () => {
+    if (!duration) {
+      return;
+    }
+
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+
+    timeout = setTimeout(() => emitter.end('expired'), duration);
+  };
+
+  activeCollectors.add(emitter);
+  resetTimeout();
 
   emitter.collect = async (item: Type) => {
     if (stopped) {
       return;
     }
 
-    const pass = filter ? filter(item) : true;
+    const pass = filter ? await filter(item) : true;
     if (!pass) {
       return;
     }
 
-    collected.push(item);
+    collectedCount++;
 
     emitter.emit('collect', item);
 
-    if (max && collected.length >= max) {
-      return emitter.end('max reached');
+    if (max && collectedCount >= max) {
+      emitter.end('max reached');
+      return;
     }
 
-    if (duration && timeout) clearTimeout(timeout);
-    timeout = setTimeout(() => emitter.end('expired'), duration);
+    resetTimeout();
   };
 
   emitter.end = (reason?: string) => {
@@ -46,19 +56,16 @@ export default function createCollector<Type>(options: CollectorOptions<Type>) {
 
     stopped = true;
 
-    if (timeout) {
-      clearTimeout(timeout);
-    }
-
+    if (timeout) clearTimeout(timeout);
     timeout = undefined;
 
-    emitter.emit('end', reason ?? '');
-    emitter.removeAllListeners();
-
-    collectors.delete(id);
+    try {
+      emitter.emit('end', reason ?? '');
+    } finally {
+      activeCollectors.delete(emitter);
+      emitter.removeAllListeners();
+    }
   };
-
-  collectors.set(id, { id, key, max, filter, emitter });
 
   return emitter;
 }
