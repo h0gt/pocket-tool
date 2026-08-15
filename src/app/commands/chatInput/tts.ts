@@ -11,8 +11,6 @@ import createApplicationCommand from '../../../builders/command';
 import { getAutocompleteFocusedOption } from '../../../utils/utils';
 import env from '../../../utils/env';
 import { emoji } from '../../../utils/markdown';
-import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
-import { decodeOpusBytes, getWaveform } from '../../../utils/opus';
 import { SUPPORTED_LANGUAGES } from '../../../types/constants';
 
 createApplicationCommand({
@@ -115,6 +113,11 @@ createApplicationCommand({
 
       return;
     }
+
+    const [{ ElevenLabsClient }, { decodeOpusBytes, getWaveform }] = await Promise.all([
+      import('@elevenlabs/elevenlabs-js'),
+      import('../../../utils/opus'),
+    ]);
 
     const elevenlabs = new ElevenLabsClient({ apiKey: elevenLabsApiKey });
 

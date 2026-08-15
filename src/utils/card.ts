@@ -25,10 +25,19 @@ const FONTS = [
   ['Dancing Script', 'DancingScript-Regular.ttf'],
 ] as const;
 
-export function loadFonts(): void {
+const loadedFonts = new Set<string>();
+
+function loadFonts(font: FontKey): void {
+  const requiredFamilies = new Set([CARD_FONTS[font].family, 'Exo 2', 'Inconsolata']);
+
   for (const [family, file] of FONTS) {
+    if (!requiredFamilies.has(family) || loadedFonts.has(family)) {
+      continue;
+    }
+
     try {
       GlobalFonts.registerFromPath(path.join(process.cwd(), 'fonts', file), family);
+      loadedFonts.add(family);
     } catch (error) {
       console.error(`Failed to load font ${family}:`, error);
     }
@@ -321,6 +330,8 @@ type TextArea = {
 };
 
 export async function renderQuoteCard(options: RenderQuoteCardOptions): Promise<Buffer> {
+  loadFonts(options.font);
+
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
   const selectedEffects = new Set(options.effects.map((effect) => CARD_EFFECTS[effect].effect));
