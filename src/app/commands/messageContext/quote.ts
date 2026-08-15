@@ -135,12 +135,6 @@ createApplicationCommand({
     });
 
     const originalReply = await api.interactions.editReply(interaction.application_id, interaction.token, {
-      files: [
-        {
-          name: 'quote.gif',
-          data: image,
-        },
-      ],
       components: [
         {
           type: ComponentType.TextDisplay,
@@ -205,7 +199,7 @@ createApplicationCommand({
                       {
                         label: `Custom Text Size: ${session.size}px`,
                         description: 'Currently selected custom size',
-                        value: String(sessions.get(interaction.token)!.size),
+                        value: String(session.size),
                         default: true,
                       },
                     ]
@@ -278,6 +272,12 @@ createApplicationCommand({
           ],
         },
       ],
+      files: [
+        {
+          name: 'quote.gif',
+          data: image,
+        },
+      ],
       flags: MessageFlags.IsComponentsV2,
     });
 
@@ -318,14 +318,31 @@ createApplicationCommand({
             });
 
             await api.interactions.editReply(interaction.application_id, interaction.token, {
-              content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
-              files: [
-                {
-                  name: 'quote.gif',
-                  data: image,
-                },
-              ],
               components: [
+                {
+                  type: ComponentType.TextDisplay,
+                  content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
+                },
+                {
+                  type: ComponentType.MediaGallery,
+                  items: [
+                    {
+                      media: {
+                        url: 'attachment://quote.gif',
+                      },
+                    },
+                  ],
+                },
+                {
+                  type: ComponentType.Container,
+                  components: [
+                    {
+                      type: ComponentType.TextDisplay,
+                      content:
+                        '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+                    },
+                  ],
+                },
                 {
                   type: ComponentType.ActionRow,
                   components: [
@@ -439,6 +456,13 @@ createApplicationCommand({
                   ],
                 },
               ],
+              files: [
+                {
+                  name: 'quote.gif',
+                  data: image,
+                },
+              ],
+              flags: MessageFlags.IsComponentsV2,
             });
           }
 
@@ -485,14 +509,31 @@ createApplicationCommand({
             });
 
             await api.interactions.editReply(interaction.application_id, interaction.token, {
-              content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
-              files: [
-                {
-                  name: 'quote.gif',
-                  data: image,
-                },
-              ],
               components: [
+                {
+                  type: ComponentType.TextDisplay,
+                  content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
+                },
+                {
+                  type: ComponentType.MediaGallery,
+                  items: [
+                    {
+                      media: {
+                        url: 'attachment://quote.gif',
+                      },
+                    },
+                  ],
+                },
+                {
+                  type: ComponentType.Container,
+                  components: [
+                    {
+                      type: ComponentType.TextDisplay,
+                      content:
+                        '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+                    },
+                  ],
+                },
                 {
                   type: ComponentType.ActionRow,
                   components: [
@@ -606,6 +647,13 @@ createApplicationCommand({
                   ],
                 },
               ],
+              files: [
+                {
+                  name: 'quote.gif',
+                  data: image,
+                },
+              ],
+              flags: MessageFlags.IsComponentsV2,
             });
           }
 
@@ -654,14 +702,31 @@ createApplicationCommand({
             });
 
             await api.interactions.editReply(interaction.application_id, interaction.token, {
-              content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
-              files: [
-                {
-                  name: 'quote.gif',
-                  data: image,
-                },
-              ],
               components: [
+                {
+                  type: ComponentType.TextDisplay,
+                  content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
+                },
+                {
+                  type: ComponentType.MediaGallery,
+                  items: [
+                    {
+                      media: {
+                        url: 'attachment://quote.gif',
+                      },
+                    },
+                  ],
+                },
+                {
+                  type: ComponentType.Container,
+                  components: [
+                    {
+                      type: ComponentType.TextDisplay,
+                      content:
+                        '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+                    },
+                  ],
+                },
                 {
                   type: ComponentType.ActionRow,
                   components: [
@@ -775,6 +840,13 @@ createApplicationCommand({
                   ],
                 },
               ],
+              files: [
+                {
+                  name: 'quote.gif',
+                  data: image,
+                },
+              ],
+              flags: MessageFlags.IsComponentsV2,
             });
           }
 
@@ -803,14 +875,31 @@ createApplicationCommand({
             });
 
             await api.interactions.editReply(interaction.application_id, interaction.token, {
-              content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
-              files: [
-                {
-                  name: 'quote.gif',
-                  data: image,
-                },
-              ],
               components: [
+                {
+                  type: ComponentType.TextDisplay,
+                  content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
+                },
+                {
+                  type: ComponentType.MediaGallery,
+                  items: [
+                    {
+                      media: {
+                        url: 'attachment://quote.gif',
+                      },
+                    },
+                  ],
+                },
+                {
+                  type: ComponentType.Container,
+                  components: [
+                    {
+                      type: ComponentType.TextDisplay,
+                      content:
+                        '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+                    },
+                  ],
+                },
                 {
                   type: ComponentType.ActionRow,
                   components: [
@@ -924,6 +1013,160 @@ createApplicationCommand({
                   ],
                 },
               ],
+              files: [
+                {
+                  name: 'quote.gif',
+                  data: image,
+                },
+              ],
+              flags: MessageFlags.IsComponentsV2,
+            });
+            await api.interactions.editReply(interaction.application_id, interaction.token, {
+              components: [
+                {
+                  type: ComponentType.TextDisplay,
+                  content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
+                },
+                {
+                  type: ComponentType.MediaGallery,
+                  items: [
+                    {
+                      media: {
+                        url: 'attachment://quote.gif',
+                      },
+                    },
+                  ],
+                },
+                {
+                  type: ComponentType.Container,
+                  components: [
+                    {
+                      type: ComponentType.TextDisplay,
+                      content:
+                        '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+                    },
+                  ],
+                },
+                {
+                  type: ComponentType.ActionRow,
+                  components: [
+                    {
+                      type: ComponentType.StringSelect,
+                      custom_id: 'quote-font',
+                      placeholder: 'Choose a font',
+                      options: Object.entries(CARD_FONTS).map(([value, item]) => ({
+                        label: item.label,
+                        description: item.description,
+                        value,
+                        default: value === session.font,
+                      })),
+                    },
+                  ],
+                },
+                {
+                  type: ComponentType.ActionRow,
+                  components: [
+                    {
+                      type: ComponentType.StringSelect,
+                      custom_id: 'quote-size',
+                      placeholder: 'Choose a size ',
+                      options: [
+                        ...Object.entries(CARD_SIZES).map(([value, item]) => ({
+                          label: item.label,
+                          description: item.description,
+                          value,
+                          default: value === session.size,
+                        })),
+                        {
+                          label: 'Custom Font Size',
+                          description: 'Provide a custom font size',
+                          value: 'custom',
+                        },
+                        ...(!(session.size in CARD_SIZES)
+                          ? [
+                              {
+                                label: `Custom Text Size: ${session.size}px`,
+                                description: 'Currently selected custom size',
+                                value: String(session.size),
+                                default: true,
+                              },
+                            ]
+                          : []),
+                      ],
+                    },
+                  ],
+                },
+                {
+                  type: ComponentType.ActionRow,
+                  components: [
+                    {
+                      type: ComponentType.StringSelect,
+                      custom_id: 'quote-color',
+                      placeholder: 'Choose a color',
+                      options: [
+                        ...Object.entries(CARD_COLORS).map(([value, item]) => ({
+                          label: item.label,
+                          description: item.description,
+                          value,
+                          default: value === session.color,
+                        })),
+                        {
+                          label: 'Custom Text Color',
+                          description: 'Provide a custom text color',
+                          value: 'custom',
+                        },
+                        ...(!(session.color in CARD_COLORS)
+                          ? [
+                              {
+                                label: `Custom Text Color: ${session.color}`,
+                                description: 'Currently selected custom color',
+                                value: session.color,
+                                default: true,
+                              },
+                            ]
+                          : []),
+                      ],
+                    },
+                  ],
+                },
+                {
+                  type: ComponentType.ActionRow,
+                  components: [
+                    {
+                      type: ComponentType.StringSelect,
+                      custom_id: 'quote-effects',
+                      placeholder: 'Choose Some Effects!',
+                      min_values: 0,
+                      max_values: Object.keys(CARD_EFFECTS).length,
+                      options: Object.entries(CARD_EFFECTS).map(([value, item]) => ({
+                        label: item.label,
+                        description: item.description,
+                        value,
+                        default: session.effects.includes(value as EffectKey),
+                      })),
+                    },
+                  ],
+                },
+                {
+                  type: ComponentType.ActionRow,
+                  components: [
+                    {
+                      type: ComponentType.Button,
+                      custom_id: 'random',
+                      label: 'Surprise Me!',
+                      emoji: toComponentEmoji('Spark'),
+                      style: ButtonStyle.Secondary,
+                    },
+                  ],
+                },
+              ],
+              files: [
+                {
+                  name: 'quote.gif',
+                  data: image,
+                },
+              ],
+              flags: MessageFlags.IsComponentsV2,
             });
           }
 
@@ -947,14 +1190,31 @@ createApplicationCommand({
           });
 
           await api.interactions.editReply(interaction.application_id, interaction.token, {
-            content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
-            files: [
-              {
-                name: 'quote.gif',
-                data: image,
-              },
-            ],
             components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
+              },
+              {
+                type: ComponentType.MediaGallery,
+                items: [
+                  {
+                    media: {
+                      url: 'attachment://quote.gif',
+                    },
+                  },
+                ],
+              },
+              {
+                type: ComponentType.Container,
+                components: [
+                  {
+                    type: ComponentType.TextDisplay,
+                    content:
+                      '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+                  },
+                ],
+              },
               {
                 type: ComponentType.ActionRow,
                 components: [
@@ -1068,6 +1328,13 @@ createApplicationCommand({
                 ],
               },
             ],
+            files: [
+              {
+                name: 'quote.gif',
+                data: image,
+              },
+            ],
+            flags: MessageFlags.IsComponentsV2,
           });
 
           break;
@@ -1120,14 +1387,31 @@ createApplicationCommand({
           });
 
           await api.interactions.editReply(interaction.application_id, interaction.token, {
-            content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
-            files: [
-              {
-                name: 'quote.gif',
-                data: image,
-              },
-            ],
             components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
+              },
+              {
+                type: ComponentType.MediaGallery,
+                items: [
+                  {
+                    media: {
+                      url: 'attachment://quote.gif',
+                    },
+                  },
+                ],
+              },
+              {
+                type: ComponentType.Container,
+                components: [
+                  {
+                    type: ComponentType.TextDisplay,
+                    content:
+                      '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+                  },
+                ],
+              },
               {
                 type: ComponentType.ActionRow,
                 components: [
@@ -1241,6 +1525,160 @@ createApplicationCommand({
                 ],
               },
             ],
+            files: [
+              {
+                name: 'quote.gif',
+                data: image,
+              },
+            ],
+            flags: MessageFlags.IsComponentsV2,
+          });
+          await api.interactions.editReply(interaction.application_id, interaction.token, {
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
+              },
+              {
+                type: ComponentType.MediaGallery,
+                items: [
+                  {
+                    media: {
+                      url: 'attachment://quote.gif',
+                    },
+                  },
+                ],
+              },
+              {
+                type: ComponentType.Container,
+                components: [
+                  {
+                    type: ComponentType.TextDisplay,
+                    content:
+                      '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+                  },
+                ],
+              },
+              {
+                type: ComponentType.ActionRow,
+                components: [
+                  {
+                    type: ComponentType.StringSelect,
+                    custom_id: 'quote-font',
+                    placeholder: 'Choose a font',
+                    options: Object.entries(CARD_FONTS).map(([value, item]) => ({
+                      label: item.label,
+                      description: item.description,
+                      value,
+                      default: value === session.font,
+                    })),
+                  },
+                ],
+              },
+              {
+                type: ComponentType.ActionRow,
+                components: [
+                  {
+                    type: ComponentType.StringSelect,
+                    custom_id: 'quote-size',
+                    placeholder: 'Choose a size ',
+                    options: [
+                      ...Object.entries(CARD_SIZES).map(([value, item]) => ({
+                        label: item.label,
+                        description: item.description,
+                        value,
+                        default: value === session.size,
+                      })),
+                      {
+                        label: 'Custom Font Size',
+                        description: 'Provide a custom font size',
+                        value: 'custom',
+                      },
+                      ...(!(session.size in CARD_SIZES)
+                        ? [
+                            {
+                              label: `Custom Text Size: ${session.size}px`,
+                              description: 'Currently selected custom size',
+                              value: String(session.size),
+                              default: true,
+                            },
+                          ]
+                        : []),
+                    ],
+                  },
+                ],
+              },
+              {
+                type: ComponentType.ActionRow,
+                components: [
+                  {
+                    type: ComponentType.StringSelect,
+                    custom_id: 'quote-color',
+                    placeholder: 'Choose a color',
+                    options: [
+                      ...Object.entries(CARD_COLORS).map(([value, item]) => ({
+                        label: item.label,
+                        description: item.description,
+                        value,
+                        default: value === session.color,
+                      })),
+                      {
+                        label: 'Custom Text Color',
+                        description: 'Provide a custom text color',
+                        value: 'custom',
+                      },
+                      ...(!(session.color in CARD_COLORS)
+                        ? [
+                            {
+                              label: `Custom Text Color: ${session.color}`,
+                              description: 'Currently selected custom color',
+                              value: session.color,
+                              default: true,
+                            },
+                          ]
+                        : []),
+                    ],
+                  },
+                ],
+              },
+              {
+                type: ComponentType.ActionRow,
+                components: [
+                  {
+                    type: ComponentType.StringSelect,
+                    custom_id: 'quote-effects',
+                    placeholder: 'Choose Some Effects!',
+                    min_values: 0,
+                    max_values: Object.keys(CARD_EFFECTS).length,
+                    options: Object.entries(CARD_EFFECTS).map(([value, item]) => ({
+                      label: item.label,
+                      description: item.description,
+                      value,
+                      default: session.effects.includes(value as EffectKey),
+                    })),
+                  },
+                ],
+              },
+              {
+                type: ComponentType.ActionRow,
+                components: [
+                  {
+                    type: ComponentType.Button,
+                    custom_id: 'random',
+                    label: 'Surprise Me!',
+                    emoji: toComponentEmoji('Spark'),
+                    style: ButtonStyle.Secondary,
+                  },
+                ],
+              },
+            ],
+            files: [
+              {
+                name: 'quote.gif',
+                data: image,
+              },
+            ],
+            flags: MessageFlags.IsComponentsV2,
           });
 
           break;
@@ -1290,14 +1728,31 @@ createApplicationCommand({
           });
 
           await api.interactions.editReply(interaction.application_id, interaction.token, {
-            content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
-            files: [
-              {
-                name: 'quote.gif',
-                data: image,
-              },
-            ],
             components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
+              },
+              {
+                type: ComponentType.MediaGallery,
+                items: [
+                  {
+                    media: {
+                      url: 'attachment://quote.gif',
+                    },
+                  },
+                ],
+              },
+              {
+                type: ComponentType.Container,
+                components: [
+                  {
+                    type: ComponentType.TextDisplay,
+                    content:
+                      '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+                  },
+                ],
+              },
               {
                 type: ComponentType.ActionRow,
                 components: [
@@ -1411,6 +1866,13 @@ createApplicationCommand({
                 ],
               },
             ],
+            files: [
+              {
+                name: 'quote.gif',
+                data: image,
+              },
+            ],
+            flags: MessageFlags.IsComponentsV2,
           });
 
           break;
@@ -1422,14 +1884,30 @@ createApplicationCommand({
       sessions.delete(interaction.token);
 
       await api.interactions.editReply(interaction.application_id, interaction.token, {
-        content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
-        files: [
-          {
-            name: 'quote.gif',
-            data: image,
-          },
-        ],
         components: [
+          {
+            type: ComponentType.TextDisplay,
+            content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
+          },
+          {
+            type: ComponentType.MediaGallery,
+            items: [
+              {
+                media: {
+                  url: 'attachment://quote.gif',
+                },
+              },
+            ],
+          },
+          {
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+              },
+            ],
+          },
           {
             type: ComponentType.ActionRow,
             components: [
@@ -1548,6 +2026,13 @@ createApplicationCommand({
             ],
           },
         ],
+        files: [
+          {
+            name: 'quote.gif',
+            data: image,
+          },
+        ],
+        flags: MessageFlags.IsComponentsV2,
       });
     });
   },
