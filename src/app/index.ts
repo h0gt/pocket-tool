@@ -37,7 +37,6 @@ import {
   type BooleanChatInputOption,
   type ButtonComponent,
   type ChatInputCommand,
-  type Collector,
   type Component,
   type MessageContextMenuCommand,
   type ModalComponent,
@@ -68,7 +67,6 @@ export const commands = new Collection<string, ApplicationCommand>();
 export const components = new Collection<string, Component>();
 
 export const cooldowns = new Collection<string, Collection<Snowflake, number>>();
-export const collectors = new Set<Collector<any>>();
 
 await readDirectory(path.join(process.cwd(), 'src', 'app', 'commands'));
 await readDirectory(path.join(process.cwd(), 'src', 'app', 'components'));
@@ -830,9 +828,7 @@ async function handleButtonComponent(interaction: APIMessageComponentButtonInter
   const button = components.get(customId) as ButtonComponent;
 
   if (!button) {
-    for (const collector of collectors) {
-      collector.collect(interaction);
-    }
+    await Promise.all(Array.from(collectors, (collector) => collector.collect(interaction)));
 
     return;
   }
@@ -859,9 +855,7 @@ async function handleSelectMenuComponent(interaction: APIMessageComponentSelectM
   const selectMenu = components.get(customId) as SelectMenuComponent;
 
   if (!selectMenu) {
-    for (const collector of collectors) {
-      collector.collect(interaction);
-    }
+    await Promise.all(Array.from(collectors, (collector) => collector.collect(interaction)));
 
     return;
   }
@@ -888,9 +882,7 @@ async function handleModalSubmit(interaction: APIModalSubmitInteraction, api: AP
   const modal = components.get(customId) as ModalComponent;
 
   if (!modal) {
-    for (const collector of collectors) {
-      collector.collect(interaction);
-    }
+    await Promise.all(Array.from(collectors, (collector) => collector.collect(interaction)));
 
     return;
   }

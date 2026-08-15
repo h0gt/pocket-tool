@@ -31,10 +31,8 @@ export async function readDirectory(folder: string): Promise<void> {
   }
 }
 
-const DISCORD_EPOCH = 1420070400000;
-
 export function getTimestampFromSnowflake(snowflake: Snowflake): number {
-  return Number(BigInt(snowflake) >> 22n) + DISCORD_EPOCH;
+  return Number(BigInt(snowflake) >> 22n) + 1420070400000; // 1420070400000 is the timestamp epoch (January 1, 2015)
 }
 
 const TIME_UNITS = {

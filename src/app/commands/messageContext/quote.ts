@@ -22,7 +22,6 @@ import type {
   SizeKey,
 } from '../../../utils/card';
 import createCollector from '../../../builders/collector';
-import { collectors } from '../..';
 import { Collection } from '@discordjs/collection';
 import { makeRequest } from '../../../utils/request';
 import { RequestMethod, ResponseType } from '../../../types/types';
@@ -302,8 +301,6 @@ createApplicationCommand({
         (i.user?.id ?? i.member?.user.id) === (interaction.user?.id ?? interaction.member?.user.id),
       duration: 5 * 60 * 1000,
     });
-
-    collectors.add(collector);
 
     collector.on('collect', async (i) => {
       switch (i.data.custom_id) {
