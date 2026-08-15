@@ -59,6 +59,7 @@ import { redis } from '../utils/redis';
 import { Temporal } from '@js-temporal/polyfill';
 import { MESSAGE_BLOCK_REASONS, SUPPORT } from '../types/constants';
 import { subtle } from 'crypto';
+import { collectors } from '../builders/collector';
 
 process.on('uncaughtException', console.error);
 process.on('unhandledRejection', console.error);
