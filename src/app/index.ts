@@ -56,7 +56,7 @@ import {
 import path from 'path';
 import { verify } from 'discord-verify/node';
 import { loadFonts } from '../utils/card';
-import { activeCollectors } from '../builders/collector';
+import { collectors } from '../builders/collector';
 import { redis } from '../utils/redis';
 import { Temporal } from '@js-temporal/polyfill';
 import { MESSAGE_BLOCK_REASONS, SUPPORT } from '../types/constants';
@@ -830,7 +830,7 @@ async function handleButtonComponent(interaction: APIMessageComponentButtonInter
   const button = components.get(customId) as ButtonComponent;
 
   if (!button) {
-    await Promise.all(Array.from(activeCollectors, (collector) => collector.collect(interaction)));
+    await Promise.all(Array.from(collectors, (collector) => collector.collect(interaction)));
 
     return;
   }
@@ -857,7 +857,7 @@ async function handleSelectMenuComponent(interaction: APIMessageComponentSelectM
   const selectMenu = components.get(customId) as SelectMenuComponent;
 
   if (!selectMenu) {
-    await Promise.all(Array.from(activeCollectors, (collector) => collector.collect(interaction)));
+    await Promise.all(Array.from(collectors, (collector) => collector.collect(interaction)));
 
     return;
   }
@@ -884,7 +884,7 @@ async function handleModalSubmit(interaction: APIModalSubmitInteraction, api: AP
   const modal = components.get(customId) as ModalComponent;
 
   if (!modal) {
-    await Promise.all(Array.from(activeCollectors, (collector) => collector.collect(interaction)));
+    await Promise.all(Array.from(collectors, (collector) => collector.collect(interaction)));
 
     return;
   }
