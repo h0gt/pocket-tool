@@ -32,7 +32,7 @@ export default function createCollector<Type>(options: CollectorOptions<Type>) {
       return;
     }
 
-    const pass = filter ? filter(item) : true;
+    const pass = filter ? await filter(item) : true;
     if (!pass) {
       return;
     }
@@ -59,9 +59,12 @@ export default function createCollector<Type>(options: CollectorOptions<Type>) {
     if (timeout) clearTimeout(timeout);
     timeout = undefined;
 
-    emitter.emit('end', reason ?? '');
-    activeCollectors.delete(emitter);
-    emitter.removeAllListeners();
+    try {
+      emitter.emit('end', reason ?? '');
+    } finally {
+      activeCollectors.delete(emitter);
+      emitter.removeAllListeners();
+    }
   };
 
   return emitter;

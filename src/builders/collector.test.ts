@@ -39,4 +39,30 @@ describe('createCollector', () => {
 
     expect(activeCollectors.has(collector)).toBe(true);
   });
+
+  test('waits for asynchronous filters', async () => {
+    const collected: string[] = [];
+    const collector = createCollector<string>({
+      key: 'test',
+      filter: async () => false,
+    });
+
+    collector.on('collect', (item) => collected.push(item));
+
+    await collector.collect('ignored');
+
+    expect(collected).toEqual([]);
+  });
+
+  test('cleans up when an end listener throws', () => {
+    const collector = createCollector<string>({ key: 'test' });
+
+    collector.on('end', () => {
+      throw new Error('listener failed');
+    });
+
+    expect(() => collector.end()).toThrow('listener failed');
+    expect(activeCollectors.has(collector)).toBe(false);
+    expect(collector.listenerCount('end')).toBe(0);
+  });
 });

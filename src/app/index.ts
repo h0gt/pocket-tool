@@ -830,9 +830,7 @@ async function handleButtonComponent(interaction: APIMessageComponentButtonInter
   const button = components.get(customId) as ButtonComponent;
 
   if (!button) {
-    for (const collector of activeCollectors) {
-      collector.collect(interaction);
-    }
+    await Promise.all(Array.from(activeCollectors, (collector) => collector.collect(interaction)));
 
     return;
   }
@@ -859,9 +857,7 @@ async function handleSelectMenuComponent(interaction: APIMessageComponentSelectM
   const selectMenu = components.get(customId) as SelectMenuComponent;
 
   if (!selectMenu) {
-    for (const collector of activeCollectors) {
-      collector.collect(interaction);
-    }
+    await Promise.all(Array.from(activeCollectors, (collector) => collector.collect(interaction)));
 
     return;
   }
@@ -888,9 +884,7 @@ async function handleModalSubmit(interaction: APIModalSubmitInteraction, api: AP
   const modal = components.get(customId) as ModalComponent;
 
   if (!modal) {
-    for (const collector of activeCollectors) {
-      collector.collect(interaction);
-    }
+    await Promise.all(Array.from(activeCollectors, (collector) => collector.collect(interaction)));
 
     return;
   }
