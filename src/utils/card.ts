@@ -25,21 +25,22 @@ const FONTS = [
   ['Dancing Script', 'DancingScript-Regular.ttf'],
 ] as const;
 
-const loadedFonts = new Set<string>();
+const attemptedFonts = new Set<string>();
 
 function loadFonts(font: FontKey): void {
   const requiredFamilies = new Set([CARD_FONTS[font].family, 'Exo 2', 'Inconsolata']);
 
   for (const [family, file] of FONTS) {
-    if (!requiredFamilies.has(family) || loadedFonts.has(family)) {
+    if (!requiredFamilies.has(family) || attemptedFonts.has(family)) {
       continue;
     }
 
     try {
       GlobalFonts.registerFromPath(path.join(process.cwd(), 'fonts', file), family);
-      loadedFonts.add(family);
     } catch (error) {
       console.error(`Failed to load font ${family}:`, error);
+    } finally {
+      attemptedFonts.add(family);
     }
   }
 }
