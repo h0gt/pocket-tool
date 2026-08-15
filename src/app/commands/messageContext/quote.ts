@@ -118,7 +118,9 @@ createApplicationCommand({
 
     const session = sessions.get(interaction.token);
 
-    if (!session) return;
+    if (!session) {
+      return;
+    }
 
     let image = await renderQuoteCard({
       avatar: session.avatar,
@@ -133,7 +135,6 @@ createApplicationCommand({
     });
 
     const originalReply = await api.interactions.editReply(interaction.application_id, interaction.token, {
-      content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
       files: [
         {
           name: 'quote.gif',
@@ -141,6 +142,29 @@ createApplicationCommand({
         },
       ],
       components: [
+        {
+          type: ComponentType.TextDisplay,
+          content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
+        },
+        {
+          type: ComponentType.MediaGallery,
+          items: [
+            {
+              media: {
+                url: 'attachment://quote.gif',
+              },
+            },
+          ],
+        },
+        {
+          type: ComponentType.Container,
+          components: [
+            {
+              type: ComponentType.TextDisplay,
+              content: '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+            },
+          ],
+        },
         {
           type: ComponentType.ActionRow,
           components: [
@@ -254,6 +278,7 @@ createApplicationCommand({
           ],
         },
       ],
+      flags: MessageFlags.IsComponentsV2,
     });
 
     const collector = createCollector<
@@ -1549,7 +1574,7 @@ export async function resolveContent(message: APIMessage) {
 
   const customEmojiRegex = /<a?:\w+:(\d+)>/g;
 
-  const emojiIds = [...content.matchAll(customEmojiRegex)].map((m) => m[1]!);
+  const emojiIds = [...content.matchAll(customEmojiRegex)].map((match) => match[1]!);
 
   const emojis = Object.fromEntries(
     await Promise.all(

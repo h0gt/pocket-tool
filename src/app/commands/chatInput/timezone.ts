@@ -35,17 +35,17 @@ createApplicationCommand({
     const now = new Date();
 
     const choices = Intl.supportedValuesOf('timeZone')
-      .map((z) => ({
-        name: `${z} (${new Intl.DateTimeFormat('en-US', {
-          timeZone: z,
+      .map((zone) => ({
+        name: `${zone} (${new Intl.DateTimeFormat('en-US', {
+          timeZone: zone,
           timeZoneName: 'short',
         })
           .format(now)
           .split(', ')
           .pop()})`,
-        value: z,
+        value: zone,
       }))
-      .filter((c) => c.name.toLowerCase().includes(value))
+      .filter((choice) => choice.name.toLowerCase().includes(value))
       .slice(0, 25);
 
     await api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });

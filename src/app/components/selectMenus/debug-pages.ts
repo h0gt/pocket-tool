@@ -5,12 +5,13 @@ import {
   type APIMessageComponentSelectMenuInteraction,
 } from '@discordjs/core/http-only';
 import createComponent from '../../../builders/component';
-import { InteractableComponentType, TimestampStyle } from '../../../types/types';
+import { HighlightStyle, InteractableComponentType, TimestampStyle } from '../../../types/types';
 import { msToReadableTime, toComponentEmoji } from '../../../utils/utils';
-import { hyperlink, timestamp } from '../../../utils/markdown';
+import { highlight, hyperlink, timestamp } from '../../../utils/markdown';
 import { commands, components } from '../..';
 import { redis } from '../../../utils/redis';
 import { Temporal } from '@js-temporal/polyfill';
+import { INVITE, SUPPORT, WEBSITE } from '../../../types/constants';
 
 createComponent({
   type: InteractableComponentType.SelectMenu,
@@ -20,7 +21,9 @@ createComponent({
   async run(interaction, args, api) {
     const { userId } = args;
 
-    if ((interaction.user?.id ?? interaction.member?.user.id) !== userId) return;
+    if ((interaction.user?.id ?? interaction.member?.user.id) !== userId) {
+      return;
+    }
 
     const page =
       (interaction as APIMessageComponentSelectMenuInteraction).data.component_type === ComponentType.StringSelect &&
@@ -35,7 +38,11 @@ createComponent({
               components: [
                 {
                   type: ComponentType.TextDisplay,
-                  content: `### Welcome to Pocket Tool!\nYou can view all the available commands by running </help:1504215560865448037>`,
+                  content: `### ${hyperlink(WEBSITE, 'Welcome to Pocket Tool!')}\nYou can view all the available slash commands by typing ${highlight('/', HighlightStyle.Bold)}\n-# additionally, you can view context menu commands by right-clicking or long-pressing a message or user`,
+                },
+                {
+                  type: ComponentType.TextDisplay,
+                  content: `-# **Quickstart:**\n> </help:1504215560865448037> - View and search through all the available commands\n> </debug:1533585400138961059> - View stats and information about me!`,
                 },
                 {
                   type: ComponentType.Separator,
@@ -83,14 +90,14 @@ createComponent({
                       type: ComponentType.Button,
                       label: 'Add to Your Apps!',
                       emoji: toComponentEmoji('Link'),
-                      url: `https://pocket-tool.vercel.app/api/invite`,
+                      url: INVITE,
                       style: ButtonStyle.Link,
                     },
                     {
                       type: ComponentType.Button,
                       label: 'Support Server',
                       emoji: toComponentEmoji('Discord'),
-                      url: 'https://discord.gg/Y67yNmsPuf',
+                      url: SUPPORT,
                       style: ButtonStyle.Link,
                     },
                   ],
@@ -153,14 +160,14 @@ createComponent({
                       type: ComponentType.Button,
                       label: 'Add to Your Apps!',
                       emoji: toComponentEmoji('Link'),
-                      url: `https://pocket-tool.vercel.app/api/invite`,
+                      url: INVITE,
                       style: ButtonStyle.Link,
                     },
                     {
                       type: ComponentType.Button,
                       label: 'Support Server',
                       emoji: toComponentEmoji('Discord'),
-                      url: 'https://discord.gg/Y67yNmsPuf',
+                      url: SUPPORT,
                       style: ButtonStyle.Link,
                     },
                   ],
@@ -256,14 +263,14 @@ createComponent({
                       type: ComponentType.Button,
                       label: 'Add to Your Apps!',
                       emoji: toComponentEmoji('Link'),
-                      url: `https://pocket-tool.vercel.app/api/invite`,
+                      url: INVITE,
                       style: ButtonStyle.Link,
                     },
                     {
                       type: ComponentType.Button,
                       label: 'Support Server',
                       emoji: toComponentEmoji('Discord'),
-                      url: 'https://discord.gg/Y67yNmsPuf',
+                      url: SUPPORT,
                       style: ButtonStyle.Link,
                     },
                   ],
@@ -324,14 +331,14 @@ createComponent({
                       type: ComponentType.Button,
                       label: 'Add to Your Apps!',
                       emoji: toComponentEmoji('Link'),
-                      url: `https://pocket-tool.vercel.app/api/invite`,
+                      url: INVITE,
                       style: ButtonStyle.Link,
                     },
                     {
                       type: ComponentType.Button,
                       label: 'Support Server',
                       emoji: toComponentEmoji('Discord'),
-                      url: 'https://discord.gg/Y67yNmsPuf',
+                      url: SUPPORT,
                       style: ButtonStyle.Link,
                     },
                   ],

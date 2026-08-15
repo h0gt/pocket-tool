@@ -18,26 +18,38 @@ export default function createCollector<Type>(options: CollectorOptions<Type>) {
   if (duration) timeout = setTimeout(() => emitter.end('expired'), duration);
 
   emitter.collect = async (item: Type) => {
-    if (stopped) return;
+    if (stopped) {
+      return;
+    }
 
     const pass = filter ? filter(item) : true;
-    if (!pass) return;
+    if (!pass) {
+      return;
+    }
 
     collected.push(item);
 
     emitter.emit('collect', item);
 
-    if (max && collected.length >= max) return emitter.end('max reached');
+    if (max && collected.length >= max) {
+      return emitter.end('max reached');
+    }
 
     if (duration && timeout) clearTimeout(timeout);
     timeout = setTimeout(() => emitter.end('expired'), duration);
   };
 
   emitter.end = (reason?: string) => {
-    if (stopped) return;
+    if (stopped) {
+      return;
+    }
+
     stopped = true;
 
-    if (timeout) clearTimeout(timeout);
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+
     timeout = undefined;
 
     emitter.emit('end', reason ?? '');

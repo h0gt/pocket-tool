@@ -325,11 +325,14 @@ export async function renderQuoteCard(options: RenderQuoteCardOptions): Promise<
   const ctx = canvas.getContext('2d');
   const selectedEffects = new Set(options.effects.map((effect) => CARD_EFFECTS[effect].effect));
   const layout: Layout = options.effects.includes('full-bleed') ? 'full-bleed' : 'split';
-  const [avatar, e] = await Promise.all([
+  const [avatar, emojis] = await Promise.all([
     options.avatar ? loadImage(options.avatar) : undefined,
-    Promise.all(Object.entries(options.emojis ?? {}).map(async ([id, data]) => [id, await loadImage(data)] as const)),
+    Promise.all(
+      Object.entries(options.emojis ?? {}).map(async ([id, data]) => [id, await loadImage(data)] as const),
+    ).then((entries) =>
+      Object.fromEntries(entries.filter((entry): entry is readonly [string, LoadedImage] => Boolean(entry[1]))),
+    ),
   ]);
-  const emojis = Object.fromEntries(e.filter((entry): entry is readonly [string, LoadedImage] => Boolean(entry[1])));
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
@@ -337,7 +340,9 @@ export async function renderQuoteCard(options: RenderQuoteCardOptions): Promise<
   const area = drawLayout(ctx, layout, selectedEffects, avatar);
   await drawQuote(ctx, options, area, resolveTextColor(options.color), emojis);
 
-  if (!selectedEffects.has('remove-watermark')) drawBrandMark(ctx);
+  if (!selectedEffects.has('remove-watermark')) {
+    drawBrandMark(ctx);
+  }
 
   const frame = await canvas.encode('png');
 
@@ -349,8 +354,11 @@ function drawLayout(ctx: SKRSContext2D, layout: Layout, effects: ReadonlySet<Eff
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
   if (layout === 'full-bleed') {
-    if (avatar) drawImageCover(ctx, avatar, 0, 0, WIDTH, HEIGHT, effects);
-    else drawFallbackAvatar(ctx, 0, 0, WIDTH, HEIGHT);
+    if (avatar) {
+      drawImageCover(ctx, avatar, 0, 0, WIDTH, HEIGHT, effects);
+    } else {
+      drawFallbackAvatar(ctx, 0, 0, WIDTH, HEIGHT);
+    }
 
     const diagonalShade = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
     diagonalShade.addColorStop(0, 'rgba(22,24,30,.14)');
@@ -380,8 +388,11 @@ function drawLayout(ctx: SKRSContext2D, layout: Layout, effects: ReadonlySet<Eff
 function drawSplitAvatar(ctx: SKRSContext2D, avatar: LoadedImage | undefined, effects: ReadonlySet<Effect>): void {
   const panelWidth = 420;
 
-  if (avatar) drawImageCover(ctx, avatar, 0, 0, panelWidth, HEIGHT, effects);
-  else drawFallbackAvatar(ctx, 0, 0, panelWidth, HEIGHT);
+  if (avatar) {
+    drawImageCover(ctx, avatar, 0, 0, panelWidth, HEIGHT, effects);
+  } else {
+    drawFallbackAvatar(ctx, 0, 0, panelWidth, HEIGHT);
+  }
 
   const fadeStart = 255;
   const fade = ctx.createLinearGradient(fadeStart, 0, panelWidth, 0);
@@ -436,14 +447,27 @@ function drawImageCover(
   ctx.rect(x, y, width, height);
   ctx.clip();
 
-  if (effects.has('pixelate')) ctx.imageSmoothingEnabled = false;
+  if (effects.has('pixelate')) {
+    ctx.imageSmoothingEnabled = false;
+  }
 
   const filters: string[] = [];
 
-  if (effects.has('grayscale')) filters.push('grayscale(1)', 'contrast(1.08)');
-  if (effects.has('blur')) filters.push('blur(12px)', 'saturate(.82)');
-  if (effects.has('brightness')) filters.push('brightness(1.55)', 'contrast(1.04)');
-  if (filters.length) ctx.filter = filters.join(' ');
+  if (effects.has('grayscale')) {
+    filters.push('grayscale(1)', 'contrast(1.08)');
+  }
+
+  if (effects.has('blur')) {
+    filters.push('blur(12px)', 'saturate(.82)');
+  }
+
+  if (effects.has('brightness')) {
+    filters.push('brightness(1.55)', 'contrast(1.04)');
+  }
+
+  if (filters.length) {
+    ctx.filter = filters.join(' ');
+  }
 
   const overscan = effects.has('blur') ? 20 : 0;
 
@@ -498,7 +522,9 @@ async function drawQuote(
     ctx.font = resolveFont(selectedFont, fontSize);
     lines = wrapRichText(ctx, options.quote, area.width, fontSize);
 
-    if (lines.length <= maxLines && lines.length * fontSize * 1.16 <= area.height - 62) break;
+    if (lines.length <= maxLines && lines.length * fontSize * 1.16 <= area.height - 62) {
+      break;
+    }
 
     fontSize -= 2;
   }
@@ -516,8 +542,13 @@ async function drawQuote(
 
   let startY = area.y;
 
-  if (area.vertical === 'middle') startY += (area.height - contentHeight) / 2;
-  if (area.vertical === 'bottom') startY += area.height - contentHeight;
+  if (area.vertical === 'middle') {
+    startY += (area.height - contentHeight) / 2;
+  }
+
+  if (area.vertical === 'bottom') {
+    startY += area.height - contentHeight;
+  }
 
   const drawX = area.align === 'center' ? area.x + area.width / 2 : area.x;
 
@@ -525,8 +556,9 @@ async function drawQuote(
   ctx.fillStyle = color;
   ctx.font = resolveFont(selectedFont, fontSize);
 
-  for (const [index, line] of lines.entries())
+  for (const [index, line] of lines.entries()) {
     await drawRichLine(ctx, line, drawX, startY + index * lineHeight, area.align, fontSize, emojiImages);
+  }
 
   const creditY = startY + lines.length * lineHeight + 14;
 
@@ -584,7 +616,9 @@ function wrapRichText(ctx: SKRSContext2D, input: string, maxWidth: number, fontS
       }
     }
 
-    if (current.length) lines.push(current);
+    if (current.length) {
+      lines.push(current);
+    }
   }
 
   return lines.length ? lines : [[]];
@@ -609,7 +643,9 @@ function parseRichWord(word: string): RichLine {
   ].sort((a, b) => a.index! - b.index!);
 
   for (const match of matches) {
-    if (match.index! > cursor) appendText(spans, word.slice(cursor, match.index));
+    if (match.index! > cursor) {
+      appendText(spans, word.slice(cursor, match.index));
+    }
 
     if (match[2]) {
       // custom emoji
@@ -630,7 +666,9 @@ function parseRichWord(word: string): RichLine {
     cursor = match.index! + match[0].length;
   }
 
-  if (cursor < word.length) appendText(spans, word.slice(cursor));
+  if (cursor < word.length) {
+    appendText(spans, word.slice(cursor));
+  }
 
   return spans;
 }
@@ -654,14 +692,18 @@ function breakLongRichWord(ctx: SKRSContext2D, spans: RichLine, maxWidth: number
     }
   }
 
-  if (current.length) chunks.push(current);
+  if (current.length) {
+    chunks.push(current);
+  }
 
   return chunks;
 }
 
 function measureRichLine(ctx: SKRSContext2D, line: RichLine, fontSize: number): number {
   return line.reduce((width, span) => {
-    if (span.type === 'emoji') return width + fontSize;
+    if (span.type === 'emoji') {
+      return width + fontSize;
+    }
 
     return width + ctx.measureText(span.value).width;
   }, 0);
@@ -717,19 +759,27 @@ async function drawRichLine(
 function appendText(line: RichLine, value: string): void {
   const last = line.at(-1);
 
-  if (last?.type === 'text') last.value += value;
-  else line.push({ type: 'text', value });
+  if (last?.type === 'text') {
+    last.value += value;
+  } else {
+    line.push({ type: 'text', value });
+  }
 }
 
 function smartFontSize(quote: string): number {
   const length = [...quote].length;
 
-  if (length <= 35) return 42;
-  if (length <= 75) return 36;
-  if (length <= 140) return 31;
-  if (length <= 240) return 26;
-
-  return 22;
+  if (length <= 35) {
+    return 42;
+  } else if (length <= 75) {
+    return 36;
+  } else if (length <= 140) {
+    return 31;
+  } else if (length <= 240) {
+    return 26;
+  } else {
+    return 22;
+  }
 }
 
 function drawBrandMark(ctx: SKRSContext2D): void {
@@ -744,7 +794,9 @@ function drawBrandMark(ctx: SKRSContext2D): void {
 }
 
 function resolveTextColor(color: ColorKey | Hexadecimal): string {
-  if (isHex(color)) return color;
+  if (isHex(color)) {
+    return color;
+  }
 
   return color === 'auto' ? '#f5f5f5' : CARD_COLORS[color].value;
 }

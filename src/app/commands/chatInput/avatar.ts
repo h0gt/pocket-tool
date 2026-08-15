@@ -54,9 +54,7 @@ createApplicationCommand({
       };
     }
 
-    if (!scope) {
-      scope = 'global';
-    }
+    scope ??= 'global';
 
     const { user, member } = target;
 

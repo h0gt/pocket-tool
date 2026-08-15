@@ -8,11 +8,14 @@ import {
 } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../builders/command';
 import { toComponentEmoji } from '../../../utils/utils';
+import { highlight, hyperlink } from '../../../utils/markdown';
+import { HighlightStyle } from '../../../types/types';
+import { INVITE, SUPPORT, WEBSITE } from '../../../types/constants';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'debug',
-  description: 'Views some information about me!',
+  description: 'View stats and information about me!',
   integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   cooldown: 3,
@@ -25,7 +28,11 @@ createApplicationCommand({
           components: [
             {
               type: ComponentType.TextDisplay,
-              content: `### Welcome to Pocket Tool!\nYou can view all the available commands by running </help:1504215560865448037>`,
+              content: `### ${hyperlink(WEBSITE, 'Welcome to Pocket Tool!')}\nYou can view all the available slash commands by typing ${highlight('/', HighlightStyle.Bold)}\n-# additionally, you can view context menu commands by right-clicking or long-pressing a message or user`,
+            },
+            {
+              type: ComponentType.TextDisplay,
+              content: `-# **Quickstart:**\n> </help:1504215560865448037> - View and search through all the available commands\n> </debug:1533585400138961059> - View stats and information about me!`,
             },
             {
               type: ComponentType.Separator,
@@ -73,14 +80,14 @@ createApplicationCommand({
                   type: ComponentType.Button,
                   label: 'Add to Your Apps!',
                   emoji: toComponentEmoji('Link'),
-                  url: `https://pocket-tool.vercel.app/api/invite`,
+                  url: INVITE,
                   style: ButtonStyle.Link,
                 },
                 {
                   type: ComponentType.Button,
                   label: 'Support Server',
                   emoji: toComponentEmoji('Discord'),
-                  url: 'https://discord.gg/Y67yNmsPuf',
+                  url: SUPPORT,
                   style: ButtonStyle.Link,
                 },
               ],

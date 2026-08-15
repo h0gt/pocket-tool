@@ -22,7 +22,7 @@ import { emoji } from '../../../utils/markdown';
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'help',
-  description: 'View all available commands',
+  description: 'View and search through all available commands',
   integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   cooldown: 3,
@@ -46,8 +46,8 @@ createApplicationCommand({
 
     let commands = page
       .map(
-        (c, index) =>
-          `**${pages.pointer * perPage + index + 1}.** </${c.name}:${c.id}>${c.description ? `\n-# ${c.description}` : ''}`,
+        (command, index) =>
+          `**${pages.pointer * perPage + index + 1}.** </${command.name}:${command.id}>${command.description ? `\n-# ${command.description}` : ''}`,
       )
       .join('\n\n');
 
@@ -130,8 +130,8 @@ createApplicationCommand({
 
           commands = (pages.current ?? [])
             .map(
-              (c, index) =>
-                `**${pages.pointer * perPage + index + 1}.** </${c.name}:${c.id}>${c.description ? `\n-# ${c.description}` : ''}`,
+              (command, index) =>
+                `**${pages.pointer * perPage + index + 1}.** </${command.name}:${command.id}>${command.description ? `\n-# ${command.description}` : ''}`,
             )
             .join('\n\n');
 
@@ -216,8 +216,8 @@ createApplicationCommand({
 
           commands = (pages.current ?? [])
             .map(
-              (c, index) =>
-                `**${pages.pointer * perPage + index + 1}.** </${c.name}:${c.id}>${c.description ? `\n-# ${c.description}` : ''}`,
+              (command, index) =>
+                `**${pages.pointer * perPage + index + 1}.** </${command.name}:${command.id}>${command.description ? `\n-# ${command.description}` : ''}`,
             )
             .join('\n\n');
 
@@ -327,9 +327,13 @@ createApplicationCommand({
                 ).value
               : undefined;
 
-          if (!name || !name.trim().toLowerCase()) return;
+          if (!name || !name.trim().toLowerCase()) {
+            return;
+          }
 
-          const results = globalCommands.filter((c) => c.name.trim().toLowerCase().includes(name.trim().toLowerCase()));
+          const results = globalCommands.filter((command) =>
+            command.name.trim().toLowerCase().includes(name.trim().toLowerCase()),
+          );
 
           if (results.length === 0) {
             await api.interactions.followUp(interaction.application_id, interaction.token, {
@@ -361,8 +365,8 @@ createApplicationCommand({
 
           commands = (pages.current ?? [])
             .map(
-              (c, index) =>
-                `**${pages.pointer * perPage + index + 1}.** </${c.name}:${c.id}>${c.description ? `\n-# ${c.description}` : ''}`,
+              (command, index) =>
+                `**${pages.pointer * perPage + index + 1}.** </${command.name}:${command.id}>${command.description ? `\n-# ${command.description}` : ''}`,
             )
             .join('\n\n');
 

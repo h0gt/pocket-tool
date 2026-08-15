@@ -13,7 +13,9 @@ class EnvParser {
   }
 
   toNumber(): number {
-    if (isNaN(this.value as any)) throw new Error(`Item '${this.key}' is not a valid number`);
+    if (isNaN(this.value as any)) {
+      throw new Error(`Item '${this.key}' is not a valid number`);
+    }
 
     return Number(this.value);
   }
@@ -23,15 +25,17 @@ class EnvParser {
   }
 
   toArray(): any[] {
-    if (this.value[0] !== '[' && this.value[this.value.length - 1] !== ']')
+    if (this.value[0] !== '[' && this.value[this.value.length - 1] !== ']') {
       throw new Error(`Item '${this.key}' is not a valid array`);
+    }
 
     return JSON.parse(this.value);
   }
 
   toObject(): object {
-    if (this.value[0] !== '{' && this.value[this.value.length - 1] !== '}')
+    if (this.value[0] !== '{' && this.value[this.value.length - 1] !== '}') {
       throw new Error(`Item '${this.key}' is not a valid object`);
+    }
 
     return JSON.parse(this.value);
   }
@@ -57,7 +61,9 @@ class Env {
   }
 
   public get(key: string, required: boolean = false) {
-    if (required && !this.has(key)) throw new Error(`Env error: '${key}' is required`);
+    if (required && !this.has(key)) {
+      throw new Error(`Env error: '${key}' is required`);
+    }
 
     return new EnvParser(this.#cache.get(key)!, key);
   }

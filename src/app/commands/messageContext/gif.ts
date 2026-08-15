@@ -60,7 +60,7 @@ createApplicationCommand({
     }
 
     const attachments = Object.values(message.attachments)
-      .filter((a) => a.content_type?.startsWith('image/'))
+      .filter((attachment) => attachment.content_type?.startsWith('image/'))
       .slice(0, 10);
 
     if (attachments.length === 0) {

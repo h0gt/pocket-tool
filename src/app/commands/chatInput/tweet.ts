@@ -15,7 +15,7 @@ import env from '../../../utils/env';
 import { emoji, hyperlink, timestamp } from '../../../utils/markdown';
 import { makeRequest } from '../../../utils/request';
 import { RequestMethod, ResponseType, TimestampStyle } from '../../../types/types';
-import { SUPPORTED_LANGUAGES } from '../../../types/languages';
+import { SUPPORTED_LANGUAGES } from '../../../types/constants';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
@@ -44,8 +44,8 @@ createApplicationCommand({
     const focused = getAutocompleteFocusedOption(interaction.data.options);
     const value = String(focused?.value).toLowerCase() ?? '';
 
-    const languages = SUPPORTED_LANGUAGES.filter((l) => {
-      return l.name.toLowerCase().includes(value) || l.code.toLowerCase().includes(value);
+    const languages = SUPPORTED_LANGUAGES.filter((language) => {
+      return language.name.toLowerCase().includes(value) || language.code.toLowerCase().includes(value);
     });
 
     const choices = [
@@ -53,9 +53,9 @@ createApplicationCommand({
         name: 'Use my locale',
         value: 'auto',
       },
-      ...languages.map((l) => ({
-        name: l.name,
-        value: l.code,
+      ...languages.map((language) => ({
+        name: language.name,
+        value: language.code,
       })),
     ].slice(0, 25);
 
@@ -148,7 +148,7 @@ createApplicationCommand({
         },
       });
 
-      content = translated[0].map(([t]: [string]) => t).join('');
+      content = translated[0].map(([translation]: [string]) => translation).join('');
       isTranslated = true;
     }
 
@@ -187,9 +187,9 @@ createApplicationCommand({
               ? ([
                   {
                     type: ComponentType.MediaGallery,
-                    items: res.media.slice(0, 10).map((m: any) => ({
+                    items: res.media.slice(0, 10).map((media: any) => ({
                       media: {
-                        url: m.url,
+                        url: media.url,
                       },
                     })),
                   },

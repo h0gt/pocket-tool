@@ -38,15 +38,20 @@ export async function makeRequest<Type extends ResponseType>(
     }
 
     switch (options.response) {
-      case ResponseType.JSON:
+      case ResponseType.JSON: {
         return (await res.json()) as RequestResponse[Type];
-      case ResponseType.BUFFER:
+      }
+      case ResponseType.BUFFER: {
         return Buffer.from(await res.arrayBuffer()) as RequestResponse[Type];
-      case ResponseType.TEXT:
+      }
+      case ResponseType.TEXT: {
         return (await res.text()) as RequestResponse[Type];
+      }
     }
   } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') throw new Error('Request timed out');
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error('Request timed out');
+    }
 
     throw error;
   } finally {

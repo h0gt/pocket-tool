@@ -359,10 +359,3 @@ export interface Collector<Type> extends EventEmitter<CollectorEvents<Type>> {
   collect(item: Type): Promise<void>;
   end(reason?: string): void;
 }
-
-export interface EncryptedOAuth2 {
-  iv: string;
-  tag: string;
-  algorithm: 'aes-256-gcm';
-  ciphertext: string;
-}

@@ -4,6 +4,10 @@ import {
   API,
   ApplicationCommandOptionType,
   ApplicationCommandType,
+  ApplicationIntegrationType,
+  ApplicationWebhookEventType,
+  ApplicationWebhookType,
+  ButtonStyle,
   ComponentType,
   InteractionResponseType,
   InteractionType,
@@ -19,6 +23,7 @@ import {
   type APIModalSubmitInteraction,
   type APIPrimaryEntryPointCommandInteraction,
   type APIUserApplicationCommandInteraction,
+  type APIWebhookEvent,
   type RESTPutAPIApplicationCommandsJSONBody,
   type RESTPutAPIApplicationGuildCommandsJSONBody,
   type Snowflake,
@@ -26,6 +31,7 @@ import {
 import { Hono } from 'hono';
 import { Collection } from '@discordjs/collection';
 import {
+  HighlightStyle,
   TimestampStyle,
   type ApplicationCommand,
   type BooleanChatInputOption,
@@ -39,12 +45,13 @@ import {
   type SelectMenuComponent,
   type UserContextMenuCommand,
 } from '../types/types';
-import { emoji, hyperlink, timestamp } from '../utils/markdown';
+import { emoji, highlight, hyperlink, timestamp } from '../utils/markdown';
 import {
   getChatInputOption,
   parseCommandOptions,
   parseComponentArgs,
   readDirectory,
+  toComponentEmoji,
   transformCommand,
 } from '../utils/utils';
 import path from 'path';
@@ -52,7 +59,7 @@ import { verify } from 'discord-verify/node';
 import { loadFonts } from '../utils/card';
 import { redis } from '../utils/redis';
 import { Temporal } from '@js-temporal/polyfill';
-import { MESSAGE_BLOCK_REASONS } from '../types/error';
+import { MESSAGE_BLOCK_REASONS, SUPPORT } from '../types/constants';
 import { subtle } from 'crypto';
 
 process.on('uncaughtException', console.error);
@@ -72,71 +79,173 @@ const api = new API(rest);
 
 const app = new Hono();
 
+/* webhook events
+app.post('/events', async (c) => {
+  const signature = c.req.header('X-Signature-Ed25519');
+  const timestamp = c.req.header('X-Signature-Timestamp');
+  const raw = await c.req.text();
+
+  if (!signature || !timestamp) {
+    return c.json({ error: 'missing signature or timestamp' }, 400);
+  }
+
+  const isValid = await verify(raw, signature, timestamp, env.get('discord_public_key', true).toString(), subtle);
+
+  if (!isValid) {
+    return c.json({ error: 'invalid request signature' }, 401);
+  }
+
+  const body = JSON.parse(raw);
+  const webhook = body as APIWebhookEvent;
+
+  switch (webhook.type) {
+    case ApplicationWebhookType.Ping: {
+      return c.body(null, 204);
+    }
+    case ApplicationWebhookType.Event: {
+      c.status(204);
+
+      switch (webhook.event.type) {
+        case ApplicationWebhookEventType.ApplicationAuthorized: {
+          if (webhook.event.data.integration_type === ApplicationIntegrationType.UserInstall) {
+            const dm = await api.users.createDM(webhook.event.data.user.id).catch(() => null);
+
+            if (dm) {
+              await api.channels.createMessage(dm.id, {
+                components: [
+                  {
+                    type: ComponentType.Container,
+                    components: [
+                      {
+                        type: ComponentType.TextDisplay,
+                        content: `### ${hyperlink('https://pocket-tool.vercel.app/', 'Welcome to Pocket Tool!')}\nYou can view all the available slash commands by typing ${highlight('/', HighlightStyle.Bold)}\n-# additionally, you can view context menu commands by right-clicking or long-pressing a message or user`,
+                      },
+                      {
+                        type: ComponentType.TextDisplay,
+                        content: `-# **Quickstart:**\n> </help:1504215560865448037> - View and search through all the available commands\n> </debug:1533585400138961059> - View stats and information about me!`,
+                      },
+                      {
+                        type: ComponentType.Separator,
+                      },
+                      {
+                        type: ComponentType.TextDisplay,
+                        content:
+                          '### How to report bugs?\nTo report bugs, join our __support server__ and create a post at https://discord.com/channels/1533439024637939792/1533485684961054781',
+                      },
+                      {
+                        type: ComponentType.Separator,
+                      },
+                      {
+                        type: ComponentType.ActionRow,
+                        components: [
+                          {
+                            type: ComponentType.Button,
+                            label: 'Support Server',
+                            emoji: toComponentEmoji('Discord'),
+                            url: SUPPORT,
+                            style: ButtonStyle.Link,
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+                flags: MessageFlags.IsComponentsV2,
+              });
+            }
+          }
+
+          break;
+        }
+        case ApplicationWebhookEventType.ApplicationDeauthorized: {
+          const dm = await api.users.createDM(webhook.event.data.user.id).catch(() => null);
+
+          if (dm) {
+            await api.channels.createMessage(dm.id, { content: 'test test test' });
+          }
+
+          break;
+        }
+        case ApplicationWebhookEventType.EntitlementCreate: {
+          if (webhook.event.data.sku_id === '1538163894256930917') {
+            await api.channels.createMessage('1533439027657572435', {
+              content: `<@${webhook.event.data.user_id}> has just purchased the premium subscription!`,
+            });
+
+            const member = await api.guilds
+              .getMember('1533439024637939792', webhook.event.data.user_id!)
+              .catch(() => null);
+
+            if (member) {
+              await api.guilds.addRoleToMember(
+                '1533439024637939792',
+                webhook.event.data.user_id!,
+                '1538175871985127495',
+              );
+            }
+          }
+
+          break;
+        }
+      }
+
+      return c.body(null, 204);
+    }
+  }
+});
+*/
+
+// commands and components
 app.post('/interactions', async (c) => {
   const signature = c.req.header('X-Signature-Ed25519');
   const timestamp = c.req.header('X-Signature-Timestamp');
-  const rawBody = await c.req.text();
+  const raw = await c.req.text();
 
-  if (!signature || !timestamp) return c.body('missing signature or timestamp', 400);
+  if (!signature || !timestamp) {
+    return c.json({ error: 'missing signature or timestamp' }, 400);
+  }
 
-  const isValid = await verify(rawBody, signature, timestamp, env.get('discord_public_key', true).toString(), subtle);
+  const isValid = await verify(raw, signature, timestamp, env.get('discord_public_key', true).toString(), subtle);
 
-  if (!isValid) return c.body('invalid request signature', 401);
+  if (!isValid) {
+    return c.json({ error: 'invalid request signature' }, 401);
+  }
 
-  const body = JSON.parse(rawBody);
+  const body = JSON.parse(raw);
   const interaction = body as APIInteraction;
 
   console.log(
     `Received interaction: ${interaction.id} (${InteractionType[interaction.type]}) from ${interaction.user?.username ?? interaction.member?.user.username} (${interaction.user?.id ?? interaction.member?.user.id})`,
   );
 
-  if (
-    env.get('maintenance', true).toBoolean() === true &&
-    !env
-      .get('dev_ids', true)
-      .toArray()
-      .includes(interaction.user?.id ?? interaction.member?.user.id)
-  ) {
-    await api.interactions.reply(interaction.id, interaction.token, {
-      components: [
-        {
-          type: ComponentType.Container,
-          components: [
-            {
-              type: ComponentType.TextDisplay,
-              content: `${emoji('Exclamation')} The app is currently under maintenance - please try again later`,
-            },
-          ],
-        },
-      ],
-      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-    });
-
-    return;
-  }
-
   switch (interaction.type) {
-    case InteractionType.Ping:
+    case InteractionType.Ping: {
       return c.json({ type: InteractionResponseType.Pong });
-    case InteractionType.ApplicationCommand:
+    }
+    case InteractionType.ApplicationCommand: {
       await handleApplicationCommand(interaction, api);
       break;
-    case InteractionType.ApplicationCommandAutocomplete:
+    }
+    case InteractionType.ApplicationCommandAutocomplete: {
       await handleChatInputCommandAutocomplete(interaction, api);
       break;
-    case InteractionType.MessageComponent:
+    }
+    case InteractionType.MessageComponent: {
       if (interaction.data.component_type === ComponentType.Button) {
         await handleButtonComponent(interaction as APIMessageComponentButtonInteraction, api);
       } else {
         await handleSelectMenuComponent(interaction as APIMessageComponentSelectMenuInteraction, api);
       }
+
       break;
-    case InteractionType.ModalSubmit:
+    }
+    case InteractionType.ModalSubmit: {
       await handleModalSubmit(interaction as APIModalSubmitInteraction, api);
       break;
-    default:
-      console.log('unknown interaction type:', (interaction as any).type);
-      break;
+    }
+    default: {
+      return c.json({ error: 'unknown interaction type' }, 400);
+    }
   }
 });
 
@@ -150,18 +259,25 @@ console.log(`Pocket Tool listening on port ${env.get('port').toNumber() ?? 3000}
 if (env.get('register_commands').toBoolean() === true) {
   console.log('Refreshing application (/) commands');
 
-  commands.forEach((c) => {
-    if (c.type !== ApplicationCommandType.ChatInput) return;
+  commands.forEach((command) => {
+    if (command.type !== ApplicationCommandType.ChatInput) {
+      return;
+    }
 
-    c.options ??= [];
+    command.options ??= [];
 
-    const subcommands = c.options.flatMap((option) => {
-      if (option.type === ApplicationCommandOptionType.Subcommand) return [option];
-      if (option.type === ApplicationCommandOptionType.SubcommandGroup) return option.options ?? [];
-      return [];
+    const subcommands = command.options.flatMap((option) => {
+      if (option.type === ApplicationCommandOptionType.Subcommand) {
+        return [option];
+      } else if (option.type === ApplicationCommandOptionType.SubcommandGroup) {
+        return option.options ?? [];
+      } else {
+        return [];
+      }
     });
 
-    const targets = subcommands.length > 0 ? subcommands.map((s) => (s.options ??= [])) : [c.options];
+    const targets =
+      subcommands.length > 0 ? subcommands.map((subcommand) => (subcommand.options ??= [])) : [command.options];
 
     for (const options of targets) {
       if (!options.some((o) => o.name === 'ephemeral')) {
@@ -179,17 +295,19 @@ if (env.get('register_commands').toBoolean() === true) {
   const globalCommands: RESTPutAPIApplicationCommandsJSONBody = [];
   const commandsForGuilds = new Collection<string, RESTPutAPIApplicationGuildCommandsJSONBody>();
 
-  commands.forEach((c) => {
-    const resolved = transformCommand(c);
+  commands.forEach((command) => {
+    const resolved = transformCommand(command);
 
-    if (!('guilds' in c)) {
+    if (!('guilds' in command)) {
       globalCommands.push(resolved);
 
       return;
     }
 
-    for (const guildId of c.guilds ?? []) {
-      if (resolved.type === ApplicationCommandType.PrimaryEntryPoint) return;
+    for (const guildId of command.guilds ?? []) {
+      if (resolved.type === ApplicationCommandType.PrimaryEntryPoint) {
+        return;
+      }
 
       const list = commandsForGuilds.get(guildId) ?? [];
       list.push(resolved);
@@ -216,12 +334,44 @@ if (env.get('register_commands').toBoolean() === true) {
 async function handleApplicationCommand(interaction: APIApplicationCommandInteraction, api: API) {
   const command = commands.get(interaction.data.name) as ApplicationCommand;
 
-  if (!command) return;
+  if (!command) {
+    return;
+  }
 
   const devIds = env.get('dev_ids', true).toArray();
 
-  if ('dev' in command && command.dev === true && !devIds.includes(interaction.user?.id ?? interaction.member?.user.id))
+  if (
+    'dev' in command &&
+    command.dev === true &&
+    !devIds.includes(interaction.user?.id ?? interaction.member?.user.id)
+  ) {
     return;
+  }
+
+  if (
+    env.get('maintenance', true).toBoolean() === true &&
+    !env
+      .get('dev_ids', true)
+      .toArray()
+      .includes(interaction.user?.id ?? interaction.member?.user.id)
+  ) {
+    await api.interactions.reply(interaction.id, interaction.token, {
+      components: [
+        {
+          type: ComponentType.Container,
+          components: [
+            {
+              type: ComponentType.TextDisplay,
+              content: `${emoji('Exclamation')} The app is currently under maintenance - please try again later`,
+            },
+          ],
+        },
+      ],
+      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+    });
+
+    return;
+  }
 
   switch (interaction.data.type) {
     case ApplicationCommandType.ChatInput: {
@@ -241,8 +391,9 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         });
       }
 
-      if (!cooldowns.has(interaction.data.name))
+      if (!cooldowns.has(interaction.data.name)) {
         cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
+      }
 
       const now = new Date().getTime();
       const timestamps = cooldowns.get(interaction.data.name)!;
@@ -322,7 +473,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}**`,
+                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
                   },
                 ],
               },
@@ -337,7 +488,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}**`,
+                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
                   },
                 ],
               },
@@ -360,8 +511,9 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         });
       }
 
-      if (!cooldowns.has(interaction.data.name))
+      if (!cooldowns.has(interaction.data.name)) {
         cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
+      }
 
       const now = new Date().getTime();
       const timestamps = cooldowns.get(interaction.data.name)!;
@@ -438,7 +590,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}**`,
+                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
                   },
                 ],
               },
@@ -453,7 +605,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}**`,
+                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
                   },
                 ],
               },
@@ -476,8 +628,9 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         });
       }
 
-      if (!cooldowns.has(interaction.data.name))
+      if (!cooldowns.has(interaction.data.name)) {
         cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
+      }
 
       const now = new Date().getTime();
       const timestamps = cooldowns.get(interaction.data.name)!;
@@ -554,7 +707,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}**`,
+                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
                   },
                 ],
               },
@@ -569,7 +722,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink('https://discord.gg/V2MxaBJxgd', 'support server', '', false)}**`,
+                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
                   },
                 ],
               },
@@ -616,7 +769,9 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
     nanosecond: 0,
   });
 
-  if (Temporal.ZonedDateTime.compare(now, nextReset) >= 0) nextReset = nextReset.add({ days: 1 });
+  if (Temporal.ZonedDateTime.compare(now, nextReset) >= 0) {
+    nextReset = nextReset.add({ days: 1 });
+  }
 
   const secondsUntilReset = Math.ceil((nextReset.epochMilliseconds - now.epochMilliseconds) / 1000);
 
@@ -654,7 +809,9 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
 async function handleChatInputCommandAutocomplete(interaction: APIApplicationCommandAutocompleteInteraction, api: API) {
   const command = commands.get(interaction.data.name) as ChatInputCommand;
 
-  if (!command || !command.autocomplete) return;
+  if (!command || !command.autocomplete) {
+    return;
+  }
 
   try {
     await command.autocomplete(interaction, api);
@@ -667,12 +824,16 @@ async function handleButtonComponent(interaction: APIMessageComponentButtonInter
   const args = interaction.data.custom_id?.split('_') ?? [];
   const customId = args.shift();
 
-  if (!customId) return;
+  if (!customId) {
+    return;
+  }
 
   const button = components.get(customId) as ButtonComponent;
 
   if (!button) {
-    for (const collector of collectors) collector.collect(interaction);
+    for (const collector of collectors) {
+      collector.collect(interaction);
+    }
 
     return;
   }
@@ -692,12 +853,16 @@ async function handleSelectMenuComponent(interaction: APIMessageComponentSelectM
   const args = interaction.data.custom_id?.split('_') ?? [];
   const customId = args.shift();
 
-  if (!customId) return;
+  if (!customId) {
+    return;
+  }
 
   const selectMenu = components.get(customId) as SelectMenuComponent;
 
   if (!selectMenu) {
-    for (const collector of collectors) collector.collect(interaction);
+    for (const collector of collectors) {
+      collector.collect(interaction);
+    }
 
     return;
   }
@@ -717,12 +882,16 @@ async function handleModalSubmit(interaction: APIModalSubmitInteraction, api: AP
   const args = interaction.data.custom_id?.split('_') ?? [];
   const customId = args.shift();
 
-  if (!customId) return;
+  if (!customId) {
+    return;
+  }
 
   const modal = components.get(customId) as ModalComponent;
 
   if (!modal) {
-    for (const collector of collectors) collector.collect(interaction);
+    for (const collector of collectors) {
+      collector.collect(interaction);
+    }
 
     return;
   }

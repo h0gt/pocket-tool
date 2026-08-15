@@ -1,3 +1,54 @@
+export const INVITE = 'https://discord.com/oauth2/authorize?client_id=1489362526880796903';
+export const SUPPORT = 'https://discord.gg/Y67yNmsPuf';
+export const WEBSITE = 'https://pocket-tool.vercel.app';
+
+export enum Emoji {
+  Boost = '<:boost:1533281851475628193>',
+  Correct = '<:correct:1533281900528013333>',
+  Wrong = '<:wrong:1533281955984965812>',
+  Exclamation = '<:exclamation:1533281999912046753>',
+  Newbie = '<:newbie:1533282058640687294>',
+  Owner = '<:owner:1533282111170150430>',
+  Spark = '<:spark:1533282156040687696>',
+  Wumpus = '<:wumpus:1533282200613556227>',
+  Ping = '<:at:1533282869861023885>',
+  Calendar = '<:calendar:1533283045367349409>',
+  Clock = '<:clock:1533283098345607188>',
+  Discord = '<:discord:1535332684132519956>',
+  Home = '<:home:1533283376176566322>',
+  GIF = '<:gif:1533283453989158982>',
+  Link = '<:link:1533283554845266000>',
+  People = '<:people:1533283678191484948>',
+  Role = '<:role:1533283748903129098>',
+  Translate = '<:translate:1533284546097840228>',
+  Quote = '<:quote:1533288342052016138>',
+  Search = '<:search:1535622633058598942>',
+  // pagination
+  Previous = '<:previous:1535622582454194228>',
+  Next = '<:next:1535622608429654037>',
+  // twitter
+  Bookmark = '<:twitter_bookmark:1504947779548479669>',
+  Like = '<:twitter_like:1504947769717162076>',
+  Repost = '<:twitter_repost:1504947753745121421>',
+  Reply = '<:twitter_reply:1504947725471322286>',
+  Verified = '<:twitter_verified:1504947691363238008>',
+}
+
+export const MESSAGE_BLOCK_REASONS = {
+  20016: {
+    reason: "the channel's slowmode settings",
+    article: 'https://support.discord.com/hc/en-us/articles/360016150952',
+  },
+  200000: {
+    reason: "the server's AutoMod setup",
+    article: 'https://support.discord.com/hc/en-us/articles/4421269296535',
+  },
+  50013: {
+    reason: "the channel's permission setup",
+    article: 'https://support.discord.com/hc/en-us/articles/10543994968087',
+  },
+};
+
 export const SUPPORTED_LANGUAGES = [
   { name: 'Abkhaz', code: 'ab', flag: '' },
   { name: 'Afar', code: 'aa', flag: '' },

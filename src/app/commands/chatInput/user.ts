@@ -3,26 +3,14 @@ import {
   ApplicationCommandType,
   ApplicationIntegrationType,
   ComponentType,
-  ConnectionVisibility,
   InteractionContextType,
   MessageFlags,
-  OAuth2API,
-  Routes,
-  type APIConnection,
   type APIInteractionDataResolvedGuildMember,
-  type APIMessageTopLevelComponent,
-  type APIUser,
 } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../builders/command';
 import { cdn, emoji, highlight, hyperlink, timestamp } from '../../../utils/markdown';
-import { getTimestampFromSnowflake, toComponentEmoji } from '../../../utils/utils';
+import { getTimestampFromSnowflake } from '../../../utils/utils';
 import { TimestampStyle } from '../../../types/types';
-import { decryptOauth2, encryptOauth2, getOauth2, hasOAuth2 } from '../../../utils/oauth2';
-import env from '../../../utils/env';
-import { supabase } from '../../../utils/supabase';
-import { CONNECTION_SERVICES } from '../../../types/connections';
-import { Emoji } from '../../../types/emojis';
-import { REST } from '@discordjs/rest';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
@@ -66,54 +54,9 @@ createApplicationCommand({
       };
     }
 
-    if (!scope) {
-      scope = 'global';
-    }
+    scope ??= 'global';
 
     const { user, member } = target;
-
-    let connections: APIConnection[] = [];
-
-    if (await hasOAuth2(user.id)) {
-      const data = await getOauth2(user.id);
-
-      let accessToken = decryptOauth2(data.exchange.access_token);
-
-      const expired = new Date(data.exchange.expires_at).getTime() <= Date.now();
-
-      if (expired) {
-        const refreshToken = decryptOauth2(data.exchange.refresh_token);
-
-        const oauth2 = new OAuth2API(api.rest);
-
-        const refreshed = await oauth2.refreshToken({
-          refresh_token: refreshToken,
-          grant_type: 'refresh_token',
-          client_id: atob(env.get('token', true).toString().split('.')[0]!),
-          client_secret: env.get('client_secret', true).toString(),
-        });
-
-        accessToken = refreshed.access_token;
-
-        const { error } = await supabase
-          .from('oauth2')
-          .update({
-            access_token: encryptOauth2(refreshed.access_token),
-            refresh_token: encryptOauth2(refreshed.refresh_token),
-            expires_in: refreshed.expires_in,
-            expires_at: new Date(Date.now() + refreshed.expires_in * 1000).toISOString(),
-            scope: refreshed.scope,
-            token_type: refreshed.token_type,
-          })
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-      }
-
-      const rest = new REST({ authPrefix: 'Bearer' }).setToken(accessToken);
-
-      connections = (await rest.get(Routes.userConnections())) as APIConnection[];
-    }
 
     if (!user) {
       await api.interactions.editReply(interaction.application_id, interaction.token, {
@@ -159,37 +102,6 @@ createApplicationCommand({
                   },
                 },
               },
-              ...(connections.filter(
-                (c) =>
-                  c.visibility === ConnectionVisibility.Everyone &&
-                  CONNECTION_SERVICES.find((s) => s.service === c.type)?.emoji,
-              ).length > 0
-                ? ([
-                    {
-                      type: ComponentType.ActionRow,
-                      components: [
-                        {
-                          type: ComponentType.StringSelect,
-                          custom_id: 'connections',
-                          placeholder: 'Connections',
-                          options: connections
-                            .filter(
-                              (c) =>
-                                c.visibility === ConnectionVisibility.Everyone &&
-                                CONNECTION_SERVICES.find((s) => s.service === c.type)?.emoji,
-                            )
-                            .map((c) => ({
-                              label: CONNECTION_SERVICES.find((s) => s.service === c.type)?.name ?? c.type,
-                              value: c.id,
-                              emoji: toComponentEmoji(
-                                CONNECTION_SERVICES.find((s) => s.service === c.type)?.emoji as keyof typeof Emoji,
-                              ),
-                            })),
-                        },
-                      ],
-                    },
-                  ] satisfies APIMessageTopLevelComponent[])
-                : []),
               {
                 type: ComponentType.Separator,
               },
@@ -232,37 +144,6 @@ createApplicationCommand({
                   },
                 },
               },
-              ...(connections.filter(
-                (c) =>
-                  c.visibility === ConnectionVisibility.Everyone &&
-                  CONNECTION_SERVICES.find((s) => s.service === c.type)?.emoji,
-              ).length > 0
-                ? ([
-                    {
-                      type: ComponentType.ActionRow,
-                      components: [
-                        {
-                          type: ComponentType.StringSelect,
-                          custom_id: 'connections',
-                          placeholder: 'Connections',
-                          options: connections
-                            .filter(
-                              (c) =>
-                                c.visibility === ConnectionVisibility.Everyone &&
-                                CONNECTION_SERVICES.find((s) => s.service === c.type)?.emoji,
-                            )
-                            .map((c) => ({
-                              label: CONNECTION_SERVICES.find((s) => s.service === c.type)?.name ?? c.type,
-                              value: c.id,
-                              emoji: toComponentEmoji(
-                                CONNECTION_SERVICES.find((s) => s.service === c.type)?.emoji as keyof typeof Emoji,
-                              ),
-                            })),
-                        },
-                      ],
-                    },
-                  ] satisfies APIMessageTopLevelComponent[])
-                : []),
               {
                 type: ComponentType.Separator,
               },

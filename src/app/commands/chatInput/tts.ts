@@ -13,6 +13,7 @@ import env from '../../../utils/env';
 import { emoji } from '../../../utils/markdown';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 import { decodeOpusBytes, getWaveform } from '../../../utils/opus';
+import { SUPPORTED_LANGUAGES } from '../../../types/constants';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
@@ -53,18 +54,20 @@ createApplicationCommand({
     const focused = getAutocompleteFocusedOption(interaction.data.options);
     const value = String(focused?.value).toLowerCase() ?? '';
 
+    const languages = SUPPORTED_LANGUAGES.filter((language) => {
+      return language.name.toLowerCase().includes(value) || language.code.toLowerCase().includes(value);
+    });
+
     const choices = [
       {
-        name: 'Auto',
+        name: 'Use my locale',
         value: 'auto',
       },
-      ...Object.entries(Locale).map(([key, value]) => ({
-        name: key,
-        value,
+      ...languages.map((language) => ({
+        name: language.name,
+        value: language.code,
       })),
-    ]
-      .filter((c) => c.name.toLowerCase().includes(value))
-      .slice(0, 25);
+    ].slice(0, 25);
 
     await api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
   },

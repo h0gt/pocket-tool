@@ -11,7 +11,7 @@ import { getAutocompleteFocusedOption } from '../../../utils/utils';
 import { makeRequest } from '../../../utils/request';
 import { RequestMethod, ResponseType } from '../../../types/types';
 import { emoji } from '../../../utils/markdown';
-import { SUPPORTED_LANGUAGES } from '../../../types/languages';
+import { SUPPORTED_LANGUAGES } from '../../../types/constants';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
@@ -47,8 +47,8 @@ createApplicationCommand({
     const focused = getAutocompleteFocusedOption(interaction.data.options);
     const value = String(focused?.value).toLowerCase() ?? '';
 
-    const languages = SUPPORTED_LANGUAGES.filter((l) => {
-      return l.name.toLowerCase().includes(value) || l.code.toLowerCase().includes(value);
+    const languages = SUPPORTED_LANGUAGES.filter((language) => {
+      return language.name.toLowerCase().includes(value) || language.code.toLowerCase().includes(value);
     });
 
     switch (focused?.name) {
@@ -58,9 +58,9 @@ createApplicationCommand({
             name: 'Auto Detect',
             value: 'auto',
           },
-          ...languages.map((l) => ({
-            name: l.name,
-            value: l.code,
+          ...languages.map((language) => ({
+            name: language.name,
+            value: language.code,
           })),
         ].slice(0, 25);
 
@@ -74,9 +74,9 @@ createApplicationCommand({
             name: 'Use my locale',
             value: 'auto',
           },
-          ...languages.map((l) => ({
-            name: l.name,
-            value: l.code,
+          ...languages.map((language) => ({
+            name: language.name,
+            value: language.code,
           })),
         ].slice(0, 25);
 
@@ -122,7 +122,7 @@ createApplicationCommand({
       },
     });
 
-    const translated = res[0].map(([t]: [string]) => t).join('');
+    const translated = res[0].map(([translation]: [string]) => translation).join('');
 
     const sourceCode = res[2];
     const targetCode = to === 'auto' ? interaction.locale.split('-')[0]! : (to ?? interaction.locale.split('-')[0]!);
