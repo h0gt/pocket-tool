@@ -4,6 +4,7 @@ import { readdir } from 'fs/promises';
 import { Emoji } from '../types/constants';
 import type { ApplicationCommand, Component } from '../types/types';
 import {
+  API,
   ApplicationCommandOptionType,
   ApplicationCommandType,
   InteractionType,
@@ -291,4 +292,13 @@ export function getAutocompleteFocusedOption(
       return option;
     }
   }
+}
+
+export async function hasPlus(userId: string, api: API): Promise<boolean> {
+  const result = await api.monetization.getEntitlements('1489362526880796903', {
+    user_id: userId,
+    sku_ids: '1538163894256930917',
+  });
+
+  return result.length > 0;
 }

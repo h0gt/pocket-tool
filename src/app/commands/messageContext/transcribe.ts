@@ -40,15 +40,21 @@ createApplicationCommand({
       return;
     }
 
-    if (!message || message.attachments.length === 0) {
+    if (
+      !message ||
+      message.attachments.length === 0 ||
+      !message.attachments.find((attachment) => attachment.content_type?.startsWith('audio/'))
+    ) {
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
-            type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Please select a voice message to convert to speech`,
-          },
-          {
-            type: ComponentType.Separator,
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Exclamation')} Please select a voice message to convert to speech`,
+              },
+            ],
           },
         ],
         flags: MessageFlags.IsComponentsV2,
@@ -57,17 +63,19 @@ createApplicationCommand({
       return;
     }
 
-    const voice = message.attachments.find((attachment) => attachment.content_type?.startsWith('audio/'));
+    const voice = message.attachments.find((attachment) => attachment.content_type?.startsWith('audio/'))!;
 
-    if (!voice) {
+    if (!voice.duration_secs || voice.duration_secs > 1 * 60 * 1000) {
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
-            type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Please select a voice message to convert to speech`,
-          },
-          {
-            type: ComponentType.Separator,
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Exclamation')} Voice message must be less than 1 minute`,
+              },
+            ],
           },
         ],
         flags: MessageFlags.IsComponentsV2,

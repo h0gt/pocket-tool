@@ -42,11 +42,13 @@ createApplicationCommand({
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
-            type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Please select a text message to convert to speech`,
-          },
-          {
-            type: ComponentType.Separator,
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Exclamation')} Please select a text message to convert to speech`,
+              },
+            ],
           },
         ],
         flags: MessageFlags.IsComponentsV2,

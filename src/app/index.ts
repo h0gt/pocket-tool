@@ -77,7 +77,7 @@ const api = new API(rest);
 
 const app = new Hono();
 
-/* webhook events
+// webhook events
 app.post('/events', async (c) => {
   const signature = c.req.header('X-Signature-Ed25519');
   const timestamp = c.req.header('X-Signature-Timestamp');
@@ -104,67 +104,9 @@ app.post('/events', async (c) => {
       c.status(204);
 
       switch (webhook.event.type) {
-        case ApplicationWebhookEventType.ApplicationAuthorized: {
-          if (webhook.event.data.integration_type === ApplicationIntegrationType.UserInstall) {
-            const dm = await api.users.createDM(webhook.event.data.user.id).catch(() => null);
-
-            if (dm) {
-              await api.channels.createMessage(dm.id, {
-                components: [
-                  {
-                    type: ComponentType.Container,
-                    components: [
-                      {
-                        type: ComponentType.TextDisplay,
-                        content: `### ${hyperlink(WEBSITE, 'Welcome to Pocket Tool!')}\nYou can view all the available slash commands by typing ${highlight('/', HighlightStyle.Bold)}\n-# additionally, you can view context menu commands by right-clicking or long-pressing a message or user`,
-                      },
-                      {
-                        type: ComponentType.TextDisplay,
-                        content: `-# **Quickstart:**\n> </help:1504215560865448037> - View and search through all the available commands\n> </debug:1533585400138961059> - View stats and information about me!`,
-                      },
-                      {
-                        type: ComponentType.Separator,
-                      },
-                      {
-                        type: ComponentType.TextDisplay,
-                        content:
-                          '### How to report bugs?\nTo report bugs, join our __support server__ and create a post at https://discord.com/channels/1533439024637939792/1533485684961054781',
-                      },
-                      {
-                        type: ComponentType.Separator,
-                      },
-                      {
-                        type: ComponentType.ActionRow,
-                        components: [
-                          {
-                            type: ComponentType.Button,
-                            label: 'Support Server',
-                            emoji: toComponentEmoji('Discord'),
-                            url: SUPPORT,
-                            style: ButtonStyle.Link,
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                ],
-                flags: MessageFlags.IsComponentsV2,
-              });
-            }
-          }
-
-          break;
-        }
-        case ApplicationWebhookEventType.ApplicationDeauthorized: {
-          const dm = await api.users.createDM(webhook.event.data.user.id).catch(() => null);
-
-          if (dm) {
-            await api.channels.createMessage(dm.id, { content: 'test test test' });
-          }
-
-          break;
-        }
         case ApplicationWebhookEventType.EntitlementCreate: {
+          console.log(webhook.event.data);
+
           if (webhook.event.data.sku_id === '1538163894256930917') {
             await api.channels.createMessage('1533439027657572435', {
               content: `<@${webhook.event.data.user_id}> has just purchased the premium subscription!`,
@@ -185,13 +127,31 @@ app.post('/events', async (c) => {
 
           break;
         }
+        case ApplicationWebhookEventType.EntitlementUpdate: {
+          console.log(webhook.event.data);
+
+          if (webhook.event.data.sku_id === '1538163894256930917') {
+            const member = await api.guilds
+              .getMember('1533439024637939792', webhook.event.data.user_id!)
+              .catch(() => null);
+
+            if (member) {
+              await api.guilds.removeRoleFromMember(
+                '1533439024637939792',
+                webhook.event.data.user_id!,
+                '1538175871985127495',
+              );
+            }
+          }
+
+          break;
+        }
       }
 
       return c.body(null, 204);
     }
   }
 });
-*/
 
 // commands and components
 app.post('/interactions', async (c) => {

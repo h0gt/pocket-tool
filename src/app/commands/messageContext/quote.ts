@@ -15,12 +15,7 @@ import {
 } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../builders/command';
 import { cdn, emoji, hyperlink } from '../../../utils/markdown';
-import type {
-  ColorKey,
-  EffectKey,
-  FontKey,
-  SizeKey,
-} from '../../../utils/card';
+import type { ColorKey, EffectKey, FontKey, SizeKey } from '../../../utils/card';
 import createCollector from '../../../builders/collector';
 import { Collection } from '@discordjs/collection';
 import { makeRequest } from '../../../utils/request';
@@ -86,8 +81,7 @@ createApplicationCommand({
       return;
     }
 
-    const { CARD_COLORS, CARD_EFFECTS, CARD_FONTS, CARD_SIZES, renderQuoteCard } =
-      await import('../../../utils/card');
+    const { CARD_COLORS, CARD_EFFECTS, CARD_FONTS, CARD_SIZES, renderQuoteCard } = await import('../../../utils/card');
 
     const randomizeSession = (session: Session): Session => {
       const random = <T extends Record<string, unknown>>(obj: T): keyof T => {
