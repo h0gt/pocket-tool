@@ -57,7 +57,7 @@ import path from 'path';
 import { verify } from 'discord-verify/node';
 import { redis } from '../utils/redis';
 import { Temporal } from '@js-temporal/polyfill';
-import { MESSAGE_BLOCK_REASONS, SUPPORT } from '../types/constants';
+import { MESSAGE_BLOCK_REASONS, SUPPORT, WEBSITE } from '../types/constants';
 import { subtle } from 'crypto';
 import { collectors } from '../builders/collector';
 
@@ -116,7 +116,7 @@ app.post('/events', async (c) => {
                     components: [
                       {
                         type: ComponentType.TextDisplay,
-                        content: `### ${hyperlink('https://pocket-tool.vercel.app/', 'Welcome to Pocket Tool!')}\nYou can view all the available slash commands by typing ${highlight('/', HighlightStyle.Bold)}\n-# additionally, you can view context menu commands by right-clicking or long-pressing a message or user`,
+                        content: `### ${hyperlink(WEBSITE, 'Welcome to Pocket Tool!')}\nYou can view all the available slash commands by typing ${highlight('/', HighlightStyle.Bold)}\n-# additionally, you can view context menu commands by right-clicking or long-pressing a message or user`,
                       },
                       {
                         type: ComponentType.TextDisplay,

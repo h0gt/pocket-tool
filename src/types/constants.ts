@@ -1,6 +1,6 @@
 export const INVITE = 'https://discord.com/oauth2/authorize?client_id=1489362526880796903';
 export const SUPPORT = 'https://discord.gg/Y67yNmsPuf';
-export const WEBSITE = 'https://pocket-tool.vercel.app';
+export const WEBSITE = 'https://pocket-tool.xyz/';
 
 export enum Emoji {
   Boost = '<:boost:1533281851475628193>',
