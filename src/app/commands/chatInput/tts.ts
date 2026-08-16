@@ -4,14 +4,15 @@ import {
   ApplicationIntegrationType,
   ComponentType,
   InteractionContextType,
-  Locale,
   MessageFlags,
 } from '@discordjs/core/http-only';
 import createApplicationCommand from '../../../builders/command';
-import { getAutocompleteFocusedOption } from '../../../utils/utils';
+import { getAutocompleteFocusedOption, hasPlus } from '../../../utils/utils';
 import env from '../../../utils/env';
-import { emoji } from '../../../utils/markdown';
+import { emoji, timestamp, truncate } from '../../../utils/markdown';
 import { SUPPORTED_LANGUAGES } from '../../../types/constants';
+import { redis } from '../../../utils/redis';
+import { TimestampStyle } from '../../../types/types';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
@@ -25,7 +26,6 @@ createApplicationCommand({
       name: 'text',
       description: 'The text to convert to speech',
       required: true,
-      max_length: 500,
     },
     {
       type: ApplicationCommandOptionType.String,
@@ -93,9 +93,37 @@ createApplicationCommand({
       return;
     }
 
-    const content = text.trim();
+    const date = new Date().toISOString().slice(0, 10);
+    const key = `tts:${interaction.user?.id ?? interaction.member?.user.id}:${date}`;
 
-    if (!content) {
+    const usage = Number((await redis.get(key)) ?? 0);
+
+    const plus = await hasPlus((interaction.user?.id ?? interaction.member?.user.id)!, api);
+    const limit = plus ? 50 : 10;
+
+    if (usage >= limit) {
+      const resetAt = new Date();
+      resetAt.setUTCHours(24, 0, 0, 0);
+
+      await api.interactions.editReply(interaction.application_id, interaction.token, {
+        components: [
+          {
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Exclamation')} You have reached your daily TTS limit of ${limit} messages - try again ${timestamp(resetAt.getTime(), TimestampStyle.RelativeTime)}.`,
+              },
+            ],
+          },
+        ],
+        flags: MessageFlags.IsComponentsV2,
+      });
+
+      return;
+    }
+
+    if (!text.trim()) {
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
@@ -122,7 +150,7 @@ createApplicationCommand({
     const elevenlabs = new ElevenLabsClient({ apiKey: elevenLabsApiKey });
 
     const audio = await elevenlabs.textToSpeech.convertWithTimestamps(voice ?? 'M563YhMmA0S8vEYwkgYa', {
-      text: content,
+      text: truncate(text.trim(), plus ? 1000 : 500),
       languageCode: !language || language === 'auto' ? interaction.locale.split('-')[0]! : language.split('-')[0]!,
       modelId: 'eleven_flash_v2_5',
       outputFormat: 'opus_48000_192',
@@ -167,5 +195,7 @@ createApplicationCommand({
       ],
       flags: MessageFlags.IsVoiceMessage,
     });
+
+    await redis.incr(key);
   },
 });

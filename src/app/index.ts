@@ -4,10 +4,8 @@ import {
   API,
   ApplicationCommandOptionType,
   ApplicationCommandType,
-  ApplicationIntegrationType,
   ApplicationWebhookEventType,
   ApplicationWebhookType,
-  ButtonStyle,
   ComponentType,
   InteractionResponseType,
   InteractionType,
@@ -31,7 +29,6 @@ import {
 import { Hono } from 'hono';
 import { Collection } from '@discordjs/collection';
 import {
-  HighlightStyle,
   TimestampStyle,
   type ApplicationCommand,
   type BooleanChatInputOption,
@@ -44,20 +41,19 @@ import {
   type SelectMenuComponent,
   type UserContextMenuCommand,
 } from '../types/types';
-import { emoji, highlight, hyperlink, timestamp } from '../utils/markdown';
+import { emoji, hyperlink, timestamp } from '../utils/markdown';
 import {
   getChatInputOption,
   parseCommandOptions,
   parseComponentArgs,
   readDirectory,
-  toComponentEmoji,
   transformCommand,
 } from '../utils/utils';
 import path from 'path';
 import { verify } from 'discord-verify/node';
 import { redis } from '../utils/redis';
 import { Temporal } from '@js-temporal/polyfill';
-import { MESSAGE_BLOCK_REASONS, SUPPORT, WEBSITE } from '../types/constants';
+import { MESSAGE_BLOCK_REASONS, SUPPORT } from '../types/constants';
 import { subtle } from 'crypto';
 import { collectors } from '../builders/collector';
 
@@ -105,8 +101,6 @@ app.post('/events', async (c) => {
 
       switch (webhook.event.type) {
         case ApplicationWebhookEventType.EntitlementCreate: {
-          console.log(webhook.event.data);
-
           if (webhook.event.data.sku_id === '1538163894256930917') {
             await api.channels.createMessage('1533439027657572435', {
               content: `<@${webhook.event.data.user_id}> has just purchased the premium subscription!`,
@@ -128,8 +122,6 @@ app.post('/events', async (c) => {
           break;
         }
         case ApplicationWebhookEventType.EntitlementUpdate: {
-          console.log(webhook.event.data);
-
           if (webhook.event.data.sku_id === '1538163894256930917') {
             const member = await api.guilds
               .getMember('1533439024637939792', webhook.event.data.user_id!)

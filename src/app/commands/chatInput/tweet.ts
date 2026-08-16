@@ -5,7 +5,6 @@ import {
   ButtonStyle,
   ComponentType,
   InteractionContextType,
-  Locale,
   MessageFlags,
   type APIMessageTopLevelComponent,
 } from '@discordjs/core/http-only';

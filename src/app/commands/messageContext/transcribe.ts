@@ -6,10 +6,12 @@ import {
   MessageFlags,
 } from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
-import { codeblock, emoji, truncate } from '../../../utils/markdown';
+import { codeblock, emoji, timestamp, truncate } from '../../../utils/markdown';
 import env from '../../../utils/env';
 import { makeRequest } from '../../../utils/request';
-import { RequestMethod, ResponseType } from '../../../types/types';
+import { RequestMethod, ResponseType, TimestampStyle } from '../../../types/types';
+import { redis } from '../../../utils/redis';
+import { hasPlus } from '../../../utils/utils';
 
 createApplicationCommand({
   type: ApplicationCommandType.Message,
@@ -19,6 +21,57 @@ createApplicationCommand({
   cooldown: 5,
   acknowledge: true,
   async run(interaction, api) {
+    const elevenLabsApiKey = env.get('eleven_labs_api_key').toString();
+
+    if (!elevenLabsApiKey) {
+      await api.interactions.editReply(interaction.application_id, interaction.token, {
+        components: [
+          {
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Wrong')} Eleven Labs API key not set`,
+              },
+            ],
+          },
+        ],
+        flags: MessageFlags.IsComponentsV2,
+      });
+
+      return;
+    }
+
+    const date = new Date().toISOString().slice(0, 10);
+    const key = `stt:${interaction.user?.id ?? interaction.member?.user.id}:${date}`;
+
+    const usage = Number((await redis.get(key)) ?? 0);
+
+    const plus = await hasPlus((interaction.user?.id ?? interaction.member?.user.id)!, api);
+    const limit = plus ? 50 : 10;
+
+    if (usage >= limit) {
+      const resetAt = new Date();
+      resetAt.setUTCHours(24, 0, 0, 0);
+
+      await api.interactions.editReply(interaction.application_id, interaction.token, {
+        components: [
+          {
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Exclamation')} You have reached your daily STT limit of ${limit} messages - try again ${timestamp(resetAt.getTime(), TimestampStyle.RelativeTime)}.`,
+              },
+            ],
+          },
+        ],
+        flags: MessageFlags.IsComponentsV2,
+      });
+
+      return;
+    }
+
     const message = interaction.data.resolved.messages[interaction.data.target_id];
 
     if (message?.message_snapshots && message.message_snapshots.length > 0) {
@@ -65,7 +118,7 @@ createApplicationCommand({
 
     const voice = message.attachments.find((attachment) => attachment.content_type?.startsWith('audio/'))!;
 
-    if (!voice.duration_secs || voice.duration_secs > 1 * 60 * 1000) {
+    if (!voice.duration_secs || voice.duration_secs > (plus ? 5 * 60 * 1000 : 1 * 60 * 1000)) {
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
@@ -73,28 +126,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Voice message must be less than 1 minute`,
-              },
-            ],
-          },
-        ],
-        flags: MessageFlags.IsComponentsV2,
-      });
-
-      return;
-    }
-
-    const elevenLabsApiKey = env.get('eleven_labs_api_key').toString();
-
-    if (!elevenLabsApiKey) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
-        components: [
-          {
-            type: ComponentType.Container,
-            components: [
-              {
-                type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} Eleven Labs API key not set`,
+                content: `${emoji('Exclamation')} Voice message must be less than ${plus ? '5' : '1'} minutes`,
               },
             ],
           },
@@ -154,5 +186,7 @@ createApplicationCommand({
       ],
       flags: MessageFlags.IsComponentsV2,
     });
+
+    await redis.incr(key);
   },
 });
