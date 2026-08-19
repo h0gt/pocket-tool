@@ -4,6 +4,10 @@ import createGatewayEvent from '../../builders/event';
 createGatewayEvent({
   type: GatewayDispatchEvents.GuildCreate,
   async run(guild, api) {
+    if (guild.unavailable) {
+      return;
+    }
+
     await api.rest.patch(`/guilds/${guild.id}/members/@me`, {
       body: {
         display_name_font_id: 3,

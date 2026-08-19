@@ -6,6 +6,7 @@ import {
   ApplicationCommandType,
   Client,
   GatewayDispatchEvents,
+  GatewayIntentBits,
   PresenceUpdateStatus,
   type GatewayDispatchPayload,
   type RESTPutAPIApplicationCommandsJSONBody,
@@ -38,7 +39,7 @@ await readDirectory(path.join(process.cwd(), 'src', 'bot', 'events'));
 const rest = new REST().setToken(env.get('token', true).toString());
 const gateway = new WebSocketManager({
   token: env.get('token', true).toString(),
-  intents: 0,
+  intents: GatewayIntentBits.Guilds,
   shardCount: null,
   rest,
   compression: CompressionMethod.ZlibNative,
