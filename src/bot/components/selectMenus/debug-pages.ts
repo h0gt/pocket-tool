@@ -7,7 +7,7 @@ import {
 import createComponent from '../../../builders/component';
 import { HighlightStyle, InteractableComponentType, TimestampStyle } from '../../../types/types';
 import { msToReadableTime, toComponentEmoji } from '../../../utils/utils';
-import { highlight, hyperlink, timestamp } from '../../../utils/markdown';
+import { emoji, highlight, hyperlink, timestamp } from '../../../utils/markdown';
 import { commands, components, getShardIdForGuildId, getTotalShards, latencies, uptimes } from '../..';
 import { redis } from '../../../utils/redis';
 import { Temporal } from '@js-temporal/polyfill';
@@ -125,7 +125,7 @@ createComponent({
               components: [
                 {
                   type: ComponentType.TextDisplay,
-                  content: `-# **Statistics**\n> Commands: **${commands.size}**\n> Components: **${components.size}**\n> Installs: **${bot.approximate_user_install_count}**\n> Servers: **${bot.approximate_guild_count}**\n> Uptime: **${msToReadableTime(new Date().getTime() - uptime)} (${timestamp(uptime, TimestampStyle.LongDateShortTime)})**\n> Latency: **${latency}ms**`,
+                  content: `-# **Statistics**\n> Shards: **${totalShards}**\n> Commands: **${commands.size}**\n> Components: **${components.size}**\n> Installs: **${bot.approximate_user_install_count}**\n> Servers: **${bot.approximate_guild_count}**\n> Uptime: **${msToReadableTime(new Date().getTime() - uptime)} (${timestamp(uptime, TimestampStyle.LongDateShortTime)})**\n> Latency: **${latency}ms**\n-# ${emoji('Exclamation')} Viewing stats for shard **${shardId}**`,
                 },
                 {
                   type: ComponentType.Separator,
