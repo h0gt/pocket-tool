@@ -19,6 +19,7 @@ import path from 'path';
 import { REST } from '@discordjs/rest';
 import env from '../utils/env';
 import { CompressionMethod, SimpleShardingStrategy, WebSocketManager, WebSocketShardEvents } from '@discordjs/ws';
+import { scheduleReshardCheck } from '../crons/reshard';
 
 process.on('uncaughtException', console.error);
 process.on('unhandledRejection', console.error);
@@ -82,7 +83,11 @@ events.forEach((event) => {
   });
 });
 
-await gateway.connect();
+await gateway.connect().then(async () => {
+  console.log('Gateway connected');
+
+  scheduleReshardCheck(gateway, client.api);
+});
 
 if (env.get('register_commands').toBoolean() === true) {
   console.log('Refreshing application (/) commands');
