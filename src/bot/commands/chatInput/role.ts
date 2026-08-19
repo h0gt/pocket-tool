@@ -7,7 +7,7 @@ import {
   MessageFlags,
   PermissionFlagsBits,
   type APIMessageTopLevelComponent,
-} from '@discordjs/core/http-only';
+} from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
 import { cdn, emoji, highlight, timestamp } from '../../../utils/markdown';
 import { getTimestampFromSnowflake } from '../../../utils/utils';

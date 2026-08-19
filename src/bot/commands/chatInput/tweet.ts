@@ -7,7 +7,7 @@ import {
   InteractionContextType,
   MessageFlags,
   type APIMessageTopLevelComponent,
-} from '@discordjs/core/http-only';
+} from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
 import { getAutocompleteFocusedOption } from '../../../utils/utils';
 import env from '../../../utils/env';

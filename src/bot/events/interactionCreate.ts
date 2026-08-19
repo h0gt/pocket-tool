@@ -1,285 +1,78 @@
-import { REST } from '@discordjs/rest';
-import env from '../utils/env';
 import {
   API,
-  ApplicationCommandOptionType,
   ApplicationCommandType,
-  ApplicationWebhookEventType,
-  ApplicationWebhookType,
   ComponentType,
-  InteractionResponseType,
+  GatewayDispatchEvents,
   InteractionType,
   MessageFlags,
   type APIApplicationCommandAutocompleteInteraction,
   type APIApplicationCommandInteraction,
   type APIApplicationCommandInteractionDataBooleanOption,
   type APIChatInputApplicationCommandInteraction,
-  type APIInteraction,
   type APIMessageApplicationCommandInteraction,
   type APIMessageComponentButtonInteraction,
   type APIMessageComponentSelectMenuInteraction,
   type APIModalSubmitInteraction,
   type APIPrimaryEntryPointCommandInteraction,
   type APIUserApplicationCommandInteraction,
-  type APIWebhookEvent,
-  type RESTPutAPIApplicationCommandsJSONBody,
-  type RESTPutAPIApplicationGuildCommandsJSONBody,
   type Snowflake,
-} from '@discordjs/core/http-only';
-import { Hono } from 'hono';
-import { Collection } from '@discordjs/collection';
+} from '@discordjs/core';
+import createGatewayEvent from '../../builders/event';
+import { commands, components, cooldowns } from '..';
 import {
   TimestampStyle,
   type ApplicationCommand,
-  type BooleanChatInputOption,
   type ButtonComponent,
   type ChatInputCommand,
-  type Component,
   type MessageContextMenuCommand,
   type ModalComponent,
   type PrimaryEntryPointCommand,
   type SelectMenuComponent,
   type UserContextMenuCommand,
-} from '../types/types';
-import { emoji, hyperlink, timestamp } from '../utils/markdown';
-import {
-  getChatInputOption,
-  parseCommandOptions,
-  parseComponentArgs,
-  readDirectory,
-  transformCommand,
-} from '../utils/utils';
-import path from 'path';
-import { verify } from 'discord-verify/node';
-import { redis } from '../utils/redis';
-import { Temporal } from '@js-temporal/polyfill';
-import { MESSAGE_BLOCK_REASONS, SUPPORT } from '../types/constants';
-import { subtle } from 'crypto';
-import { collectors } from '../builders/collector';
+} from '../../types/types';
+import env from '../../utils/env';
+import { getChatInputOption, parseCommandOptions, parseComponentArgs } from '../../utils/utils';
+import { Collection } from '@discordjs/collection';
+import { emoji, hyperlink, timestamp } from '../../utils/markdown';
+import { MESSAGE_BLOCK_REASONS, SUPPORT } from '../../types/constants';
+import { redis } from '../../utils/redis';
+import { collectors } from '../../builders/collector';
 
-process.on('uncaughtException', console.error);
-process.on('unhandledRejection', console.error);
-
-export const commands = new Collection<string, ApplicationCommand>();
-export const components = new Collection<string, Component>();
-
-export const cooldowns = new Collection<string, Collection<Snowflake, number>>();
-
-await readDirectory(path.join(process.cwd(), 'src', 'app', 'commands'));
-await readDirectory(path.join(process.cwd(), 'src', 'app', 'components'));
-
-const rest = new REST().setToken(env.get('token', true).toString());
-const api = new API(rest);
-
-const app = new Hono();
-
-// webhook events
-app.post('/events', async (c) => {
-  const signature = c.req.header('X-Signature-Ed25519');
-  const timestamp = c.req.header('X-Signature-Timestamp');
-  const raw = await c.req.text();
-
-  if (!signature || !timestamp) {
-    return c.json({ error: 'missing signature or timestamp' }, 400);
-  }
-
-  const isValid = await verify(raw, signature, timestamp, env.get('discord_public_key', true).toString(), subtle);
-
-  if (!isValid) {
-    return c.json({ error: 'invalid request signature' }, 401);
-  }
-
-  const body = JSON.parse(raw);
-  const webhook = body as APIWebhookEvent;
-
-  switch (webhook.type) {
-    case ApplicationWebhookType.Ping: {
-      return c.body(null, 204);
-    }
-    case ApplicationWebhookType.Event: {
-      c.status(204);
-
-      switch (webhook.event.type) {
-        case ApplicationWebhookEventType.EntitlementCreate: {
-          if (webhook.event.data.sku_id === '1538163894256930917') {
-            await api.channels.createMessage('1533439027657572435', {
-              content: `<@${webhook.event.data.user_id}> has just purchased the premium subscription!`,
-            });
-
-            const member = await api.guilds
-              .getMember('1533439024637939792', webhook.event.data.user_id!)
-              .catch(() => null);
-
-            if (member) {
-              await api.guilds.addRoleToMember(
-                '1533439024637939792',
-                webhook.event.data.user_id!,
-                '1538175871985127495',
-              );
-            }
-          }
-
-          break;
-        }
-        case ApplicationWebhookEventType.EntitlementUpdate: {
-          if (webhook.event.data.sku_id === '1538163894256930917') {
-            const member = await api.guilds
-              .getMember('1533439024637939792', webhook.event.data.user_id!)
-              .catch(() => null);
-
-            if (member) {
-              await api.guilds.removeRoleFromMember(
-                '1533439024637939792',
-                webhook.event.data.user_id!,
-                '1538175871985127495',
-              );
-            }
-          }
-
-          break;
-        }
-      }
-
-      return c.body(null, 204);
-    }
-  }
-});
-
-// commands and components
-app.post('/interactions', async (c) => {
-  const signature = c.req.header('X-Signature-Ed25519');
-  const timestamp = c.req.header('X-Signature-Timestamp');
-  const raw = await c.req.text();
-
-  if (!signature || !timestamp) {
-    return c.json({ error: 'missing signature or timestamp' }, 400);
-  }
-
-  const isValid = await verify(raw, signature, timestamp, env.get('discord_public_key', true).toString(), subtle);
-
-  if (!isValid) {
-    return c.json({ error: 'invalid request signature' }, 401);
-  }
-
-  const body = JSON.parse(raw);
-  const interaction = body as APIInteraction;
-
-  console.log(
-    `Received interaction: ${interaction.id} (${InteractionType[interaction.type]}) from ${interaction.user?.username ?? interaction.member?.user.username} (${interaction.user?.id ?? interaction.member?.user.id})`,
-  );
-
-  switch (interaction.type) {
-    case InteractionType.Ping: {
-      return c.json({ type: InteractionResponseType.Pong });
-    }
-    case InteractionType.ApplicationCommand: {
-      await handleApplicationCommand(interaction, api);
-      break;
-    }
-    case InteractionType.ApplicationCommandAutocomplete: {
-      await handleChatInputCommandAutocomplete(interaction, api);
-      break;
-    }
-    case InteractionType.MessageComponent: {
-      if (interaction.data.component_type === ComponentType.Button) {
-        await handleButtonComponent(interaction as APIMessageComponentButtonInteraction, api);
-      } else {
-        await handleSelectMenuComponent(interaction as APIMessageComponentSelectMenuInteraction, api);
-      }
-
-      break;
-    }
-    case InteractionType.ModalSubmit: {
-      await handleModalSubmit(interaction as APIModalSubmitInteraction, api);
-      break;
-    }
-    default: {
-      return c.json({ error: 'unknown interaction type' }, 400);
-    }
-  }
-});
-
-Bun.serve({
-  port: env.get('port').toNumber() ?? 3000,
-  fetch: app.fetch,
-});
-
-console.log(`Pocket Tool listening on port ${env.get('port').toNumber() ?? 3000}`);
-
-if (env.get('register_commands').toBoolean() === true) {
-  console.log('Refreshing application (/) commands');
-
-  commands.forEach((command) => {
-    if (command.type !== ApplicationCommandType.ChatInput) {
-      return;
-    }
-
-    command.options ??= [];
-
-    const subcommands = command.options.flatMap((option) => {
-      if (option.type === ApplicationCommandOptionType.Subcommand) {
-        return [option];
-      } else if (option.type === ApplicationCommandOptionType.SubcommandGroup) {
-        return option.options ?? [];
-      } else {
-        return [];
-      }
-    });
-
-    const targets =
-      subcommands.length > 0 ? subcommands.map((subcommand) => (subcommand.options ??= [])) : [command.options];
-
-    for (const options of targets) {
-      if (!options.some((o) => o.name === 'ephemeral')) {
-        options.push({
-          type: ApplicationCommandOptionType.Boolean,
-          name: 'ephemeral',
-          description: 'Whether the response should only be visible to you',
-        } satisfies BooleanChatInputOption);
-      }
-    }
-  });
-
-  const applicationId = atob(env.get('token', true).toString().split('.')[0]!);
-
-  const globalCommands: RESTPutAPIApplicationCommandsJSONBody = [];
-  const commandsForGuilds = new Collection<string, RESTPutAPIApplicationGuildCommandsJSONBody>();
-
-  commands.forEach((command) => {
-    const resolved = transformCommand(command);
-
-    if (!('guilds' in command)) {
-      globalCommands.push(resolved);
-
-      return;
-    }
-
-    for (const guildId of command.guilds ?? []) {
-      if (resolved.type === ApplicationCommandType.PrimaryEntryPoint) {
-        return;
-      }
-
-      const list = commandsForGuilds.get(guildId) ?? [];
-      list.push(resolved);
-      commandsForGuilds.set(guildId, list);
-    }
-  });
-
-  if (globalCommands.length > 0) {
-    await api.applicationCommands.bulkOverwriteGlobalCommands(
-      atob(env.get('token', true).toString().split('.')[0]!),
-      globalCommands,
+createGatewayEvent({
+  type: GatewayDispatchEvents.InteractionCreate,
+  async run(interaction, api) {
+    console.log(
+      `Received interaction: ${interaction.id} (${InteractionType[interaction.type]}) from ${interaction.user?.username ?? interaction.member?.user.username} (${interaction.user?.id ?? interaction.member?.user.id})`,
     );
-  }
 
-  for (const [guildId, commandsForGuild] of commandsForGuilds) {
-    if (commandsForGuild.length > 0) {
-      await api.applicationCommands.bulkOverwriteGuildCommands(applicationId, guildId, commandsForGuild);
+    switch (interaction.type) {
+      case InteractionType.ApplicationCommand: {
+        await handleApplicationCommand(interaction, api);
+        break;
+      }
+      case InteractionType.ApplicationCommandAutocomplete: {
+        await handleChatInputCommandAutocomplete(interaction, api);
+        break;
+      }
+      case InteractionType.MessageComponent: {
+        if (interaction.data.component_type === ComponentType.Button) {
+          await handleButtonComponent(interaction as APIMessageComponentButtonInteraction, api);
+        } else {
+          await handleSelectMenuComponent(interaction as APIMessageComponentSelectMenuInteraction, api);
+        }
+
+        break;
+      }
+      case InteractionType.ModalSubmit: {
+        await handleModalSubmit(interaction as APIModalSubmitInteraction, api);
+        break;
+      }
+      default: {
+        return console.log('unknown interaction type', interaction.type);
+      }
     }
-  }
-
-  console.log('Application (/) commands refreshed');
-}
+  },
+});
 
 async function handleApplicationCommand(interaction: APIApplicationCommandInteraction, api: API) {
   const command = commands.get(interaction.data.name) as ApplicationCommand;
@@ -295,31 +88,6 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
     command.dev === true &&
     !devIds.includes(interaction.user?.id ?? interaction.member?.user.id)
   ) {
-    return;
-  }
-
-  if (
-    env.get('maintenance', true).toBoolean() === true &&
-    !env
-      .get('dev_ids', true)
-      .toArray()
-      .includes(interaction.user?.id ?? interaction.member?.user.id)
-  ) {
-    await api.interactions.reply(interaction.id, interaction.token, {
-      components: [
-        {
-          type: ComponentType.Container,
-          components: [
-            {
-              type: ComponentType.TextDisplay,
-              content: `${emoji('Exclamation')} The app is currently under maintenance - please try again later`,
-            },
-          ],
-        },
-      ],
-      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-    });
-
     return;
   }
 

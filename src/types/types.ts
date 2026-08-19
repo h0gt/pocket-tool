@@ -22,7 +22,9 @@ import type {
   LocalizationMap,
   Snowflake,
   PermissionFlagsBits,
-} from '@discordjs/core/http-only';
+  GatewayDispatchEvents,
+  GatewayDispatchPayload,
+} from '@discordjs/core';
 import { EventEmitter } from 'events';
 
 export interface BaseNonPrimaryEntryPointCommand<Type extends ApplicationCommandType> {
@@ -272,6 +274,11 @@ export interface ModalComponent<Args extends readonly string[] = readonly string
 
 export type Component<Args extends readonly string[] = readonly string[]> =
   ButtonComponent<Args> | SelectMenuComponent<Args> | ModalComponent<Args>;
+
+export interface GatewayEvent<Event extends GatewayDispatchEvents = GatewayDispatchEvents> {
+  type: Event;
+  run: (args: Extract<GatewayDispatchPayload, { t: Event }>['d'], api: API) => Promise<void>;
+}
 
 export enum TimestampStyle {
   /**	16:20 */

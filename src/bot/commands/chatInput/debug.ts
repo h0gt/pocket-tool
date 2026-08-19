@@ -5,7 +5,7 @@ import {
   ComponentType,
   InteractionContextType,
   MessageFlags,
-} from '@discordjs/core/http-only';
+} from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
 import { toComponentEmoji } from '../../../utils/utils';
 import { highlight, hyperlink } from '../../../utils/markdown';
@@ -78,7 +78,7 @@ createApplicationCommand({
               components: [
                 {
                   type: ComponentType.Button,
-                  label: 'Add to Your Apps!',
+                  label: 'Authorize',
                   emoji: toComponentEmoji('Link'),
                   url: INVITE,
                   style: ButtonStyle.Link,

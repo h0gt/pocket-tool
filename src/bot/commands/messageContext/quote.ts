@@ -12,7 +12,7 @@ import {
   type APIModalSubmitInteraction,
   type APIModalSubmitTextInputComponent,
   type ModalSubmitLabelComponent,
-} from '@discordjs/core/http-only';
+} from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
 import { cdn, emoji, hyperlink } from '../../../utils/markdown';
 import type { ColorKey, EffectKey, FontKey, SizeKey } from '../../../utils/card';

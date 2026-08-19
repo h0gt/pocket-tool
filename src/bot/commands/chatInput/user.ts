@@ -6,7 +6,7 @@ import {
   InteractionContextType,
   MessageFlags,
   type APIInteractionDataResolvedGuildMember,
-} from '@discordjs/core/http-only';
+} from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
 import { cdn, emoji, highlight, hyperlink, timestamp } from '../../../utils/markdown';
 import { getTimestampFromSnowflake } from '../../../utils/utils';

@@ -1,25 +1,77 @@
 import {
+  ApplicationCommandOptionType,
   ApplicationCommandType,
   ApplicationIntegrationType,
   ComponentType,
   InteractionContextType,
   MessageFlags,
-} from '@discordjs/core/http-only';
+} from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
+import { getAutocompleteFocusedOption, hasPlus } from '../../../utils/utils';
 import env from '../../../utils/env';
 import { emoji, timestamp, truncate } from '../../../utils/markdown';
+import { SUPPORTED_LANGUAGES } from '../../../types/constants';
 import { redis } from '../../../utils/redis';
 import { TimestampStyle } from '../../../types/types';
-import { hasPlus } from '../../../utils/utils';
 
 createApplicationCommand({
-  type: ApplicationCommandType.Message,
-  name: 'Text To Speech',
+  type: ApplicationCommandType.ChatInput,
+  name: 'tts',
+  description: 'Converts text to speech',
   integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
+  options: [
+    {
+      type: ApplicationCommandOptionType.String,
+      name: 'text',
+      description: 'The text to convert to speech',
+      required: true,
+    },
+    {
+      type: ApplicationCommandOptionType.String,
+      name: 'voice',
+      description: 'The voice to use for the TTS',
+      required: false,
+      choices: [
+        { name: 'Male', value: 'UgBBYS2sOqTuMpoF3BR0' },
+        { name: 'Female', value: 'nf4MCGNSdM0hxM95ZBQR' },
+        { name: 'Neutral', value: 'M563YhMmA0S8vEYwkgYa' },
+      ],
+    },
+    {
+      type: ApplicationCommandOptionType.String,
+      name: 'language',
+      description: 'The language to use for the TTS',
+      required: false,
+      autocomplete: true,
+    },
+  ],
   cooldown: 5,
   acknowledge: true,
-  async run(interaction, api) {
+  async autocomplete(interaction, api) {
+    const focused = getAutocompleteFocusedOption(interaction.data.options);
+    const value = String(focused?.value).toLowerCase() ?? '';
+
+    const languages = SUPPORTED_LANGUAGES.filter((language) => {
+      return language.name.toLowerCase().includes(value) || language.code.toLowerCase().includes(value);
+    });
+
+    const choices = [
+      {
+        name: 'Use my locale',
+        value: 'auto',
+      },
+      ...languages.map((language) => ({
+        name: language.name,
+        value: language.code,
+      })),
+    ].slice(0, 25);
+
+    await api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
+  },
+  async run(interaction, options, api) {
+    const { text, voice, language } = options;
+
     const elevenLabsApiKey = env.get('eleven_labs_api_key').toString();
 
     if (!elevenLabsApiKey) {
@@ -31,27 +83,6 @@ createApplicationCommand({
               {
                 type: ComponentType.TextDisplay,
                 content: `${emoji('Wrong')} Eleven Labs API key not set`,
-              },
-            ],
-          },
-        ],
-        flags: MessageFlags.IsComponentsV2,
-      });
-
-      return;
-    }
-
-    const message = interaction.data.resolved.messages[interaction.data.target_id];
-
-    if (message?.message_snapshots && message.message_snapshots.length > 0) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
-        components: [
-          {
-            type: ComponentType.Container,
-            components: [
-              {
-                type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Forwarded messages are currently not supported`,
               },
             ],
           },
@@ -92,7 +123,7 @@ createApplicationCommand({
       return;
     }
 
-    if (!message || !message.content.trim()) {
+    if (!text.trim()) {
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
@@ -100,7 +131,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please select a text message to convert to speech`,
+                content: `${emoji('Exclamation')} Please provide a text message to convert to speech`,
               },
             ],
           },
@@ -118,8 +149,9 @@ createApplicationCommand({
 
     const elevenlabs = new ElevenLabsClient({ apiKey: elevenLabsApiKey });
 
-    const audio = await elevenlabs.textToSpeech.convertWithTimestamps('M563YhMmA0S8vEYwkgYa', {
-      text: truncate(message.content.trim(), plus ? 500 : 100),
+    const audio = await elevenlabs.textToSpeech.convertWithTimestamps(voice ?? 'M563YhMmA0S8vEYwkgYa', {
+      text: truncate(text.trim(), plus ? 1000 : 500),
+      languageCode: !language || language === 'auto' ? interaction.locale.split('-')[0]! : language.split('-')[0]!,
       modelId: 'eleven_flash_v2_5',
       outputFormat: 'opus_48000_192',
     });

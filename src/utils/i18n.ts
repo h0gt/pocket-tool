@@ -1,4 +1,4 @@
-/* i might make the app support multiple languages at some point
+/* i might make the bot support multiple languages at some point
 import i18next from 'i18next';
 import Backend from 'i18next-fs-backend';
 import path from 'path';

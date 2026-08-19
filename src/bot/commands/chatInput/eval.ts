@@ -5,7 +5,7 @@ import {
   ComponentType,
   InteractionContextType,
   MessageFlags,
-} from '@discordjs/core/http-only';
+} from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
 import util from 'util';
 import { codeblock, truncate } from '../../../utils/markdown';

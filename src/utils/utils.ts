@@ -14,7 +14,7 @@ import {
   type RESTPostAPIApplicationCommandsJSONBody,
   type RESTPostAPIApplicationGuildCommandsJSONBody,
   type Snowflake,
-} from '@discordjs/core/http-only';
+} from '@discordjs/core';
 
 export async function readDirectory(folder: string): Promise<void> {
   const files = await readdir(folder, { recursive: true });

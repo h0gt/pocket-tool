@@ -5,7 +5,7 @@ import {
   ComponentType,
   InteractionContextType,
   MessageFlags,
-} from '@discordjs/core/http-only';
+} from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
 import { cdn, emoji, highlight, timestamp } from '../../../utils/markdown';
 import { getTimestampFromSnowflake } from '../../../utils/utils';
@@ -32,7 +32,7 @@ createApplicationCommand({
 
     const code = link
       .trim()
-      .match(/(https?:\/\/)?(www\.)?(discord\.gg|discord(?:app)?\.com\/invite)\/([a-zA-Z0-9-]{2,64})/)?.[4];
+      .match(/^(?:https?:\/\/)?(?:www\.)?(?:discord\.gg|discord\.com\/invite)\/([a-zA-Z0-9-]{2,64})\/?$/i)?.[1];
 
     if (!code) {
       await api.interactions.editReply(interaction.application_id, interaction.token, {

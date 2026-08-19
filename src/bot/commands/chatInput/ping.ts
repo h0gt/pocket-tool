@@ -1,4 +1,4 @@
-import { ApplicationCommandType, ApplicationIntegrationType, InteractionContextType } from '@discordjs/core/http-only';
+import { ApplicationCommandType, ApplicationIntegrationType, InteractionContextType } from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
 
 createApplicationCommand({

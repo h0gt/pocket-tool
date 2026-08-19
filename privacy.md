@@ -24,7 +24,7 @@ We only collect data necessary for operating and improving the service.
 
 Collected information may be used to:
 
-- Provide app functionality
+- Provide bot functionality
 - Process commands and components
 - Improve performance and reliability
 - Prevent abuse and malicious activity

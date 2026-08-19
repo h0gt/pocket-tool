@@ -8,7 +8,7 @@ import {
   MessageFlags,
   type APIComponentInMessageActionRow,
   type APIInteractionDataResolvedGuildMember,
-} from '@discordjs/core/http-only';
+} from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
 import { cdn, emoji } from '../../../utils/markdown';
 

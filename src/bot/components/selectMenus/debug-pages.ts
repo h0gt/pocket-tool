@@ -3,12 +3,12 @@ import {
   ComponentType,
   MessageFlags,
   type APIMessageComponentSelectMenuInteraction,
-} from '@discordjs/core/http-only';
+} from '@discordjs/core';
 import createComponent from '../../../builders/component';
 import { HighlightStyle, InteractableComponentType, TimestampStyle } from '../../../types/types';
 import { msToReadableTime, toComponentEmoji } from '../../../utils/utils';
 import { highlight, hyperlink, timestamp } from '../../../utils/markdown';
-import { commands, components } from '../..';
+import { commands, components, getShardIdForGuildId, getTotalShards, latencies, uptimes } from '../..';
 import { redis } from '../../../utils/redis';
 import { Temporal } from '@js-temporal/polyfill';
 import { INVITE, SUPPORT, WEBSITE } from '../../../types/constants';
@@ -88,7 +88,7 @@ createComponent({
                   components: [
                     {
                       type: ComponentType.Button,
-                      label: 'Add to Your Apps!',
+                      label: 'Authorize',
                       emoji: toComponentEmoji('Link'),
                       url: INVITE,
                       style: ButtonStyle.Link,
@@ -111,7 +111,12 @@ createComponent({
         break;
       }
       case 'stats': {
-        const app = await api.applications.getCurrent();
+        const bot = await api.applications.getCurrent();
+
+        const totalShards = await getTotalShards();
+        const shardId = interaction.guild_id ? getShardIdForGuildId(interaction.guild_id, totalShards) : 0;
+        const uptime = uptimes.get(shardId)!;
+        const latency = latencies.get(shardId);
 
         await api.interactions.editReply(interaction.application_id, interaction.token, {
           components: [
@@ -120,7 +125,7 @@ createComponent({
               components: [
                 {
                   type: ComponentType.TextDisplay,
-                  content: `-# **Statistics**\n> Commands: **${commands.size}**\n> Components: **${components.size}**\n> Installs: **${app.approximate_user_install_count}**\n> Uptime: **${msToReadableTime(process.uptime() * 1000)} (${timestamp(Math.floor(new Date().getTime() - process.uptime() * 1000), TimestampStyle.LongDateShortTime)})**`,
+                  content: `-# **Statistics**\n> Commands: **${commands.size}**\n> Components: **${components.size}**\n> Installs: **${bot.approximate_user_install_count}**\n> Servers: **${bot.approximate_guild_count}**\n> Uptime: **${msToReadableTime(uptime)} (${timestamp(Math.floor(new Date().getTime() - uptime), TimestampStyle.LongDateShortTime)})**\n> Latency: **${latency}ms**`,
                 },
                 {
                   type: ComponentType.Separator,
@@ -158,7 +163,7 @@ createComponent({
                   components: [
                     {
                       type: ComponentType.Button,
-                      label: 'Add to Your Apps!',
+                      label: 'Authorize',
                       emoji: toComponentEmoji('Link'),
                       url: INVITE,
                       style: ButtonStyle.Link,
@@ -261,7 +266,7 @@ createComponent({
                   components: [
                     {
                       type: ComponentType.Button,
-                      label: 'Add to Your Apps!',
+                      label: 'Authorize',
                       emoji: toComponentEmoji('Link'),
                       url: INVITE,
                       style: ButtonStyle.Link,
@@ -329,7 +334,7 @@ createComponent({
                   components: [
                     {
                       type: ComponentType.Button,
-                      label: 'Add to Your Apps!',
+                      label: 'Authorize',
                       emoji: toComponentEmoji('Link'),
                       url: INVITE,
                       style: ButtonStyle.Link,
