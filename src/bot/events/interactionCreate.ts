@@ -43,7 +43,7 @@ createGatewayEvent({
   type: GatewayDispatchEvents.InteractionCreate,
   async run(interaction, api) {
     console.log(
-      `Received interaction: ${interaction.id} (${InteractionType[interaction.type]}) from ${interaction.user?.username ?? interaction.member?.user.username} (${interaction.user?.id ?? interaction.member?.user.id})`,
+      `received interaction: ${interaction.id} (${InteractionType[interaction.type]}) from ${interaction.user?.username ?? interaction.member?.user.username} (${interaction.user?.id ?? interaction.member?.user.id})`,
     );
 
     switch (interaction.type) {

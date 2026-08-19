@@ -50,7 +50,7 @@ const gateway = new WebSocketManager({
 const client = new Client({ rest, gateway });
 
 client.on(GatewayDispatchEvents.Ready, async (payload) => {
-  console.log(`Shard #${payload.shardId} is ready!`);
+  console.log(`shard #${payload.shardId} is ready!`);
 
   await client.updatePresence(payload.shardId, {
     since: null,
@@ -78,19 +78,19 @@ gateway.on(WebSocketShardEvents.HeartbeatComplete, (payload, shardId) => {
 events.forEach((event) => {
   client.on(event.type, (payload: ToEventProps<Extract<GatewayDispatchPayload, { t: typeof event.type }>['d']>) => {
     event.run(payload.data, client.api).catch((error) => {
-      console.error(`An error occurred while running event ${event.type}:`, error);
+      console.error(`an error occurred while running event ${event.type}:`, error);
     });
   });
 });
 
 await gateway.connect().then(() => {
-  console.log('Gateway connected');
+  console.log('gateway connected');
 
   scheduleReshardCheck(gateway, client.api);
 });
 
 if (env.get('register_commands').toBoolean() === true) {
-  console.log('Refreshing application (/) commands');
+  console.log('refreshing application (/) commands');
 
   commands.forEach((command) => {
     if (command.type !== ApplicationCommandType.ChatInput) {
@@ -163,7 +163,7 @@ if (env.get('register_commands').toBoolean() === true) {
     }
   }
 
-  console.log('Application (/) commands refreshed');
+  console.log('application (/) commands refreshed');
 }
 
 // some shard utils

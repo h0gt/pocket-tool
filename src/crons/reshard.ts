@@ -4,7 +4,7 @@ import cron from 'node-cron';
 
 export function checkForReshard(gateway: WebSocketManager, recommended: number, current: number): void {
   if (recommended !== current) {
-    console.log(`Resharding ${current} -> ${recommended}`);
+    console.log(`resharding ${current} -> ${recommended}`);
 
     void gateway.updateShardCount(null);
   }
@@ -12,7 +12,7 @@ export function checkForReshard(gateway: WebSocketManager, recommended: number, 
 
 export function scheduleReshardCheck(gateway: WebSocketManager, api: API): void {
   cron.schedule('0 */12 * * *', async () => {
-    console.log('Running reshard check...');
+    console.log('running reshard check...');
 
     const recommended = (await api.gateway.getBot()).shards;
     const current = await gateway.getShardCount();
