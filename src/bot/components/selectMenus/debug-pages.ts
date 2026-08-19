@@ -125,7 +125,7 @@ createComponent({
               components: [
                 {
                   type: ComponentType.TextDisplay,
-                  content: `-# **Statistics**\n> Commands: **${commands.size}**\n> Components: **${components.size}**\n> Installs: **${bot.approximate_user_install_count}**\n> Servers: **${bot.approximate_guild_count}**\n> Uptime: **${msToReadableTime(uptime)} (${timestamp(Math.floor(new Date().getTime() - uptime), TimestampStyle.LongDateShortTime)})**\n> Latency: **${latency}ms**`,
+                  content: `-# **Statistics**\n> Commands: **${commands.size}**\n> Components: **${components.size}**\n> Installs: **${bot.approximate_user_install_count}**\n> Servers: **${bot.approximate_guild_count}**\n> Uptime: **${msToReadableTime(new Date().getTime() - uptime)} (${timestamp(uptime, TimestampStyle.LongDateShortTime)})**\n> Latency: **${latency}ms**`,
                 },
                 {
                   type: ComponentType.Separator,

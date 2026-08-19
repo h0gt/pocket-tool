@@ -37,6 +37,7 @@ import { emoji, hyperlink, timestamp } from '../../utils/markdown';
 import { MESSAGE_BLOCK_REASONS, SUPPORT } from '../../types/constants';
 import { redis } from '../../utils/redis';
 import { collectors } from '../../builders/collector';
+import { Temporal } from '@js-temporal/polyfill';
 
 createGatewayEvent({
   type: GatewayDispatchEvents.InteractionCreate,

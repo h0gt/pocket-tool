@@ -163,7 +163,7 @@ if (env.get('register_commands').toBoolean() === true) {
 // some shard utils
 export async function getTotalShards(): Promise<number> {
   return await gateway.getShardCount();
-};
+}
 
 export function getShardIdForGuildId(guildId: string, totalShards: number): number {
   return Number((BigInt(guildId) >> 22n) % BigInt(totalShards));
