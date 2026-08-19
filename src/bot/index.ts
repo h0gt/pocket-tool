@@ -83,7 +83,7 @@ events.forEach((event) => {
   });
 });
 
-await gateway.connect().then(async () => {
+await gateway.connect().then(() => {
   console.log('Gateway connected');
 
   scheduleReshardCheck(gateway, client.api);
