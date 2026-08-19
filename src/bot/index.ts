@@ -33,6 +33,7 @@ export const latencies = new Collection<number, number>();
 
 await readDirectory(path.join(process.cwd(), 'src', 'bot', 'commands'));
 await readDirectory(path.join(process.cwd(), 'src', 'bot', 'components'));
+await readDirectory(path.join(process.cwd(), 'src', 'bot', 'events'));
 
 const rest = new REST().setToken(env.get('token', true).toString());
 const gateway = new WebSocketManager({
