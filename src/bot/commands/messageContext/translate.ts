@@ -9,7 +9,7 @@ import createApplicationCommand from '../../../builders/command';
 import { emoji } from '../../../utils/markdown';
 import { makeRequest } from '../../../utils/request';
 import { RequestMethod, ResponseType } from '../../../types/types';
-import { SUPPORTED_LANGUAGES } from '../../../types/constants';
+import { SUPPORTED_LANGUAGES } from '../../constants';
 
 createApplicationCommand({
   type: ApplicationCommandType.Message,

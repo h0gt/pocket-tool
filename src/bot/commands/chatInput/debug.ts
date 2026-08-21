@@ -10,7 +10,7 @@ import createApplicationCommand from '../../../builders/command';
 import { toComponentEmoji } from '../../../utils/utils';
 import { highlight, hyperlink } from '../../../utils/markdown';
 import { HighlightStyle } from '../../../types/types';
-import { INVITE, SUPPORT, WEBSITE } from '../../../types/constants';
+import { INVITE, SUPPORT, WEBSITE } from '../../constants';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,

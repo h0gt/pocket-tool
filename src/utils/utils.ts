@@ -1,7 +1,7 @@
 import { join } from 'path';
 import { pathToFileURL } from 'url';
 import { readdir } from 'fs/promises';
-import { Emoji } from '../types/constants';
+import { Emoji } from '../bot/constants';
 import type { ApplicationCommand, Component } from '../types/types';
 import {
   API,

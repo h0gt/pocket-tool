@@ -34,7 +34,7 @@ import env from '../../utils/env';
 import { getChatInputOption, parseCommandOptions, parseComponentArgs } from '../../utils/utils';
 import { Collection } from '@discordjs/collection';
 import { emoji, hyperlink, timestamp } from '../../utils/markdown';
-import { MESSAGE_BLOCK_REASONS, SUPPORT } from '../../types/constants';
+import { MESSAGE_BLOCK_REASONS, SUPPORT } from '../constants';
 import { redis } from '../../utils/redis';
 import { collectors } from '../../builders/collector';
 

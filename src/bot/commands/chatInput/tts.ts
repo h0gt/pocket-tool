@@ -10,7 +10,7 @@ import createApplicationCommand from '../../../builders/command';
 import { getAutocompleteFocusedOption, hasPlus } from '../../../utils/utils';
 import env from '../../../utils/env';
 import { emoji, timestamp, truncate } from '../../../utils/markdown';
-import { SUPPORTED_LANGUAGES } from '../../../types/constants';
+import { SUPPORTED_LANGUAGES } from '../../constants';
 import { redis } from '../../../utils/redis';
 import { TimestampStyle } from '../../../types/types';
 

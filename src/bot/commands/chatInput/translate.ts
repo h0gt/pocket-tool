@@ -11,7 +11,7 @@ import { getAutocompleteFocusedOption } from '../../../utils/utils';
 import { makeRequest } from '../../../utils/request';
 import { RequestMethod, ResponseType } from '../../../types/types';
 import { emoji } from '../../../utils/markdown';
-import { SUPPORTED_LANGUAGES } from '../../../types/constants';
+import { SUPPORTED_LANGUAGES } from '../../constants';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,

@@ -1,4 +1,4 @@
-import { Emoji } from '../types/constants';
+import { Emoji } from '../bot/constants';
 import { HighlightStyle, TimestampStyle } from '../types/types';
 
 /** Escapes backticks in a string to avoid breaking markdown */
