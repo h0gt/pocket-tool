@@ -42,7 +42,7 @@ createApplicationCommand({
       return;
     }
 
-    const date = new Date().toISOString().slice(0, 10);
+    const date = Temporal.Now.zonedDateTimeISO().toPlainDate().toString();
     const key = `stt:${interaction.user?.id ?? interaction.member?.user.id}:${date}`;
 
     const usage = Number((await redis.get(key)) ?? 0);
@@ -51,8 +51,7 @@ createApplicationCommand({
     const limit = plus ? 50 : 10;
 
     if (usage >= limit) {
-      const resetAt = new Date();
-      resetAt.setUTCHours(24, 0, 0, 0);
+      const resetAt = Temporal.Now.instant().toZonedDateTimeISO('UTC').startOfDay().add({ days: 1 }).toInstant();
 
       await api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
@@ -61,7 +60,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} You have reached your daily STT limit of ${limit} messages - try again ${timestamp(resetAt.getTime(), TimestampStyle.RelativeTime)}.`,
+                content: `${emoji('Exclamation')} You have reached your daily STT limit of ${limit} messages - try again ${timestamp(resetAt.epochMilliseconds, TimestampStyle.RelativeTime)}.`,
               },
             ],
           },

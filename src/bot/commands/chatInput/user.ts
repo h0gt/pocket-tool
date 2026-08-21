@@ -107,7 +107,7 @@ createApplicationCommand({
               },
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Calendar')} **Created At:**\n${timestamp(getTimestampFromSnowflake(user.id), TimestampStyle.LongDate)} (${timestamp(getTimestampFromSnowflake(user.id), TimestampStyle.RelativeTime)})\n\n${emoji('Newbie')} **Joined At:**\n${timestamp(new Date(member.joined_at!).getTime(), TimestampStyle.LongDate)} (${timestamp(new Date(member.joined_at!).getTime(), TimestampStyle.RelativeTime)})${
+                content: `${emoji('Calendar')} **Created At:**\n${timestamp(getTimestampFromSnowflake(user.id), TimestampStyle.LongDate)} (${timestamp(getTimestampFromSnowflake(user.id), TimestampStyle.RelativeTime)})\n\n${emoji('Newbie')} **Joined At:**\n${timestamp(Temporal.Instant.from(member.joined_at!).epochMilliseconds, TimestampStyle.LongDate)} (${timestamp(Temporal.Instant.from(member.joined_at!).epochMilliseconds, TimestampStyle.RelativeTime)})${
                   member.roles.length > 0
                     ? `\n\n${emoji('Role')} **Roles:**\n${member.roles
                         .slice(0, 5)

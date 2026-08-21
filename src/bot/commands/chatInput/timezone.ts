@@ -9,7 +9,6 @@ import {
 import createApplicationCommand from '../../../builders/command';
 import { getAutocompleteFocusedOption } from '../../../utils/utils';
 import { emoji } from '../../../utils/markdown';
-import { Temporal } from '@js-temporal/polyfill';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
@@ -32,7 +31,7 @@ createApplicationCommand({
     const focused = getAutocompleteFocusedOption(interaction.data.options);
     const value = String(focused?.value ?? '').toLowerCase();
 
-    const now = new Date();
+    const now = Temporal.Now.instant();
 
     const choices = Intl.supportedValuesOf('timeZone')
       .map((zone) => ({

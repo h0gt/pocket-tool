@@ -3,7 +3,6 @@ import type { SKRSContext2D } from '@napi-rs/canvas';
 import { isHex, type Hexadecimal } from '@tolga1452/toolbox.js';
 import sharp from 'sharp';
 import emojiRegex from 'emoji-regex';
-import twemoji from '@twemoji/api';
 import path from 'path';
 
 const FONTS = [
@@ -45,6 +44,7 @@ function loadFonts(font: FontKey): void {
   }
 }
 
+const SCALE = 3;
 const WIDTH = 850;
 const HEIGHT = 450;
 
@@ -293,6 +293,12 @@ export const CARD_EFFECTS = {
     layout: 'split',
     effect: 'remove-watermark',
   },
+  gif: {
+    label: 'GIF',
+    description: 'Export the card as an animated GIF',
+    layout: 'split',
+    effect: 'gif',
+  },
 } as const;
 
 export type FontKey = keyof typeof CARD_FONTS;
@@ -333,9 +339,10 @@ type TextArea = {
 export async function renderQuoteCard(options: RenderQuoteCardOptions): Promise<Buffer> {
   loadFonts(options.font);
 
-  const canvas = createCanvas(WIDTH, HEIGHT);
+  const canvas = createCanvas(WIDTH * SCALE, HEIGHT * SCALE);
   const ctx = canvas.getContext('2d');
-  const selectedEffects = new Set(options.effects.map((effect) => CARD_EFFECTS[effect].effect));
+  ctx.scale(SCALE, SCALE);
+  const effects = new Set(options.effects.map((effect) => CARD_EFFECTS[effect].effect));
   const layout: Layout = options.effects.includes('full-bleed') ? 'full-bleed' : 'split';
   const [avatar, emojis] = await Promise.all([
     options.avatar ? loadImage(options.avatar) : undefined,
@@ -349,16 +356,27 @@ export async function renderQuoteCard(options: RenderQuoteCardOptions): Promise<
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
-  const area = drawLayout(ctx, layout, selectedEffects, avatar);
+  const area = drawLayout(ctx, layout, effects, avatar);
   await drawQuote(ctx, options, area, resolveTextColor(options.color), emojis);
 
-  if (!selectedEffects.has('remove-watermark')) {
+  if (!effects.has('remove-watermark')) {
     drawBrandMark(ctx);
   }
 
   const frame = await canvas.encode('png');
 
-  return sharp(frame).gif({ effort: 10 }).toBuffer();
+  const image = sharp(frame).resize(WIDTH, HEIGHT);
+
+  if (effects.has('gif')) {
+    return image.gif({ effort: 10 }).toBuffer();
+  }
+
+  return image
+    .png({
+      compressionLevel: 9,
+      effort: 10,
+    })
+    .toBuffer();
 }
 
 function drawLayout(ctx: SKRSContext2D, layout: Layout, effects: ReadonlySet<Effect>, avatar?: LoadedImage): TextArea {
@@ -814,12 +832,10 @@ function resolveTextColor(color: ColorKey | Hexadecimal): string {
 }
 
 function getTwemojiUrl(emoji: string): string {
-  const code = twemoji.convert.toCodePoint(emoji);
-
-  const normalizedCode = code
-    .split('-')
-    .filter((part) => part !== 'fe0f')
+  const code = [...emoji]
+    .map((char) => char.codePointAt(0)!.toString(16))
+    .filter((code) => code !== 'fe0f')
     .join('-');
 
-  return `https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/${normalizedCode}.png`;
+  return `https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/${code}.png`;
 }

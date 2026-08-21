@@ -37,7 +37,6 @@ import { emoji, hyperlink, timestamp } from '../../utils/markdown';
 import { MESSAGE_BLOCK_REASONS, SUPPORT } from '../../types/constants';
 import { redis } from '../../utils/redis';
 import { collectors } from '../../builders/collector';
-import { Temporal } from '@js-temporal/polyfill';
 
 createGatewayEvent({
   type: GatewayDispatchEvents.InteractionCreate,
@@ -114,14 +113,14 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
       }
 
-      const now = new Date().getTime();
+      const now = Temporal.Now.instant();
       const timestamps = cooldowns.get(interaction.data.name)!;
       const cooldown = (chatInput.cooldown ?? 0) * 1000;
 
       if (timestamps.has((interaction.user?.id ?? interaction.member?.user.id)!)) {
         const expiration = timestamps.get((interaction.user?.id ?? interaction.member?.user.id)!)! + cooldown;
 
-        if (now < expiration) {
+        if (now.epochMilliseconds < expiration) {
           if (chatInput.acknowledge) {
             await api.interactions.editReply(interaction.application_id, interaction.token, {
               components: [
@@ -158,7 +157,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         }
       }
 
-      timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now);
+      timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now.epochMilliseconds);
       setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
 
       try {
@@ -234,14 +233,14 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
       }
 
-      const now = new Date().getTime();
+      const now = Temporal.Now.instant();
       const timestamps = cooldowns.get(interaction.data.name)!;
       const cooldown = (messageContext.cooldown ?? 0) * 1000;
 
       if (timestamps.has((interaction.user?.id ?? interaction.member?.user.id)!)) {
         const expiration = timestamps.get((interaction.user?.id ?? interaction.member?.user.id)!)!;
 
-        if (now < expiration) {
+        if (now.epochMilliseconds < expiration) {
           if (messageContext.acknowledge) {
             await api.interactions.editReply(interaction.application_id, interaction.token, {
               components: [
@@ -278,7 +277,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         }
       }
 
-      timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now);
+      timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now.epochMilliseconds);
       setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
 
       try {
@@ -351,14 +350,14 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
       }
 
-      const now = new Date().getTime();
+      const now = Temporal.Now.instant();
       const timestamps = cooldowns.get(interaction.data.name)!;
       const cooldown = (userContext.cooldown ?? 0) * 1000;
 
       if (timestamps.has((interaction.user?.id ?? interaction.member?.user.id)!)) {
         const expiration = timestamps.get((interaction.user?.id ?? interaction.member?.user.id)!)!;
 
-        if (now < expiration) {
+        if (now.epochMilliseconds < expiration) {
           if (userContext.acknowledge) {
             await api.interactions.editReply(interaction.application_id, interaction.token, {
               components: [
@@ -395,7 +394,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         }
       }
 
-      timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now);
+      timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now.epochMilliseconds);
       setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
 
       try {

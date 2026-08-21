@@ -1,6 +1,5 @@
 import type { API } from '@discordjs/core';
 import type { WebSocketManager } from '@discordjs/ws';
-import cron from 'node-cron';
 
 export function checkForReshard(gateway: WebSocketManager, recommended: number, current: number): void {
   if (recommended !== current) {
@@ -11,7 +10,7 @@ export function checkForReshard(gateway: WebSocketManager, recommended: number, 
 }
 
 export function scheduleReshardCheck(gateway: WebSocketManager, api: API): void {
-  cron.schedule('0 */12 * * *', async () => {
+  Bun.cron('0 */12 * * *', async () => {
     console.log('running reshard check...');
 
     const recommended = (await api.gateway.getBot()).shards;

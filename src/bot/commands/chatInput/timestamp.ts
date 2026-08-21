@@ -11,7 +11,6 @@ import { parse } from 'chrono-node';
 import { emoji, timestamp } from '../../../utils/markdown';
 import type { TimestampStyle } from '../../../types/types';
 import { getAutocompleteFocusedOption } from '../../../utils/utils';
-import { Temporal } from '@js-temporal/polyfill';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
@@ -84,7 +83,7 @@ createApplicationCommand({
     const focused = getAutocompleteFocusedOption(interaction.data.options);
     const value = String(focused?.value ?? '').toLowerCase();
 
-    const now = new Date();
+    const now = Temporal.Now.instant();
 
     const choices = Intl.supportedValuesOf('timeZone')
       .map((zone) => ({

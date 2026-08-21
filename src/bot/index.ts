@@ -68,7 +68,7 @@ client.on(GatewayDispatchEvents.Ready, async (payload) => {
 
 // track uptime and latency
 gateway.on(WebSocketShardEvents.Ready, (_, shardId) => {
-  uptimes.set(shardId, new Date().getTime());
+  uptimes.set(shardId, Temporal.Now.instant().epochMilliseconds);
 });
 
 gateway.on(WebSocketShardEvents.HeartbeatComplete, (payload, shardId) => {
