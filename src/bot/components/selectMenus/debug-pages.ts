@@ -5,7 +5,7 @@ import {
   type APIMessageComponentSelectMenuInteraction,
 } from '@discordjs/core';
 import createComponent from '../../../builders/component';
-import { HighlightStyle, InteractableComponentType, TimestampStyle } from '../../../types/types';
+import { HighlightStyle, InteractionComponentType, TimestampStyle } from '../../../types/types';
 import { msToReadableTime, toComponentEmoji } from '../../../utils/utils';
 import { emoji, highlight, hyperlink, timestamp } from '../../../utils/markdown';
 import { getShardIdForGuildId, getTotalShards, latencies, uptimes } from '../..';
@@ -13,8 +13,8 @@ import { redis } from '../../../utils/redis';
 import { INVITE, SUPPORT, WEBSITE } from '../../constants';
 
 createComponent({
-  type: InteractableComponentType.SelectMenu,
-  custom_id: 'debug-pages',
+  type: InteractionComponentType.SelectMenu,
+  customId: 'debug-pages',
   args: ['userId'] as const,
   acknowledge: true,
   async run(interaction, args, api) {

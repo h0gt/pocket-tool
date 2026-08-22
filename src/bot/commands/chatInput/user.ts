@@ -16,7 +16,7 @@ createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'user',
   description: 'Views information about an user or yourself',
-  integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   options: [
     {

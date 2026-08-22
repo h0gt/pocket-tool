@@ -14,7 +14,7 @@ createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'eval',
   description: 'Evaluates the provided code',
-  integration_types: [ApplicationIntegrationType.GuildInstall],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall],
   contexts: [InteractionContextType.Guild],
   options: [
     {

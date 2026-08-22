@@ -1,4 +1,10 @@
-import { ApplicationCommandType, ComponentType, MessageFlags } from '@discordjs/core';
+import {
+  ApplicationCommandType,
+  ApplicationIntegrationType,
+  ComponentType,
+  InteractionContextType,
+  MessageFlags,
+} from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
 import { cdn, emoji, highlight, hyperlink, timestamp } from '../../../utils/markdown';
 import { getTimestampFromSnowflake } from '../../../utils/utils';
@@ -7,6 +13,8 @@ import { TimestampStyle } from '../../../types/types';
 createApplicationCommand({
   type: ApplicationCommandType.User,
   name: 'View User Profile',
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   cooldown: 3,
   acknowledge: true,
   async run(interaction, api) {

@@ -2,7 +2,7 @@ import { GatewayDispatchEvents } from '@discordjs/core';
 import createGatewayEvent from '../../builders/event';
 
 createGatewayEvent({
-  type: GatewayDispatchEvents.GuildCreate,
+  event: GatewayDispatchEvents.GuildCreate,
   async run(guild, api) {
     if (guild.unavailable) {
       return;

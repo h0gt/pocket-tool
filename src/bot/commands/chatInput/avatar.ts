@@ -16,7 +16,7 @@ createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'avatar',
   description: "View an user's avatar",
-  integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   options: [
     {

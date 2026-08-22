@@ -17,7 +17,7 @@ createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'role',
   description: 'Views information about a role',
-  integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.Guild],
   options: [
     {

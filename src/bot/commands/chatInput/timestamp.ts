@@ -16,7 +16,7 @@ createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'timestamp',
   description: 'Generates a Discord style timestamp for the given time',
-  integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   options: [
     {

@@ -2,7 +2,7 @@ import { join } from 'path';
 import { pathToFileURL } from 'url';
 import { readdir } from 'fs/promises';
 import { Emoji } from '../bot/constants';
-import type { ApplicationCommand, Component } from '../types/types';
+import type { ApplicationCommand, ChatInputOptions, Component, Localization } from '../types/types';
 import {
   API,
   ApplicationCommandOptionType,
@@ -11,6 +11,7 @@ import {
   type APIApplicationCommandInteractionDataOption,
   type APIChatInputApplicationCommandInteraction,
   type APIMessageComponentEmoji,
+  type LocalizationMap,
   type RESTPostAPIApplicationCommandsJSONBody,
   type RESTPostAPIApplicationGuildCommandsJSONBody,
   type Snowflake,
@@ -138,35 +139,132 @@ export function toReactionEmoji(name: keyof typeof Emoji): string {
 export function transformCommand(
   command: ApplicationCommand,
 ): RESTPostAPIApplicationCommandsJSONBody | RESTPostAPIApplicationGuildCommandsJSONBody {
+  const name = transformLocalization(command.name);
+
   if (command.type === ApplicationCommandType.ChatInput) {
+    const description = transformLocalization(command.description);
+
     return {
       type: command.type,
-      name: command.name,
-      name_localizations: command.name_localizations,
-      description: command.description,
-      description_localizations: command.description_localizations,
-      options: command.options ?? [],
-      default_member_permissions: command.default_member_permissions?.toString(),
+      name: name.global,
+      name_localizations: name.localizations,
+      description: description.global,
+      description_localizations: description.localizations,
+      options: transformCommandOptions(command.options ?? []),
+      default_member_permissions: command.defaultMemberPermissions?.toString(),
       nsfw: command.nsfw,
-      integration_types: command.integration_types,
+      integration_types: command.integrationTypes,
       contexts: command.contexts,
     };
-  } else {
-    return {
-      type: command.type,
-      name: command.name,
-      name_localizations: command.name_localizations,
-      ...('default_member_permissions' in command && command.default_member_permissions !== undefined
-        ? { default_member_permissions: command.default_member_permissions.toString() }
-        : {}),
-      ...('nsfw' in command && command.nsfw !== undefined ? { nsfw: command.nsfw } : {}),
-      ...('integration_types' in command && command.integration_types !== undefined
-        ? { integration_types: command.integration_types }
-        : {}),
-      ...('contexts' in command && command.contexts !== undefined ? { contexts: command.contexts } : {}),
-      ...('handler' in command && command.handler !== undefined ? { handler: command.handler } : {}),
-    };
   }
+
+  return {
+    type: command.type,
+    name: name.global,
+    name_localizations: name.localizations,
+    ...('defaultMemberPermissions' in command && command.defaultMemberPermissions !== undefined
+      ? { default_member_permissions: command.defaultMemberPermissions.toString() }
+      : {}),
+    ...('nsfw' in command && command.nsfw !== undefined ? { nsfw: command.nsfw } : {}),
+    ...('integrationTypes' in command && command.integrationTypes !== undefined
+      ? { integration_types: command.integrationTypes }
+      : {}),
+    ...('contexts' in command && command.contexts !== undefined ? { contexts: command.contexts } : {}),
+    ...('handler' in command && command.handler !== undefined ? { handler: command.handler } : {}),
+  };
+}
+
+function transformCommandOptions(options: ChatInputOptions): RESTPostAPIApplicationCommandsJSONBody['options'] {
+  return options.map((option) => {
+    const name = transformLocalization(option.name);
+    const description = transformLocalization(option.description);
+
+    const base = {
+      type: option.type,
+      name: name.global,
+      name_localizations: name.localizations,
+      description: description.global,
+      description_localizations: description.localizations,
+      required: option.required,
+    };
+
+    switch (option.type) {
+      case ApplicationCommandOptionType.Integer:
+      case ApplicationCommandOptionType.Number: {
+        return {
+          ...base,
+          ...(option.maxValue !== undefined ? { max_value: option.maxValue } : {}),
+          ...(option.minValue !== undefined ? { min_value: option.minValue } : {}),
+          ...(option.choices !== undefined
+            ? {
+                choices: option.choices.map((choice) => {
+                  const name = transformLocalization(choice.name);
+
+                  return {
+                    name: name.global,
+                    name_localizations: name.localizations,
+                    value: choice.value,
+                  };
+                }),
+              }
+            : {}),
+          ...(option.autocomplete !== undefined ? { autocomplete: option.autocomplete } : {}),
+        };
+      }
+      case ApplicationCommandOptionType.String: {
+        return {
+          ...base,
+          ...(option.maxLength !== undefined ? { max_length: option.maxLength } : {}),
+          ...(option.minLength !== undefined ? { min_length: option.minLength } : {}),
+          ...(option.choices !== undefined
+            ? {
+                choices: option.choices.map((choice) => {
+                  const name = transformLocalization(choice.name);
+
+                  return {
+                    name: name.global,
+                    name_localizations: name.localizations,
+                    value: choice.value,
+                  };
+                }),
+              }
+            : {}),
+          ...(option.autocomplete !== undefined ? { autocomplete: option.autocomplete } : {}),
+        };
+      }
+      case ApplicationCommandOptionType.Channel: {
+        return {
+          ...base,
+          ...(option.channel_types !== undefined ? { channel_types: option.channel_types } : {}),
+        };
+      }
+      case ApplicationCommandOptionType.Subcommand:
+      case ApplicationCommandOptionType.SubcommandGroup: {
+        return {
+          ...base,
+          ...(option.options !== undefined ? { options: transformCommandOptions(option.options) } : {}),
+        };
+      }
+      default:
+        return base;
+    }
+  }) as RESTPostAPIApplicationCommandsJSONBody['options'];
+}
+
+function transformLocalization(localization: Localization): {
+  global: string;
+  localizations?: LocalizationMap;
+} {
+  if (typeof localization === 'string') {
+    return { global: localization };
+  }
+
+  const { global, ...localizations } = localization;
+
+  return {
+    global,
+    localizations,
+  };
 }
 
 export function parseCommandOptions(
@@ -298,6 +396,7 @@ export async function hasPlus(userId: string, api: API): Promise<boolean> {
   const result = await api.monetization.getEntitlements('1489362526880796903', {
     user_id: userId,
     sku_ids: '1538163894256930917',
+    exclude_ended: true,
   });
 
   return result.length > 0;

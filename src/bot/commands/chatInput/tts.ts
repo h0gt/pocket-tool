@@ -18,7 +18,7 @@ createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'tts',
   description: 'Converts text to speech',
-  integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   options: [
     {

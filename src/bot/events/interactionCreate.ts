@@ -39,7 +39,7 @@ import { redis } from '../../utils/redis';
 import { collectors } from '../../builders/collector';
 
 createGatewayEvent({
-  type: GatewayDispatchEvents.InteractionCreate,
+  event: GatewayDispatchEvents.InteractionCreate,
   async run(interaction, api) {
     console.log(
       `received interaction: ${interaction.id} (${InteractionType[interaction.type]}) from ${interaction.user?.username ?? interaction.member?.user.username} (${interaction.user?.id ?? interaction.member?.user.id})`,

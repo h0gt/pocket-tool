@@ -14,7 +14,7 @@ createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'timezone',
   description: 'View the current time for a specific timezone',
-  integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   options: [
     {

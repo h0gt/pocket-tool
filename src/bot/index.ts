@@ -76,11 +76,22 @@ gateway.on(WebSocketShardEvents.HeartbeatComplete, (payload, shardId) => {
 });
 
 events.forEach((event) => {
-  client.on(event.type, (payload: ToEventProps<Extract<GatewayDispatchPayload, { t: typeof event.type }>['d']>) => {
-    event.run(payload.data, client.api).catch((error) => {
-      console.error(`an error occurred while running event ${event.type}:`, error);
+  if (event.once) {
+    client.once(
+      event.event,
+      (payload: ToEventProps<Extract<GatewayDispatchPayload, { t: typeof event.event }>['d']>) => {
+        event.run(payload.data, client.api).catch((error) => {
+          console.error(`an error occurred while running event ${event.event}:`, error);
+        });
+      },
+    );
+  } else {
+    client.on(event.event, (payload: ToEventProps<Extract<GatewayDispatchPayload, { t: typeof event.event }>['d']>) => {
+      event.run(payload.data, client.api).catch((error) => {
+        console.error(`an error occurred while running event ${event.event}:`, error);
+      });
     });
-  });
+  }
 });
 
 await gateway.connect().then(() => {

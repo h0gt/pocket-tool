@@ -5,7 +5,7 @@ createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'ping',
   description: 'Pong!',
-  integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   acknowledge: true,
   async run(interaction, options, api) {

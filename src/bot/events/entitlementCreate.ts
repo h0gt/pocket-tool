@@ -2,7 +2,7 @@ import { GatewayDispatchEvents } from '@discordjs/core';
 import createGatewayEvent from '../../builders/event';
 
 createGatewayEvent({
-  type: GatewayDispatchEvents.EntitlementCreate,
+  event: GatewayDispatchEvents.EntitlementCreate,
   async run(entitlement, api) {
     if (entitlement.sku_id === '1538163894256930917') {
       await api.channels.createMessage('1533439027657572435', {

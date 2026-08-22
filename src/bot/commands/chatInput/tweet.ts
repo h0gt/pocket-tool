@@ -20,7 +20,7 @@ createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'tweet',
   description: 'Display a tweet preview',
-  integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   options: [
     {

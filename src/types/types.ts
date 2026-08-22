@@ -27,13 +27,14 @@ import type {
 } from '@discordjs/core';
 import { EventEmitter } from 'events';
 
+export type Localization = (Partial<Record<keyof LocalizationMap, string>> & { global: string }) | string;
+
 export interface BaseNonPrimaryEntryPointCommand<Type extends ApplicationCommandType> {
   type: Type;
-  name: string;
-  name_localizations?: LocalizationMap;
-  integration_types?: ApplicationIntegrationType[];
+  name: Localization;
+  integrationTypes?: ApplicationIntegrationType[];
   contexts?: InteractionContextType[];
-  default_member_permissions?: (typeof PermissionFlagsBits)[keyof typeof PermissionFlagsBits];
+  defaultMemberPermissions?: (typeof PermissionFlagsBits)[keyof typeof PermissionFlagsBits];
   cooldown?: number;
   guilds?: Snowflake[];
   dev?: boolean;
@@ -45,8 +46,7 @@ export interface BaseNonPrimaryEntryPointCommand<Type extends ApplicationCommand
 export interface ChatInputCommand<
   Options extends ChatInputOptions = ChatInputOptions,
 > extends BaseNonPrimaryEntryPointCommand<ApplicationCommandType.ChatInput> {
-  description: string;
-  description_localizations?: LocalizationMap;
+  description: Localization;
   options?: Options;
   run: (
     interaction: APIChatInputApplicationCommandInteraction,
@@ -73,10 +73,8 @@ export type ChatInputOption =
 
 export type BaseChatInputOption<Type extends ApplicationCommandOptionType = ApplicationCommandOptionType> = {
   type: Type;
-  name: string;
-  name_localizations?: LocalizationMap;
-  description: string;
-  description_localizations?: LocalizationMap;
+  name: Localization;
+  description: Localization;
   required?: boolean;
 };
 
@@ -90,14 +88,14 @@ export type ChannelChatInputOption = BaseChatInputOption<ApplicationCommandOptio
 
 export type IntegerChatInputOption =
   | (BaseChatInputOption<ApplicationCommandOptionType.Integer> & {
-      max_value?: number;
-      min_value?: number;
+      maxValue?: number;
+      minValue?: number;
       choices?: ChatInputOptionChoice<ApplicationCommandOptionType.Integer>[];
       autocomplete?: false;
     })
   | (BaseChatInputOption<ApplicationCommandOptionType.Integer> & {
-      max_value?: number;
-      min_value?: number;
+      maxValue?: number;
+      minValue?: number;
       choices?: never;
       autocomplete: true;
     });
@@ -106,14 +104,14 @@ export type MentionableChatInputOption = BaseChatInputOption<ApplicationCommandO
 
 export type NumberChatInputOption =
   | (BaseChatInputOption<ApplicationCommandOptionType.Number> & {
-      max_value?: number;
-      min_value?: number;
+      maxValue?: number;
+      minValue?: number;
       choices?: ChatInputOptionChoice<ApplicationCommandOptionType.Number>[];
       autocomplete?: false;
     })
   | (BaseChatInputOption<ApplicationCommandOptionType.Number> & {
-      max_value?: number;
-      min_value?: number;
+      maxValue?: number;
+      minValue?: number;
       choices?: never;
       autocomplete: true;
     });
@@ -122,14 +120,14 @@ export type RoleChatInputOption = BaseChatInputOption<ApplicationCommandOptionTy
 
 export type StringChatInputOption =
   | (BaseChatInputOption<ApplicationCommandOptionType.String> & {
-      max_length?: number;
-      min_length?: number;
+      maxLength?: number;
+      minLength?: number;
       choices?: ChatInputOptionChoice<ApplicationCommandOptionType.String>[];
       autocomplete?: false;
     })
   | (BaseChatInputOption<ApplicationCommandOptionType.String> & {
-      max_length?: number;
-      min_length?: number;
+      maxLength?: number;
+      minLength?: number;
       choices?: never;
       autocomplete: true;
     });
@@ -147,8 +145,7 @@ export type SubcommandGroupChatInputOption = BaseChatInputOption<ApplicationComm
 };
 
 export type ChatInputOptionChoice<Type extends ApplicationCommandOptionType> = {
-  name: string;
-  name_localizations?: LocalizationMap;
+  name: Localization;
   value: Type extends ApplicationCommandOptionType.String
     ? string
     : Type extends ApplicationCommandOptionType.Number
@@ -215,7 +212,7 @@ export interface MessageContextMenuCommand extends BaseNonPrimaryEntryPointComma
 export interface PrimaryEntryPointCommand {
   type: ApplicationCommandType.PrimaryEntryPoint;
   name: string;
-  name_localizations?: LocalizationMap;
+  nameLocalizations?: LocalizationMap;
   handler: EntryPointCommandHandlerType;
   run?: (interaction: APIPrimaryEntryPointCommandInteraction, api: API) => Promise<void>;
 }
@@ -226,23 +223,23 @@ export type NonPrimaryEntryPointCommand<Options extends ChatInputOptions = ChatI
 export type ApplicationCommand<Options extends ChatInputOptions = ChatInputOptions> =
   NonPrimaryEntryPointCommand<Options> | PrimaryEntryPointCommand;
 
-export enum InteractableComponentType {
+export enum InteractionComponentType {
   Button = 'button',
   SelectMenu = 'select_menu',
   Modal = 'modal',
 }
 
 export interface BaseComponent<
-  Type extends InteractableComponentType = InteractableComponentType,
+  Type extends InteractionComponentType = InteractionComponentType,
   Args extends readonly string[] = readonly string[],
 > {
   type: Type;
-  custom_id: Snowflake;
+  customId: Snowflake;
   args?: Args;
 }
 
 export interface ButtonComponent<Args extends readonly string[] = readonly string[]> extends BaseComponent<
-  InteractableComponentType.Button,
+  InteractionComponentType.Button,
   Args
 > {
   acknowledge?: boolean;
@@ -254,7 +251,7 @@ export interface ButtonComponent<Args extends readonly string[] = readonly strin
 }
 
 export interface SelectMenuComponent<Args extends readonly string[] = readonly string[]> extends BaseComponent<
-  InteractableComponentType.SelectMenu,
+  InteractionComponentType.SelectMenu,
   Args
 > {
   acknowledge?: boolean;
@@ -266,7 +263,7 @@ export interface SelectMenuComponent<Args extends readonly string[] = readonly s
 }
 
 export interface ModalComponent<Args extends readonly string[] = readonly string[]> extends BaseComponent<
-  InteractableComponentType.Modal,
+  InteractionComponentType.Modal,
   Args
 > {
   run: (interaction: APIModalSubmitInteraction, args: Record<Args[number], string>, api: API) => Promise<void>;
@@ -276,7 +273,8 @@ export type Component<Args extends readonly string[] = readonly string[]> =
   ButtonComponent<Args> | SelectMenuComponent<Args> | ModalComponent<Args>;
 
 export interface GatewayEvent<Event extends GatewayDispatchEvents = GatewayDispatchEvents> {
-  type: Event;
+  event: Event;
+  once?: boolean;
   run: (args: Extract<GatewayDispatchPayload, { t: Event }>['d'], api: API) => Promise<void>;
 }
 

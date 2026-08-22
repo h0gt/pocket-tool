@@ -16,7 +16,7 @@ import { hasPlus } from '../../../utils/utils';
 createApplicationCommand({
   type: ApplicationCommandType.Message,
   name: 'Speech to Text',
-  integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   cooldown: 5,
   acknowledge: true,

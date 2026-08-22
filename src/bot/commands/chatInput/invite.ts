@@ -15,7 +15,7 @@ createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'invite',
   description: 'Views information about an invite',
-  integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   options: [
     {

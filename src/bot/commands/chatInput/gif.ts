@@ -16,7 +16,7 @@ createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'gif',
   description: 'Turn an image into a GIF',
-  integration_types: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   options: [
     {
