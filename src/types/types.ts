@@ -24,6 +24,7 @@ import type {
   PermissionFlagsBits,
   GatewayDispatchEvents,
   GatewayDispatchPayload,
+  Client,
 } from '@discordjs/core';
 import { EventEmitter } from 'events';
 
@@ -51,9 +52,9 @@ export interface ChatInputCommand<
   run: (
     interaction: APIChatInputApplicationCommandInteraction,
     options: GetChatInputCommandOptions<Options>,
-    api: API,
+    client: Client,
   ) => Promise<void>;
-  autocomplete?: (interaction: APIApplicationCommandAutocompleteInteraction, api: API) => Promise<void>;
+  autocomplete?: (interaction: APIApplicationCommandAutocompleteInteraction, client: Client) => Promise<void>;
 }
 
 export type ChatInputOptions = ChatInputOption[];
@@ -202,11 +203,11 @@ export type GetOptionValue<Option> = Option extends {
 export type GetChatInputCommandOptions<Options extends ChatInputOptions = ChatInputOptions> = BuildOptions<Options>;
 
 export interface UserContextMenuCommand extends BaseNonPrimaryEntryPointCommand<ApplicationCommandType.User> {
-  run: (interaction: APIUserApplicationCommandInteraction, api: API) => Promise<void>;
+  run: (interaction: APIUserApplicationCommandInteraction, client: Client) => Promise<void>;
 }
 
 export interface MessageContextMenuCommand extends BaseNonPrimaryEntryPointCommand<ApplicationCommandType.Message> {
-  run: (interaction: APIMessageApplicationCommandInteraction, api: API) => Promise<void>;
+  run: (interaction: APIMessageApplicationCommandInteraction, client: Client) => Promise<void>;
 }
 
 export interface PrimaryEntryPointCommand {
@@ -214,7 +215,7 @@ export interface PrimaryEntryPointCommand {
   name: string;
   nameLocalizations?: LocalizationMap;
   handler: EntryPointCommandHandlerType;
-  run?: (interaction: APIPrimaryEntryPointCommandInteraction, api: API) => Promise<void>;
+  run?: (interaction: APIPrimaryEntryPointCommandInteraction, client: Client) => Promise<void>;
 }
 
 export type NonPrimaryEntryPointCommand<Options extends ChatInputOptions = ChatInputOptions> =
@@ -246,7 +247,7 @@ export interface ButtonComponent<Args extends readonly string[] = readonly strin
   run: (
     interaction: APIMessageComponentButtonInteraction,
     args: Record<Args[number], string>,
-    api: API,
+    client: Client,
   ) => Promise<void>;
 }
 
@@ -258,7 +259,7 @@ export interface SelectMenuComponent<Args extends readonly string[] = readonly s
   run: (
     interaction: APIMessageComponentSelectMenuInteraction,
     args: Record<Args[number], string>,
-    api: API,
+    client: Client,
   ) => Promise<void>;
 }
 
@@ -266,7 +267,7 @@ export interface ModalComponent<Args extends readonly string[] = readonly string
   InteractionComponentType.Modal,
   Args
 > {
-  run: (interaction: APIModalSubmitInteraction, args: Record<Args[number], string>, api: API) => Promise<void>;
+  run: (interaction: APIModalSubmitInteraction, args: Record<Args[number], string>, client: Client) => Promise<void>;
 }
 
 export type Component<Args extends readonly string[] = readonly string[]> =
@@ -275,7 +276,7 @@ export type Component<Args extends readonly string[] = readonly string[]> =
 export interface GatewayEvent<Event extends GatewayDispatchEvents = GatewayDispatchEvents> {
   event: Event;
   once?: boolean;
-  run: (args: Extract<GatewayDispatchPayload, { t: Event }>['d'], api: API) => Promise<void>;
+  run: (args: Extract<GatewayDispatchPayload, { t: Event }>['d'], client: Client) => Promise<void>;
 }
 
 export enum TimestampStyle {

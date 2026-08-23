@@ -33,8 +33,7 @@ export async function makeRequest<Type extends ResponseType>(
     });
 
     if (!res.ok) {
-      const error = await res.text().catch(() => '');
-      throw new Error(`Request failed (${res.status}): ${error}`);
+      throw new Error(`Request failed (${res.status})`);
     }
 
     switch (options.response) {

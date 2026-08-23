@@ -1,5 +1,5 @@
 import { Collection } from '@discordjs/collection';
-import type { ApplicationCommand, BooleanChatInputOption, Component, GatewayEvent } from '../types/types';
+import type { BooleanChatInputOption } from '../types/types';
 import {
   ActivityType,
   ApplicationCommandOptionType,
@@ -11,7 +11,6 @@ import {
   type GatewayDispatchPayload,
   type RESTPutAPIApplicationCommandsJSONBody,
   type RESTPutAPIApplicationGuildCommandsJSONBody,
-  type Snowflake,
   type ToEventProps,
 } from '@discordjs/core';
 import { readDirectory, transformCommand } from '../utils/utils';
@@ -20,18 +19,10 @@ import { REST } from '@discordjs/rest';
 import env from '../utils/env';
 import { CompressionMethod, SimpleShardingStrategy, WebSocketManager, WebSocketShardEvents } from '@discordjs/ws';
 import { scheduleReshardCheck } from '../crons/reshard';
+import { commands, events, latencies, uptimes } from './collections';
 
 process.on('uncaughtException', console.error);
 process.on('unhandledRejection', console.error);
-
-export const commands = new Collection<string, ApplicationCommand>();
-export const components = new Collection<string, Component>();
-export const events = new Collection<string, GatewayEvent>();
-
-export const cooldowns = new Collection<string, Collection<Snowflake, number>>();
-
-export const uptimes = new Collection<number, number>();
-export const latencies = new Collection<number, number>();
 
 await readDirectory(path.join(process.cwd(), 'src', 'bot', 'commands'));
 await readDirectory(path.join(process.cwd(), 'src', 'bot', 'components'));
@@ -80,14 +71,14 @@ events.forEach((event) => {
     client.once(
       event.event,
       (payload: ToEventProps<Extract<GatewayDispatchPayload, { t: typeof event.event }>['d']>) => {
-        event.run(payload.data, client.api).catch((error) => {
+        event.run(payload.data, client).catch((error) => {
           console.error(`an error occurred while running event ${event.event}:`, error);
         });
       },
     );
   } else {
     client.on(event.event, (payload: ToEventProps<Extract<GatewayDispatchPayload, { t: typeof event.event }>['d']>) => {
-      event.run(payload.data, client.api).catch((error) => {
+      event.run(payload.data, client).catch((error) => {
         console.error(`an error occurred while running event ${event.event}:`, error);
       });
     });
@@ -175,13 +166,4 @@ if (env.get('register_commands').toBoolean() === true) {
   }
 
   console.log('application (/) commands refreshed');
-}
-
-// some shard utils
-export async function getTotalShards(): Promise<number> {
-  return await gateway.getShardCount();
-}
-
-export function getShardIdForGuildId(guildId: string, totalShards: number): number {
-  return Number((BigInt(guildId) >> 22n) % BigInt(totalShards));
 }

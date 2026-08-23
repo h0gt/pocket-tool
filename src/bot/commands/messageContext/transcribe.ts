@@ -20,18 +20,18 @@ createApplicationCommand({
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   cooldown: 5,
   acknowledge: true,
-  async run(interaction, api) {
+  async run(interaction, client) {
     const elevenLabsApiKey = env.get('eleven_labs_api_key').toString();
 
     if (!elevenLabsApiKey) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} Eleven Labs API key not set`,
+                content: `${emoji('Wrong')} Eleven Labs client.api key not set`,
               },
             ],
           },
@@ -47,13 +47,13 @@ createApplicationCommand({
 
     const usage = Number((await redis.get(key)) ?? 0);
 
-    const plus = await hasPlus((interaction.user?.id ?? interaction.member?.user.id)!, api);
+    const plus = await hasPlus((interaction.user?.id ?? interaction.member?.user.id)!, client.api);
     const limit = plus ? 50 : 10;
 
     if (usage >= limit) {
       const resetAt = Temporal.Now.instant().toZonedDateTimeISO('UTC').startOfDay().add({ days: 1 }).toInstant();
 
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -74,7 +74,7 @@ createApplicationCommand({
     const message = interaction.data.resolved.messages[interaction.data.target_id];
 
     if (message?.message_snapshots && message.message_snapshots.length > 0) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -97,7 +97,7 @@ createApplicationCommand({
       message.attachments.length === 0 ||
       !message.attachments.find((attachment) => attachment.content_type?.startsWith('audio/'))
     ) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -118,7 +118,7 @@ createApplicationCommand({
     const voice = message.attachments.find((attachment) => attachment.content_type?.startsWith('audio/'))!;
 
     if (!voice.duration_secs || voice.duration_secs > (plus ? 5 * 60 * 1000 : 1 * 60 * 1000)) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -153,7 +153,7 @@ createApplicationCommand({
     });
 
     if (!transcript) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -171,7 +171,7 @@ createApplicationCommand({
       return;
     }
 
-    await api.interactions.editReply(interaction.application_id, interaction.token, {
+    await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
         {
           type: ComponentType.Container,

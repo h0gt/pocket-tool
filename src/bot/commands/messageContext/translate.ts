@@ -9,7 +9,7 @@ import createApplicationCommand from '../../../builders/command';
 import { emoji } from '../../../utils/markdown';
 import { makeRequest } from '../../../utils/request';
 import { RequestMethod, ResponseType } from '../../../types/types';
-import { SUPPORTED_LANGUAGES } from '../../constants';
+import { LANGUAGES } from '../../constants';
 
 createApplicationCommand({
   type: ApplicationCommandType.Message,
@@ -18,11 +18,11 @@ createApplicationCommand({
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   cooldown: 5,
   acknowledge: true,
-  async run(interaction, api) {
+  async run(interaction, client) {
     const message = interaction.data.resolved.messages[interaction.data.target_id];
 
     if (message?.message_snapshots && message.message_snapshots.length > 0) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -41,7 +41,7 @@ createApplicationCommand({
     }
 
     if (!message || !message.content.trim()) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -59,28 +59,53 @@ createApplicationCommand({
       return;
     }
 
-    const res = await makeRequest('https://translate.googleapis.com/translate_a/single', {
-      method: RequestMethod.GET,
-      response: ResponseType.JSON,
-      params: {
-        client: 'gtx',
-        sl: 'auto',
-        tl: interaction.locale.split('-')[0]!,
-        dt: 't',
-        q: message.content.trim(),
-      },
-    });
+    let translation;
 
-    const translated = res[0].map(([text]: [string]) => text).join('');
+    try {
+      translation = await makeRequest('https://translate.googleapis.com/translate_a/single', {
+        method: RequestMethod.GET,
+        response: ResponseType.JSON,
+        params: {
+          client: 'gtx',
+          sl: 'auto',
+          tl: interaction.locale.split('-')[0]!,
+          dt: 't',
+          q: message.content.trim(),
+        },
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('(429)')) {
+        await client.api.interactions.editReply(interaction.application_id, interaction.token, {
+          components: [
+            {
+              type: ComponentType.Container,
+              components: [
+                {
+                  type: ComponentType.TextDisplay,
+                  content: `${emoji('Wrong')} I'm temporarily rate limited - please try again in a moment`,
+                },
+              ],
+            },
+          ],
+          flags: MessageFlags.IsComponentsV2,
+        });
 
-    const sourceLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === res[2]);
-    const targetLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === interaction.locale.split('-')[0]);
+        return;
+      }
 
-    if (!sourceLanguage || !targetLanguage) {
-      throw new Error(`Unsupported language: source=${res[2]}, target=${interaction.locale.split('-')[0]}`);
+      throw error;
     }
 
-    await api.interactions.editReply(interaction.application_id, interaction.token, {
+    const translated = translation[0].map(([text]: [string]) => text).join('');
+
+    const sourceLanguage = LANGUAGES.find((l) => l.code === translation[2]);
+    const targetLanguage = LANGUAGES.find((l) => l.code === interaction.locale.split('-')[0]);
+
+    if (!sourceLanguage || !targetLanguage) {
+      throw new Error(`Unsupported language: source=${translation[2]}, target=${interaction.locale.split('-')[0]}`);
+    }
+
+    await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
         {
           type: ComponentType.Container,

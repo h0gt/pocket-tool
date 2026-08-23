@@ -6,18 +6,18 @@ import {
 } from '@discordjs/core';
 import createComponent from '../../../builders/component';
 import { HighlightStyle, InteractionComponentType, TimestampStyle } from '../../../types/types';
-import { msToReadableTime, toComponentEmoji } from '../../../utils/utils';
+import { getShardIdForGuildId, msToReadableTime, toComponentEmoji } from '../../../utils/utils';
 import { emoji, highlight, hyperlink, timestamp } from '../../../utils/markdown';
-import { getShardIdForGuildId, getTotalShards, latencies, uptimes } from '../..';
 import { redis } from '../../../utils/redis';
 import { INVITE, SUPPORT, WEBSITE } from '../../constants';
+import { latencies, uptimes } from '../../collections';
 
 createComponent({
   type: InteractionComponentType.SelectMenu,
   customId: 'debug-pages',
   args: ['userId'] as const,
   acknowledge: true,
-  async run(interaction, args, api) {
+  async run(interaction, args, client) {
     const { userId } = args;
 
     if ((interaction.user?.id ?? interaction.member?.user.id) !== userId) {
@@ -30,7 +30,7 @@ createComponent({
 
     switch (page) {
       case 'about': {
-        await api.interactions.editReply(interaction.application_id, interaction.token, {
+        await client.api.interactions.editReply(interaction.application_id, interaction.token, {
           components: [
             {
               type: ComponentType.Container,
@@ -110,14 +110,14 @@ createComponent({
         break;
       }
       case 'stats': {
-        const bot = await api.applications.getCurrent();
+        const bot = await client.api.applications.getCurrent();
 
-        const totalShards = await getTotalShards();
+        const totalShards = await client.gateway.getShardCount();
         const shardId = interaction.guild_id ? getShardIdForGuildId(interaction.guild_id, totalShards) : 0;
         const uptime = uptimes.get(shardId)!;
         const latency = latencies.get(shardId);
 
-        await api.interactions.editReply(interaction.application_id, interaction.token, {
+        await client.api.interactions.editReply(interaction.application_id, interaction.token, {
           components: [
             {
               type: ComponentType.Container,
@@ -220,7 +220,7 @@ createComponent({
           )
           .join('\n');
 
-        await api.interactions.editReply(interaction.application_id, interaction.token, {
+        await client.api.interactions.editReply(interaction.application_id, interaction.token, {
           components: [
             {
               type: ComponentType.Container,
@@ -288,7 +288,7 @@ createComponent({
         break;
       }
       case 'credits': {
-        await api.interactions.editReply(interaction.application_id, interaction.token, {
+        await client.api.interactions.editReply(interaction.application_id, interaction.token, {
           components: [
             {
               type: ComponentType.Container,

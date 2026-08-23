@@ -26,8 +26,8 @@ createApplicationCommand({
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   cooldown: 3,
   acknowledge: true,
-  async run(interaction, options, api) {
-    const globalCommands = await api.applicationCommands.getGlobalCommands(interaction.application_id);
+  async run(interaction, options, client) {
+    const globalCommands = await client.api.applicationCommands.getGlobalCommands(interaction.application_id);
 
     const perPage = 5;
 
@@ -50,7 +50,7 @@ createApplicationCommand({
       )
       .join('\n\n');
 
-    const originalReply = await api.interactions.editReply(interaction.application_id, interaction.token, {
+    const originalReply = await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
         {
           type: ComponentType.Container,
@@ -121,7 +121,7 @@ createApplicationCommand({
     collector.on('collect', async (i) => {
       switch (i.data.custom_id) {
         case 'commands-prev': {
-          await api.interactions.deferMessageUpdate(i.id, i.token);
+          await client.api.interactions.deferMessageUpdate(i.id, i.token);
 
           pages.back();
 
@@ -132,7 +132,7 @@ createApplicationCommand({
             )
             .join('\n\n');
 
-          await api.interactions.editReply(interaction.application_id, interaction.token, {
+          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
             components: [
               {
                 type: ComponentType.Container,
@@ -207,7 +207,7 @@ createApplicationCommand({
           break;
         }
         case 'commands-next': {
-          await api.interactions.deferMessageUpdate(i.id, i.token);
+          await client.api.interactions.deferMessageUpdate(i.id, i.token);
 
           pages.next();
 
@@ -218,7 +218,7 @@ createApplicationCommand({
             )
             .join('\n\n');
 
-          await api.interactions.editReply(interaction.application_id, interaction.token, {
+          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
             components: [
               {
                 type: ComponentType.Container,
@@ -293,7 +293,7 @@ createApplicationCommand({
           break;
         }
         case 'commands-search': {
-          await api.interactions.createModal(i.id, i.token, {
+          await client.api.interactions.createModal(i.id, i.token, {
             title: 'Command Search',
             custom_id: 'commands-search-modal',
             components: [
@@ -314,7 +314,7 @@ createApplicationCommand({
           break;
         }
         case 'commands-search-modal': {
-          await api.interactions.deferMessageUpdate(i.id, i.token);
+          await client.api.interactions.deferMessageUpdate(i.id, i.token);
 
           const name =
             (i as APIModalSubmitInteraction).data.components?.[0]?.type === ComponentType.Label
@@ -333,7 +333,7 @@ createApplicationCommand({
           );
 
           if (results.length === 0) {
-            await api.interactions.followUp(interaction.application_id, interaction.token, {
+            await client.api.interactions.followUp(interaction.application_id, interaction.token, {
               components: [
                 {
                   type: ComponentType.Container,
@@ -367,7 +367,7 @@ createApplicationCommand({
             )
             .join('\n\n');
 
-          await api.interactions.editReply(interaction.application_id, interaction.token, {
+          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
             components: [
               {
                 type: ComponentType.Container,
@@ -435,7 +435,7 @@ createApplicationCommand({
           break;
         }
         case 'commands-back': {
-          await api.interactions.deferMessageUpdate(i.id, i.token);
+          await client.api.interactions.deferMessageUpdate(i.id, i.token);
 
           pages = list;
           query = null;
@@ -447,7 +447,7 @@ createApplicationCommand({
             )
             .join('\n\n');
 
-          await api.interactions.editReply(interaction.application_id, interaction.token, {
+          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
             components: [
               {
                 type: ComponentType.Container,
@@ -513,7 +513,7 @@ createApplicationCommand({
     });
 
     collector.once('end', async () => {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,

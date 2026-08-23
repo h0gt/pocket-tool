@@ -1,6 +1,6 @@
 import {
-  API,
   ApplicationCommandType,
+  Client,
   ComponentType,
   GatewayDispatchEvents,
   InteractionType,
@@ -18,7 +18,6 @@ import {
   type Snowflake,
 } from '@discordjs/core';
 import createGatewayEvent from '../../builders/event';
-import { commands, components, cooldowns } from '..';
 import {
   TimestampStyle,
   type ApplicationCommand,
@@ -36,35 +35,35 @@ import { Collection } from '@discordjs/collection';
 import { emoji, hyperlink, timestamp } from '../../utils/markdown';
 import { MESSAGE_BLOCK_REASONS, SUPPORT } from '../constants';
 import { redis } from '../../utils/redis';
-import { collectors } from '../../builders/collector';
+import { collectors, commands, components, cooldowns } from '../collections';
 
 createGatewayEvent({
   event: GatewayDispatchEvents.InteractionCreate,
-  async run(interaction, api) {
+  async run(interaction, client) {
     console.log(
       `received interaction: ${interaction.id} (${InteractionType[interaction.type]}) from ${interaction.user?.username ?? interaction.member?.user.username} (${interaction.user?.id ?? interaction.member?.user.id})`,
     );
 
     switch (interaction.type) {
       case InteractionType.ApplicationCommand: {
-        await handleApplicationCommand(interaction, api);
+        await handleApplicationCommand(interaction, client);
         break;
       }
       case InteractionType.ApplicationCommandAutocomplete: {
-        await handleChatInputCommandAutocomplete(interaction, api);
+        await handleChatInputCommandAutocomplete(interaction, client);
         break;
       }
       case InteractionType.MessageComponent: {
         if (interaction.data.component_type === ComponentType.Button) {
-          await handleButtonComponent(interaction as APIMessageComponentButtonInteraction, api);
+          await handleButtonComponent(interaction as APIMessageComponentButtonInteraction, client);
         } else {
-          await handleSelectMenuComponent(interaction as APIMessageComponentSelectMenuInteraction, api);
+          await handleSelectMenuComponent(interaction as APIMessageComponentSelectMenuInteraction, client);
         }
 
         break;
       }
       case InteractionType.ModalSubmit: {
-        await handleModalSubmit(interaction as APIModalSubmitInteraction, api);
+        await handleModalSubmit(interaction as APIModalSubmitInteraction, client);
         break;
       }
       default: {
@@ -74,7 +73,7 @@ createGatewayEvent({
   },
 });
 
-async function handleApplicationCommand(interaction: APIApplicationCommandInteraction, api: API) {
+async function handleApplicationCommand(interaction: APIApplicationCommandInteraction, client: Client) {
   const command = commands.get(interaction.data.name) as ApplicationCommand;
 
   if (!command) {
@@ -104,7 +103,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         )?.value === true;
 
       if (chatInput.acknowledge === true) {
-        await api.interactions.defer(interaction.id, interaction.token, {
+        await client.api.interactions.defer(interaction.id, interaction.token, {
           flags: chatInput.ephemeral || ephemeral ? MessageFlags.Ephemeral : undefined,
         });
       }
@@ -122,7 +121,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
 
         if (now.epochMilliseconds < expiration) {
           if (chatInput.acknowledge) {
-            await api.interactions.editReply(interaction.application_id, interaction.token, {
+            await client.api.interactions.editReply(interaction.application_id, interaction.token, {
               components: [
                 {
                   type: ComponentType.Container,
@@ -137,7 +136,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
               flags: MessageFlags.IsComponentsV2,
             });
           } else {
-            await api.interactions.reply(interaction.id, interaction.token, {
+            await client.api.interactions.reply(interaction.id, interaction.token, {
               components: [
                 {
                   type: ComponentType.Container,
@@ -164,16 +163,17 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         await chatInput.run(
           interaction as APIChatInputApplicationCommandInteraction,
           parseCommandOptions(interaction as APIChatInputApplicationCommandInteraction),
-          api,
+          client,
         );
       } catch (error) {
         const code = (error as any).code;
         const err = MESSAGE_BLOCK_REASONS[code as keyof typeof MESSAGE_BLOCK_REASONS];
 
         if (err) {
-          if (chatInput.acknowledge) await api.interactions.deleteReply(interaction.application_id, interaction.token);
+          if (chatInput.acknowledge)
+            await client.api.interactions.deleteReply(interaction.application_id, interaction.token);
 
-          await api.interactions.followUp(interaction.application_id, interaction.token, {
+          await client.api.interactions.followUp(interaction.application_id, interaction.token, {
             content: `-# </${interaction.data.name}:${interaction.data.id}> was blocked due to ${hyperlink(err.article, err.reason)} - please try again with **ephemeral** enabled`,
             flags: MessageFlags.Ephemeral,
           });
@@ -184,14 +184,14 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         console.error(`Command ${interaction.data.name} encountered an error:`, error);
 
         if (chatInput.acknowledge) {
-          await api.interactions.editReply(interaction.application_id, interaction.token, {
+          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
             components: [
               {
                 type: ComponentType.Container,
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
+                    content: `${emoji('Wrong')} ${error instanceof Error ? error.message : String(error)}\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
                   },
                 ],
               },
@@ -199,14 +199,14 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
             flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
           });
         } else {
-          await api.interactions.reply(interaction.id, interaction.token, {
+          await client.api.interactions.reply(interaction.id, interaction.token, {
             components: [
               {
                 type: ComponentType.Container,
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
+                    content: `${emoji('Wrong')} ${error instanceof Error ? error.message : String(error)}\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
                   },
                 ],
               },
@@ -224,7 +224,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
       const messageContext = command as MessageContextMenuCommand;
 
       if (messageContext.acknowledge) {
-        await api.interactions.defer(interaction.id, interaction.token, {
+        await client.api.interactions.defer(interaction.id, interaction.token, {
           flags: messageContext.ephemeral ? MessageFlags.Ephemeral : undefined,
         });
       }
@@ -242,7 +242,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
 
         if (now.epochMilliseconds < expiration) {
           if (messageContext.acknowledge) {
-            await api.interactions.editReply(interaction.application_id, interaction.token, {
+            await client.api.interactions.editReply(interaction.application_id, interaction.token, {
               components: [
                 {
                   type: ComponentType.Container,
@@ -257,7 +257,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
               flags: MessageFlags.IsComponentsV2,
             });
           } else {
-            await api.interactions.reply(interaction.id, interaction.token, {
+            await client.api.interactions.reply(interaction.id, interaction.token, {
               components: [
                 {
                   type: ComponentType.Container,
@@ -281,16 +281,16 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
       setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
 
       try {
-        await messageContext.run(interaction as APIMessageApplicationCommandInteraction, api);
+        await messageContext.run(interaction as APIMessageApplicationCommandInteraction, client);
       } catch (error) {
         const code = (error as any).code;
         const err = MESSAGE_BLOCK_REASONS[code as keyof typeof MESSAGE_BLOCK_REASONS];
 
         if (err) {
           if (messageContext.acknowledge)
-            await api.interactions.deleteReply(interaction.application_id, interaction.token);
+            await client.api.interactions.deleteReply(interaction.application_id, interaction.token);
 
-          await api.interactions.followUp(interaction.application_id, interaction.token, {
+          await client.api.interactions.followUp(interaction.application_id, interaction.token, {
             content: `-# </${interaction.data.name}:${interaction.data.id}> was blocked due to ${hyperlink(err.article, err.reason)}`,
             flags: MessageFlags.Ephemeral,
           });
@@ -301,14 +301,14 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         console.error(`Command ${interaction.data.name} encountered an error:`, error);
 
         if (messageContext.acknowledge) {
-          await api.interactions.editReply(interaction.application_id, interaction.token, {
+          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
             components: [
               {
                 type: ComponentType.Container,
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
+                    content: `${emoji('Wrong')} ${error instanceof Error ? error.message : String(error)}\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
                   },
                 ],
               },
@@ -316,14 +316,14 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
             flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
           });
         } else {
-          await api.interactions.reply(interaction.id, interaction.token, {
+          await client.api.interactions.reply(interaction.id, interaction.token, {
             components: [
               {
                 type: ComponentType.Container,
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
+                    content: `${emoji('Wrong')} ${error instanceof Error ? error.message : String(error)}\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
                   },
                 ],
               },
@@ -341,7 +341,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
       const userContext = command as UserContextMenuCommand;
 
       if (userContext.acknowledge) {
-        await api.interactions.defer(interaction.id, interaction.token, {
+        await client.api.interactions.defer(interaction.id, interaction.token, {
           flags: userContext.ephemeral ? MessageFlags.Ephemeral : undefined,
         });
       }
@@ -359,7 +359,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
 
         if (now.epochMilliseconds < expiration) {
           if (userContext.acknowledge) {
-            await api.interactions.editReply(interaction.application_id, interaction.token, {
+            await client.api.interactions.editReply(interaction.application_id, interaction.token, {
               components: [
                 {
                   type: ComponentType.Container,
@@ -374,7 +374,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
               flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
             });
           } else {
-            await api.interactions.reply(interaction.id, interaction.token, {
+            await client.api.interactions.reply(interaction.id, interaction.token, {
               components: [
                 {
                   type: ComponentType.Container,
@@ -398,16 +398,16 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
       setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
 
       try {
-        await userContext.run(interaction as APIUserApplicationCommandInteraction, api);
+        await userContext.run(interaction as APIUserApplicationCommandInteraction, client);
       } catch (error) {
         const code = (error as any).code;
         const err = MESSAGE_BLOCK_REASONS[code as keyof typeof MESSAGE_BLOCK_REASONS];
 
         if (err) {
           if (userContext.acknowledge)
-            await api.interactions.deleteReply(interaction.application_id, interaction.token);
+            await client.api.interactions.deleteReply(interaction.application_id, interaction.token);
 
-          await api.interactions.followUp(interaction.application_id, interaction.token, {
+          await client.api.interactions.followUp(interaction.application_id, interaction.token, {
             content: `-# </${interaction.data.name}:${interaction.data.id}> was blocked due to ${hyperlink(err.article, err.reason)}`,
             flags: MessageFlags.Ephemeral,
           });
@@ -418,14 +418,14 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         console.error(`Command ${interaction.data.name} encountered an error:`, error);
 
         if (userContext.acknowledge) {
-          await api.interactions.editReply(interaction.application_id, interaction.token, {
+          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
             components: [
               {
                 type: ComponentType.Container,
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
+                    content: `${emoji('Wrong')} ${error instanceof Error ? error.message : String(error)}\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
                   },
                 ],
               },
@@ -433,14 +433,14 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
             flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
           });
         } else {
-          await api.interactions.reply(interaction.id, interaction.token, {
+          await client.api.interactions.reply(interaction.id, interaction.token, {
             components: [
               {
                 type: ComponentType.Container,
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Wrong')} An error occurred while executing the command </${interaction.data.name}:${interaction.data.id}> - please try again later\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
+                    content: `${emoji('Wrong')} ${error instanceof Error ? error.message : String(error)}\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
                   },
                 ],
               },
@@ -459,7 +459,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
 
       if (primaryEntryPoint.run) {
         try {
-          await primaryEntryPoint.run(interaction as APIPrimaryEntryPointCommandInteraction, api);
+          await primaryEntryPoint.run(interaction as APIPrimaryEntryPointCommandInteraction, client);
         } catch (error) {
           console.error(`Command ${interaction.data.name} encountered an error:`, error);
         }
@@ -524,7 +524,10 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
   await redis.hIncrBy(commandKey, 'uses', 1);
 }
 
-async function handleChatInputCommandAutocomplete(interaction: APIApplicationCommandAutocompleteInteraction, api: API) {
+async function handleChatInputCommandAutocomplete(
+  interaction: APIApplicationCommandAutocompleteInteraction,
+  client: Client,
+) {
   const command = commands.get(interaction.data.name) as ChatInputCommand;
 
   if (!command || !command.autocomplete) {
@@ -532,13 +535,13 @@ async function handleChatInputCommandAutocomplete(interaction: APIApplicationCom
   }
 
   try {
-    await command.autocomplete(interaction, api);
+    await command.autocomplete(interaction, client);
   } catch (error) {
     console.error(`Autocomplete for command ${interaction.data.name} encountered an error:`, error);
   }
 }
 
-async function handleButtonComponent(interaction: APIMessageComponentButtonInteraction, api: API) {
+async function handleButtonComponent(interaction: APIMessageComponentButtonInteraction, client: Client) {
   const args = interaction.data.custom_id?.split('_') ?? [];
   const customId = args.shift();
 
@@ -555,17 +558,17 @@ async function handleButtonComponent(interaction: APIMessageComponentButtonInter
   }
 
   if (button.acknowledge) {
-    await api.interactions.deferMessageUpdate(interaction.id, interaction.token);
+    await client.api.interactions.deferMessageUpdate(interaction.id, interaction.token);
   }
 
   try {
-    await button.run(interaction, parseComponentArgs(button, args), api);
+    await button.run(interaction, parseComponentArgs(button, args), client);
   } catch (error) {
     console.error(`Button ${customId} encountered an error:`, error);
   }
 }
 
-async function handleSelectMenuComponent(interaction: APIMessageComponentSelectMenuInteraction, api: API) {
+async function handleSelectMenuComponent(interaction: APIMessageComponentSelectMenuInteraction, client: Client) {
   const args = interaction.data.custom_id?.split('_') ?? [];
   const customId = args.shift();
 
@@ -582,17 +585,17 @@ async function handleSelectMenuComponent(interaction: APIMessageComponentSelectM
   }
 
   if (selectMenu.acknowledge) {
-    await api.interactions.deferMessageUpdate(interaction.id, interaction.token);
+    await client.api.interactions.deferMessageUpdate(interaction.id, interaction.token);
   }
 
   try {
-    await selectMenu.run(interaction, parseComponentArgs(selectMenu, args), api);
+    await selectMenu.run(interaction, parseComponentArgs(selectMenu, args), client);
   } catch (error) {
     console.error(`Select menu ${customId} encountered an error:`, error);
   }
 }
 
-async function handleModalSubmit(interaction: APIModalSubmitInteraction, api: API) {
+async function handleModalSubmit(interaction: APIModalSubmitInteraction, client: Client) {
   const args = interaction.data.custom_id?.split('_') ?? [];
   const customId = args.shift();
 
@@ -609,7 +612,7 @@ async function handleModalSubmit(interaction: APIModalSubmitInteraction, api: AP
   }
 
   try {
-    await modal.run(interaction, parseComponentArgs(modal, args), api);
+    await modal.run(interaction, parseComponentArgs(modal, args), client);
   } catch (error) {
     console.error(`Modal ${customId} encountered an error:`, error);
   }

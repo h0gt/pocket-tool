@@ -27,7 +27,7 @@ createApplicationCommand({
   guilds: ['1533439024637939792'],
   dev: true,
   acknowledge: true,
-  async run(interaction, options, api) {
+  async run(interaction, options, client) {
     const { code } = options;
 
     let result;
@@ -50,7 +50,7 @@ createApplicationCommand({
 
     const formatted = typeof value === 'string' ? value : util.inspect(value);
 
-    await api.interactions.editReply(interaction.application_id, interaction.token, {
+    await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
         {
           type: ComponentType.Container,

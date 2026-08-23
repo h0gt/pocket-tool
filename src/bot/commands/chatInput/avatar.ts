@@ -44,7 +44,7 @@ createApplicationCommand({
   ],
   cooldown: 3,
   acknowledge: true,
-  async run(interaction, options, api) {
+  async run(interaction, options, client) {
     let { user: target, scope } = options;
 
     if (!target) {
@@ -59,7 +59,7 @@ createApplicationCommand({
     const { user, member } = target;
 
     if (!user) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -79,7 +79,7 @@ createApplicationCommand({
 
     if (scope === 'guild' && member) {
       if (!member.avatar) {
-        await api.interactions.editReply(interaction.application_id, interaction.token, {
+        await client.api.interactions.editReply(interaction.application_id, interaction.token, {
           components: [
             {
               type: ComponentType.Container,
@@ -97,7 +97,7 @@ createApplicationCommand({
         return;
       }
 
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -164,7 +164,7 @@ createApplicationCommand({
       });
     } else {
       if (!user.avatar) {
-        await api.interactions.editReply(interaction.application_id, interaction.token, {
+        await client.api.interactions.editReply(interaction.application_id, interaction.token, {
           components: [
             {
               type: ComponentType.Container,
@@ -182,7 +182,7 @@ createApplicationCommand({
         return;
       }
 
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,

@@ -11,7 +11,7 @@ import { getAutocompleteFocusedOption } from '../../../utils/utils';
 import { makeRequest } from '../../../utils/request';
 import { RequestMethod, ResponseType } from '../../../types/types';
 import { emoji } from '../../../utils/markdown';
-import { SUPPORTED_LANGUAGES } from '../../constants';
+import { LANGUAGES } from '../../constants';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
@@ -43,11 +43,11 @@ createApplicationCommand({
   ],
   cooldown: 5,
   acknowledge: true,
-  async autocomplete(interaction, api) {
+  async autocomplete(interaction, client) {
     const focused = getAutocompleteFocusedOption(interaction.data.options);
     const value = String(focused?.value).toLowerCase() ?? '';
 
-    const languages = SUPPORTED_LANGUAGES.filter((language) => {
+    const languages = LANGUAGES.filter((language) => {
       return language.name.toLowerCase().includes(value) || language.code.toLowerCase().includes(value);
     });
 
@@ -64,7 +64,7 @@ createApplicationCommand({
           })),
         ].slice(0, 25);
 
-        await api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
+        await client.api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
 
         break;
       }
@@ -80,19 +80,19 @@ createApplicationCommand({
           })),
         ].slice(0, 25);
 
-        await api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
+        await client.api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
 
         break;
       }
     }
   },
-  async run(interaction, options, api) {
+  async run(interaction, options, client) {
     const { text, from, to } = options;
 
     const query = text.trim();
 
     if (!query) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -110,31 +110,56 @@ createApplicationCommand({
       return;
     }
 
-    const res = await makeRequest('https://translate.googleapis.com/translate_a/single', {
-      method: RequestMethod.GET,
-      response: ResponseType.JSON,
-      params: {
-        client: 'gtx',
-        sl: from ?? 'auto',
-        tl: to === 'auto' ? interaction.locale.split('-')[0]! : (to ?? interaction.locale.split('-')[0]!),
-        dt: 't',
-        q: query,
-      },
-    });
+    let translation;
 
-    const translated = res[0].map(([translation]: [string]) => translation).join('');
+    try {
+      translation = await makeRequest('https://translate.googleapis.com/translate_a/single', {
+        method: RequestMethod.GET,
+        response: ResponseType.JSON,
+        params: {
+          client: 'gtx',
+          sl: from ?? 'auto',
+          tl: to === 'auto' ? interaction.locale.split('-')[0]! : (to ?? interaction.locale.split('-')[0]!),
+          dt: 't',
+          q: query,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('(429)')) {
+        await client.api.interactions.editReply(interaction.application_id, interaction.token, {
+          components: [
+            {
+              type: ComponentType.Container,
+              components: [
+                {
+                  type: ComponentType.TextDisplay,
+                  content: `${emoji('Wrong')} I'm temporarily rate limited - please try again in a moment`,
+                },
+              ],
+            },
+          ],
+          flags: MessageFlags.IsComponentsV2,
+        });
 
-    const sourceCode = res[2];
+        return;
+      } else {
+        throw error;
+      }
+    }
+
+    const translated = translation[0].map(([translation]: [string]) => translation).join('');
+
+    const sourceCode = translation[2];
     const targetCode = to === 'auto' ? interaction.locale.split('-')[0]! : (to ?? interaction.locale.split('-')[0]!);
 
-    const sourceLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === sourceCode);
-    const targetLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === targetCode);
+    const sourceLanguage = LANGUAGES.find((l) => l.code === sourceCode);
+    const targetLanguage = LANGUAGES.find((l) => l.code === targetCode);
 
     if (!sourceLanguage || !targetLanguage) {
       throw new Error(`Unsupported language: source=${sourceCode}, target=${targetCode}`);
     }
 
-    await api.interactions.editReply(interaction.application_id, interaction.token, {
+    await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
         {
           type: ComponentType.Container,

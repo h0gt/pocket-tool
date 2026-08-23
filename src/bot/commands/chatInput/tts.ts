@@ -48,7 +48,7 @@ createApplicationCommand({
   ],
   cooldown: 5,
   acknowledge: true,
-  async autocomplete(interaction, api) {
+  async autocomplete(interaction, client) {
     const focused = getAutocompleteFocusedOption(interaction.data.options);
     const value = String(focused?.value).toLowerCase() ?? '';
 
@@ -67,22 +67,22 @@ createApplicationCommand({
       })),
     ].slice(0, 25);
 
-    await api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
+    await client.api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
   },
-  async run(interaction, options, api) {
+  async run(interaction, options, client) {
     const { text, voice, language } = options;
 
     const elevenLabsApiKey = env.get('eleven_labs_api_key').toString();
 
     if (!elevenLabsApiKey) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} Eleven Labs API key not set`,
+                content: `${emoji('Wrong')} Eleven Labs client.api key not set`,
               },
             ],
           },
@@ -98,13 +98,13 @@ createApplicationCommand({
 
     const usage = Number((await redis.get(key)) ?? 0);
 
-    const plus = await hasPlus((interaction.user?.id ?? interaction.member?.user.id)!, api);
+    const plus = await hasPlus((interaction.user?.id ?? interaction.member?.user.id)!, client.api);
     const limit = plus ? 50 : 10;
 
     if (usage >= limit) {
       const resetAt = Temporal.Now.instant().toZonedDateTimeISO('UTC').startOfDay().add({ days: 1 }).toInstant();
 
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -123,7 +123,7 @@ createApplicationCommand({
     }
 
     if (!text.trim()) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -156,7 +156,7 @@ createApplicationCommand({
     });
 
     if (!audio) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -177,7 +177,7 @@ createApplicationCommand({
     const buffer = Buffer.from(audio.audioBase64, 'base64');
     const decoded = await decodeOpusBytes(buffer);
 
-    await api.interactions.editReply(interaction.application_id, interaction.token, {
+    await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       attachments: [
         {
           id: 0,

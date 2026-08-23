@@ -3,12 +3,12 @@ import createGatewayEvent from '../../builders/event';
 
 createGatewayEvent({
   event: GatewayDispatchEvents.GuildCreate,
-  async run(guild, api) {
+  async run(guild, client) {
     if (guild.unavailable) {
       return;
     }
 
-    await api.rest.patch(`/guilds/${guild.id}/members/@me`, {
+    await client.rest.patch(`/guilds/${guild.id}/members/@me`, {
       body: {
         display_name_font_id: 3,
         display_name_effect_id: 2,

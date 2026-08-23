@@ -14,7 +14,7 @@ import env from '../../../utils/env';
 import { emoji, hyperlink, timestamp } from '../../../utils/markdown';
 import { makeRequest } from '../../../utils/request';
 import { RequestMethod, ResponseType, TimestampStyle } from '../../../types/types';
-import { SUPPORTED_LANGUAGES } from '../../constants';
+import { LANGUAGES } from '../../constants';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
@@ -39,11 +39,11 @@ createApplicationCommand({
   ],
   cooldown: 5,
   acknowledge: true,
-  async autocomplete(interaction, api) {
+  async autocomplete(interaction, client) {
     const focused = getAutocompleteFocusedOption(interaction.data.options);
     const value = String(focused?.value).toLowerCase() ?? '';
 
-    const languages = SUPPORTED_LANGUAGES.filter((language) => {
+    const languages = LANGUAGES.filter((language) => {
       return language.name.toLowerCase().includes(value) || language.code.toLowerCase().includes(value);
     });
 
@@ -58,15 +58,15 @@ createApplicationCommand({
       })),
     ].slice(0, 25);
 
-    await api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
+    await client.api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
   },
-  async run(interaction, options, api) {
+  async run(interaction, options, client) {
     const { url, language } = options;
 
     const tolgchuTwitterApiKey = env.get('tolgchu_twitter_api_key').toString();
 
     if (!tolgchuTwitterApiKey) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -87,7 +87,7 @@ createApplicationCommand({
     const tweetId = extractTweetId(url);
 
     if (!tweetId) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -105,7 +105,7 @@ createApplicationCommand({
       return;
     }
 
-    const res = await makeRequest('https://x.tolgchu.dev/post', {
+    const tweet = await makeRequest('https://x.tolgchu.dev/post', {
       method: RequestMethod.GET,
       response: ResponseType.JSON,
       headers: {
@@ -116,8 +116,8 @@ createApplicationCommand({
       },
     });
 
-    if (!res) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+    if (!tweet) {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.TextDisplay,
@@ -130,48 +130,57 @@ createApplicationCommand({
       return;
     }
 
-    let content = res.hasText ? res.displayText : undefined;
+    let content = tweet.hasText ? tweet.displayText : undefined;
 
     let isTranslated = false;
 
     if (language && content) {
-      const translated = await makeRequest('https://translate.googleapis.com/translate_a/single', {
-        method: RequestMethod.GET,
-        response: ResponseType.JSON,
-        params: {
-          client: 'gtx',
-          sl: res.language ?? 'auto',
-          tl: language === 'auto' ? interaction.locale : language,
-          dt: 't',
-          q: content,
-        },
-      });
+      try {
+        const translated = await makeRequest('https://translate.googleapis.com/translate_a/single', {
+          method: RequestMethod.GET,
+          response: ResponseType.JSON,
+          params: {
+            client: 'gtx',
+            sl: tweet.language ?? 'auto',
+            tl: language === 'auto' ? interaction.locale : language,
+            dt: 't',
+            q: content,
+          },
+        });
 
-      content = translated[0].map(([translation]: [string]) => translation).join('');
-      isTranslated = true;
+        content = translated[0].map(([translation]: [string]) => translation).join('');
+
+        isTranslated = true;
+      } catch (error) {
+        isTranslated = false;
+
+        if (error instanceof Error && !error.message.includes('(429)')) {
+          throw error;
+        }
+      }
     }
 
-    for (const hashtag of res.hashtags) {
+    for (const hashtag of tweet.hashtags) {
       const escaped = hashtag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const pattern = new RegExp(`#${escaped}(?![\\p{L}\\p{N}_])`, 'gu');
 
       content = content?.replace(pattern, hyperlink(`https://x.com/hashtag/${hashtag}`, `#${hashtag}`));
     }
 
-    await api.interactions.editReply(interaction.application_id, interaction.token, {
+    await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
-        ...(res.quotedPost
+        ...(tweet.quotedPost
           ? ([
               {
                 type: ComponentType.TextDisplay,
-                content: `-# *Quoting ${hyperlink(`https://x.com/${res.quotedPost?.author.username}/status/${res.quotedPost?.id}`, 'this tweet')}, posted by ${hyperlink(`https://x.com/${res.quotedPost?.author.username}`, `@${res.quotedPost?.author.username}`)}*`,
+                content: `-# *Quoting ${hyperlink(`https://x.com/${tweet.quotedPost?.author.username}/status/${tweet.quotedPost?.id}`, 'this tweet')}, posted by ${hyperlink(`https://x.com/${tweet.quotedPost?.author.username}`, `@${tweet.quotedPost?.author.username}`)}*`,
               },
             ] satisfies APIMessageTopLevelComponent[])
-          : res.parentPost
+          : tweet.parentPost
             ? ([
                 {
                   type: ComponentType.TextDisplay,
-                  content: `-# *Replying to ${hyperlink(`https://x.com/${res.parentPost?.author.username}/status/${res.parentPost?.id}`, 'this tweet')}, posted by ${hyperlink(`https://x.com/${res.parentPost?.author.username}`, `@${res.parentPost?.author.username}`)}*`,
+                  content: `-# *Replying to ${hyperlink(`https://x.com/${tweet.parentPost?.author.username}/status/${tweet.parentPost?.id}`, 'this tweet')}, posted by ${hyperlink(`https://x.com/${tweet.parentPost?.author.username}`, `@${tweet.parentPost?.author.username}`)}*`,
                 },
               ] satisfies APIMessageTopLevelComponent[])
             : []),
@@ -180,13 +189,13 @@ createApplicationCommand({
           components: [
             {
               type: ComponentType.TextDisplay,
-              content: `-# Posted by ${res.author.isVerified ? `${emoji('Verified')} ` : ''}**${res.author.name} (${hyperlink(`https://x.com/${res.author.username}`, `@${res.author.username}`)})**${content ? `\n\n${content}` : ''}`,
+              content: `-# Posted by ${tweet.author.isVerified ? `${emoji('Verified')} ` : ''}**${tweet.author.name} (${hyperlink(`https://x.com/${tweet.author.username}`, `@${tweet.author.username}`)})**${content ? `\n\n${content}` : ''}`,
             },
-            ...(res.media.length > 0
+            ...(tweet.media.length > 0
               ? ([
                   {
                     type: ComponentType.MediaGallery,
-                    items: res.media.slice(0, 10).map((media: any) => ({
+                    items: tweet.media.slice(0, 10).map((media: any) => ({
                       media: {
                         url: media.url,
                       },
@@ -207,19 +216,19 @@ createApplicationCommand({
             },
             {
               type: ComponentType.TextDisplay,
-              content: `-# ${timestamp(Temporal.Instant.from(res.createdAt).epochMilliseconds, TimestampStyle.FullDateShortTime)} (${timestamp(Temporal.Instant.from(res.createdAt).epochMilliseconds, TimestampStyle.RelativeTime)})`,
+              content: `-# ${timestamp(Temporal.Instant.from(tweet.createdAt).epochMilliseconds, TimestampStyle.FullDateShortTime)} (${timestamp(Temporal.Instant.from(tweet.createdAt).epochMilliseconds, TimestampStyle.RelativeTime)})`,
             },
             {
               type: ComponentType.Section,
               components: [
                 {
                   type: ComponentType.TextDisplay,
-                  content: `${emoji('Reply')} ${(res.replyCount ?? 0).toLocaleString('en-US')}   ${emoji('Repost')} ${(res.repostCount ?? 0).toLocaleString('en-US')}   ${emoji('Like')} ${(res.likeCount ?? 0).toLocaleString('en-US')}   ${emoji('Bookmark')} ${(res.bookmarkCount ?? 0).toLocaleString('en-US')}`,
+                  content: `${emoji('Reply')} ${(tweet.replyCount ?? 0).toLocaleString('en-US')}   ${emoji('Repost')} ${(tweet.repostCount ?? 0).toLocaleString('en-US')}   ${emoji('Like')} ${(tweet.likeCount ?? 0).toLocaleString('en-US')}   ${emoji('Bookmark')} ${(tweet.bookmarkCount ?? 0).toLocaleString('en-US')}`,
                 },
               ],
               accessory: {
                 type: ComponentType.Button,
-                url: `https://x.com/${res.author.username}/status/${tweetId}`,
+                url: `https://x.com/${tweet.author.username}/status/${tweetId}`,
                 label: 'View Tweet',
                 style: ButtonStyle.Link,
               },

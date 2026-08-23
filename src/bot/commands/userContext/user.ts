@@ -17,13 +17,13 @@ createApplicationCommand({
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   cooldown: 3,
   acknowledge: true,
-  async run(interaction, api) {
+  async run(interaction, client) {
     const userId = interaction.data.target_id;
     const user = interaction.data.resolved.users[userId];
     const member = interaction.data.resolved.members?.[userId];
 
     if (!user) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -41,7 +41,7 @@ createApplicationCommand({
       return;
     }
 
-    await api.interactions.editReply(interaction.application_id, interaction.token, {
+    await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
         {
           type: ComponentType.Container,

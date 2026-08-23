@@ -28,7 +28,7 @@ createApplicationCommand({
   ],
   cooldown: 3,
   acknowledge: true,
-  async run(interaction, options, api) {
+  async run(interaction, options, client) {
     let { user: target } = options;
 
     if (!target) {
@@ -41,7 +41,7 @@ createApplicationCommand({
     const { user, member } = target;
 
     if (!user) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -59,10 +59,10 @@ createApplicationCommand({
       return;
     }
 
-    const u = await api.users.get(user.id);
+    const u = await client.api.users.get(user.id);
 
     if (!u.banner) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -80,7 +80,7 @@ createApplicationCommand({
       return;
     }
 
-    await api.interactions.editReply(interaction.application_id, interaction.token, {
+    await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
         {
           type: ComponentType.Container,

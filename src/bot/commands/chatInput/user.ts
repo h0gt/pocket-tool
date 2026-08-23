@@ -44,7 +44,7 @@ createApplicationCommand({
   ],
   cooldown: 3,
   acknowledge: true,
-  async run(interaction, options, api) {
+  async run(interaction, options, client) {
     let { user: target, scope } = options;
 
     if (!target) {
@@ -59,7 +59,7 @@ createApplicationCommand({
     const { user, member } = target;
 
     if (!user) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.TextDisplay,
@@ -73,7 +73,7 @@ createApplicationCommand({
     }
 
     if (scope === 'guild' && member) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -122,7 +122,7 @@ createApplicationCommand({
         flags: MessageFlags.IsComponentsV2,
       });
     } else {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,

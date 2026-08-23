@@ -20,8 +20,8 @@ createApplicationCommand({
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   cooldown: 3,
   acknowledge: true,
-  async run(interaction, options, api) {
-    await api.interactions.editReply(interaction.application_id, interaction.token, {
+  async run(interaction, options, client) {
+    await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
         {
           type: ComponentType.Container,

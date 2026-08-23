@@ -1,6 +1,6 @@
 import { GatewayDispatchEvents } from '@discordjs/core';
 import type { GatewayEvent } from '../types/types.js';
-import { events } from '../bot';
+import { events } from '../bot/collections.js';
 
 export default function createGatewayEvent<const Event extends GatewayDispatchEvents = GatewayDispatchEvents>(
   event: GatewayEvent<Event>,

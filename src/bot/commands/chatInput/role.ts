@@ -29,7 +29,7 @@ createApplicationCommand({
   ],
   cooldown: 3,
   acknowledge: true,
-  async run(interaction, options, api) {
+  async run(interaction, options, client) {
     const { role } = options;
 
     const permissions = formatPermissions(role.permissions);
@@ -37,7 +37,7 @@ createApplicationCommand({
     const shownPermissions = permissions.slice(0, 5);
     const extraPermissions = permissions.length - shownPermissions.length;
 
-    await api.interactions.editReply(interaction.application_id, interaction.token, {
+    await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
         {
           type: ComponentType.Container,

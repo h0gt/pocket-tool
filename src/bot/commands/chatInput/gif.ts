@@ -28,11 +28,11 @@ createApplicationCommand({
   ],
   cooldown: 3,
   acknowledge: true,
-  async run(interaction, options, api) {
+  async run(interaction, options, client) {
     const { image } = options;
 
     if (!image || !image.content_type?.startsWith('image/')) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -57,7 +57,7 @@ createApplicationCommand({
 
     const gif = await sharp(buffer).gif({ effort: 10 }).toBuffer();
 
-    await api.interactions.editReply(interaction.application_id, interaction.token, {
+    await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       content: `-# ${emoji('GIF')} Hover over the GIF to add it to your favorites`,
       files: [
         {

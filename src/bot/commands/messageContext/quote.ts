@@ -40,11 +40,11 @@ createApplicationCommand({
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   cooldown: 3,
   acknowledge: true,
-  async run(interaction, api) {
+  async run(interaction, client) {
     const message = interaction.data.resolved.messages[interaction.data.target_id];
 
     if (message?.message_snapshots && message.message_snapshots.length > 0) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -63,7 +63,7 @@ createApplicationCommand({
     }
 
     if (!message || !message.content.trim()) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -127,7 +127,7 @@ createApplicationCommand({
       return;
     }
 
-    let image = await renderQuoteCard({
+    let card = await renderQuoteCard({
       avatar: session.avatar,
       quote: quote.content,
       emojis: quote.emojis,
@@ -139,7 +139,7 @@ createApplicationCommand({
       effects: session.effects,
     });
 
-    const originalReply = await api.interactions.editReply(interaction.application_id, interaction.token, {
+    const originalReply = await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
         {
           type: ComponentType.TextDisplay,
@@ -279,8 +279,8 @@ createApplicationCommand({
       ],
       files: [
         {
-          name: 'quote.gif',
-          data: image,
+          name: `quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
+          data: card,
         },
       ],
       flags: MessageFlags.IsComponentsV2,
@@ -299,7 +299,7 @@ createApplicationCommand({
     collector.on('collect', async (i) => {
       switch (i.data.custom_id) {
         case 'quote-font': {
-          await api.interactions.deferMessageUpdate(i.id, i.token);
+          await client.api.interactions.deferMessageUpdate(i.id, i.token);
 
           const font =
             (i as APIMessageComponentSelectMenuInteraction).data.component_type === ComponentType.StringSelect &&
@@ -308,7 +308,7 @@ createApplicationCommand({
           if (font) {
             session.font = font as FontKey;
 
-            image = await renderQuoteCard({
+            card = await renderQuoteCard({
               avatar: session.avatar,
               quote: session.content,
               emojis: session.emojis,
@@ -320,7 +320,7 @@ createApplicationCommand({
               effects: session.effects,
             });
 
-            await api.interactions.editReply(interaction.application_id, interaction.token, {
+            await client.api.interactions.editReply(interaction.application_id, interaction.token, {
               components: [
                 {
                   type: ComponentType.TextDisplay,
@@ -461,8 +461,8 @@ createApplicationCommand({
               ],
               files: [
                 {
-                  name: 'quote.gif',
-                  data: image,
+                  name: `quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
+                  data: card,
                 },
               ],
               flags: MessageFlags.IsComponentsV2,
@@ -477,7 +477,7 @@ createApplicationCommand({
             (i as APIMessageComponentSelectMenuInteraction).data.values[0];
 
           if (size === 'custom') {
-            await api.interactions.createModal(i.id, i.token, {
+            await client.api.interactions.createModal(i.id, i.token, {
               title: 'Text Font Size Customization',
               custom_id: 'custom-font-size',
               components: [
@@ -495,11 +495,11 @@ createApplicationCommand({
               ],
             });
           } else {
-            await api.interactions.deferMessageUpdate(i.id, i.token);
+            await client.api.interactions.deferMessageUpdate(i.id, i.token);
 
             session.size = size as SizeKey;
 
-            image = await renderQuoteCard({
+            card = await renderQuoteCard({
               avatar: session.avatar,
               quote: session.content,
               emojis: session.emojis,
@@ -511,7 +511,7 @@ createApplicationCommand({
               effects: session.effects,
             });
 
-            await api.interactions.editReply(interaction.application_id, interaction.token, {
+            await client.api.interactions.editReply(interaction.application_id, interaction.token, {
               components: [
                 {
                   type: ComponentType.TextDisplay,
@@ -652,8 +652,8 @@ createApplicationCommand({
               ],
               files: [
                 {
-                  name: 'quote.gif',
-                  data: image,
+                  name: `quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
+                  data: card,
                 },
               ],
               flags: MessageFlags.IsComponentsV2,
@@ -668,7 +668,7 @@ createApplicationCommand({
             (i as APIMessageComponentSelectMenuInteraction).data.values[0];
 
           if (color === 'custom') {
-            await api.interactions.createModal(i.id, i.token, {
+            await client.api.interactions.createModal(i.id, i.token, {
               title: 'Text Color Customization',
               custom_id: 'custom-color',
               components: [
@@ -688,11 +688,11 @@ createApplicationCommand({
               ],
             });
           } else {
-            await api.interactions.deferMessageUpdate(i.id, i.token);
+            await client.api.interactions.deferMessageUpdate(i.id, i.token);
 
             session.color = color as ColorKey;
 
-            image = await renderQuoteCard({
+            card = await renderQuoteCard({
               avatar: session.avatar,
               quote: session.content,
               emojis: session.emojis,
@@ -704,7 +704,7 @@ createApplicationCommand({
               effects: session.effects,
             });
 
-            await api.interactions.editReply(interaction.application_id, interaction.token, {
+            await client.api.interactions.editReply(interaction.application_id, interaction.token, {
               components: [
                 {
                   type: ComponentType.TextDisplay,
@@ -845,8 +845,8 @@ createApplicationCommand({
               ],
               files: [
                 {
-                  name: 'quote.gif',
-                  data: image,
+                  name: `quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
+                  data: card,
                 },
               ],
               flags: MessageFlags.IsComponentsV2,
@@ -856,7 +856,7 @@ createApplicationCommand({
           break;
         }
         case 'quote-effects': {
-          await api.interactions.deferMessageUpdate(i.id, i.token);
+          await client.api.interactions.deferMessageUpdate(i.id, i.token);
 
           const effects =
             (i as APIMessageComponentSelectMenuInteraction).data.component_type === ComponentType.StringSelect &&
@@ -865,7 +865,7 @@ createApplicationCommand({
           if (effects) {
             session.effects = effects as EffectKey[];
 
-            image = await renderQuoteCard({
+            card = await renderQuoteCard({
               avatar: session.avatar,
               quote: session.content,
               emojis: session.emojis,
@@ -877,7 +877,7 @@ createApplicationCommand({
               effects: session.effects,
             });
 
-            await api.interactions.editReply(interaction.application_id, interaction.token, {
+            await client.api.interactions.editReply(interaction.application_id, interaction.token, {
               components: [
                 {
                   type: ComponentType.TextDisplay,
@@ -1018,13 +1018,13 @@ createApplicationCommand({
               ],
               files: [
                 {
-                  name: 'quote.gif',
-                  data: image,
+                  name: `quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
+                  data: card,
                 },
               ],
               flags: MessageFlags.IsComponentsV2,
             });
-            await api.interactions.editReply(interaction.application_id, interaction.token, {
+            await client.api.interactions.editReply(interaction.application_id, interaction.token, {
               components: [
                 {
                   type: ComponentType.TextDisplay,
@@ -1165,8 +1165,8 @@ createApplicationCommand({
               ],
               files: [
                 {
-                  name: 'quote.gif',
-                  data: image,
+                  name: `quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
+                  data: card,
                 },
               ],
               flags: MessageFlags.IsComponentsV2,
@@ -1176,11 +1176,11 @@ createApplicationCommand({
           break;
         }
         case 'random': {
-          await api.interactions.deferMessageUpdate(i.id, i.token);
+          await client.api.interactions.deferMessageUpdate(i.id, i.token);
 
           Object.assign(session, randomizeSession(session));
 
-          image = await renderQuoteCard({
+          card = await renderQuoteCard({
             avatar: session.avatar,
             quote: session.content,
             emojis: session.emojis,
@@ -1192,7 +1192,7 @@ createApplicationCommand({
             effects: session.effects,
           });
 
-          await api.interactions.editReply(interaction.application_id, interaction.token, {
+          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
             components: [
               {
                 type: ComponentType.TextDisplay,
@@ -1333,8 +1333,8 @@ createApplicationCommand({
             ],
             files: [
               {
-                name: 'quote.gif',
-                data: image,
+                name: `quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
+                data: card,
               },
             ],
             flags: MessageFlags.IsComponentsV2,
@@ -1343,7 +1343,7 @@ createApplicationCommand({
           break;
         }
         case 'custom-font-size': {
-          await api.interactions.deferMessageUpdate(i.id, i.token);
+          await client.api.interactions.deferMessageUpdate(i.id, i.token);
 
           const size =
             (i as APIModalSubmitInteraction).data.components?.[0]?.type === ComponentType.Label
@@ -1357,7 +1357,7 @@ createApplicationCommand({
               : undefined;
 
           if (size === undefined || Number.isNaN(size) || size < 20 || size > 100) {
-            await api.interactions.followUp(i.application_id, i.token, {
+            await client.api.interactions.followUp(i.application_id, i.token, {
               components: [
                 {
                   type: ComponentType.Container,
@@ -1377,7 +1377,7 @@ createApplicationCommand({
 
           session.size = size;
 
-          image = await renderQuoteCard({
+          card = await renderQuoteCard({
             avatar: session.avatar,
             quote: session.content,
             emojis: session.emojis,
@@ -1389,7 +1389,7 @@ createApplicationCommand({
             effects: session.effects,
           });
 
-          await api.interactions.editReply(interaction.application_id, interaction.token, {
+          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
             components: [
               {
                 type: ComponentType.TextDisplay,
@@ -1530,13 +1530,13 @@ createApplicationCommand({
             ],
             files: [
               {
-                name: 'quote.gif',
-                data: image,
+                name: `quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
+                data: card,
               },
             ],
             flags: MessageFlags.IsComponentsV2,
           });
-          await api.interactions.editReply(interaction.application_id, interaction.token, {
+          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
             components: [
               {
                 type: ComponentType.TextDisplay,
@@ -1677,8 +1677,8 @@ createApplicationCommand({
             ],
             files: [
               {
-                name: 'quote.gif',
-                data: image,
+                name: `quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
+                data: card,
               },
             ],
             flags: MessageFlags.IsComponentsV2,
@@ -1687,7 +1687,7 @@ createApplicationCommand({
           break;
         }
         case 'custom-color': {
-          await api.interactions.deferMessageUpdate(i.id, i.token);
+          await client.api.interactions.deferMessageUpdate(i.id, i.token);
 
           const color =
             (i as APIModalSubmitInteraction).data.components?.[0]?.type === ComponentType.Label
@@ -1698,7 +1698,7 @@ createApplicationCommand({
               : undefined;
 
           if (color === undefined || !isHex(color)) {
-            await api.interactions.followUp(i.application_id, i.token, {
+            await client.api.interactions.followUp(i.application_id, i.token, {
               components: [
                 {
                   type: ComponentType.Container,
@@ -1718,7 +1718,7 @@ createApplicationCommand({
 
           session.color = color;
 
-          image = await renderQuoteCard({
+          card = await renderQuoteCard({
             avatar: session.avatar,
             quote: session.content,
             emojis: session.emojis,
@@ -1730,7 +1730,7 @@ createApplicationCommand({
             effects: session.effects,
           });
 
-          await api.interactions.editReply(interaction.application_id, interaction.token, {
+          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
             components: [
               {
                 type: ComponentType.TextDisplay,
@@ -1871,8 +1871,8 @@ createApplicationCommand({
             ],
             files: [
               {
-                name: 'quote.gif',
-                data: image,
+                name: `quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
+                data: card,
               },
             ],
             flags: MessageFlags.IsComponentsV2,
@@ -1886,7 +1886,7 @@ createApplicationCommand({
     collector.on('end', async () => {
       sessions.delete(interaction.token);
 
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.TextDisplay,
@@ -2031,8 +2031,8 @@ createApplicationCommand({
         ],
         files: [
           {
-            name: 'quote.gif',
-            data: image,
+            name: `quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
+            data: card,
           },
         ],
         flags: MessageFlags.IsComponentsV2,

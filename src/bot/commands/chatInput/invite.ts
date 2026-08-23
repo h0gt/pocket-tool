@@ -27,7 +27,7 @@ createApplicationCommand({
   ],
   cooldown: 3,
   acknowledge: true,
-  async run(interaction, options, api) {
+  async run(interaction, options, client) {
     const { link } = options;
 
     const code = link
@@ -35,7 +35,7 @@ createApplicationCommand({
       .match(/^(?:https?:\/\/)?(?:www\.)?(?:discord\.gg|discord\.com\/invite)\/([a-zA-Z0-9-]{2,64})\/?$/i)?.[1];
 
     if (!code) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -53,10 +53,10 @@ createApplicationCommand({
       return;
     }
 
-    const invite = await api.invites.get(code, { with_counts: true });
+    const invite = await client.api.invites.get(code, { with_counts: true });
 
     if (!invite || !invite.guild) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -74,7 +74,7 @@ createApplicationCommand({
       return;
     }
 
-    await api.interactions.editReply(interaction.application_id, interaction.token, {
+    await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
         {
           type: ComponentType.Container,

@@ -79,7 +79,7 @@ createApplicationCommand({
   ],
   cooldown: 3,
   acknowledge: true,
-  async autocomplete(interaction, api) {
+  async autocomplete(interaction, client) {
     const focused = getAutocompleteFocusedOption(interaction.data.options);
     const value = String(focused?.value ?? '').toLowerCase();
 
@@ -99,15 +99,15 @@ createApplicationCommand({
       .filter((choice) => choice.name.toLowerCase().includes(value))
       .slice(0, 25);
 
-    await api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
+    await client.api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
   },
-  async run(interaction, options, api) {
+  async run(interaction, options, client) {
     const { time, timezone, style } = options;
 
     const date = parseDate(time, timezone ?? 'UTC');
 
     if (!date) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -125,7 +125,7 @@ createApplicationCommand({
       return;
     }
 
-    await api.interactions.editReply(interaction.application_id, interaction.token, {
+    await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
         {
           type: ComponentType.TextDisplay,

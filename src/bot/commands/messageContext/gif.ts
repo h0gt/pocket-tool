@@ -18,11 +18,11 @@ createApplicationCommand({
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   cooldown: 3,
   acknowledge: true,
-  async run(interaction, api) {
+  async run(interaction, client) {
     const message = interaction.data.resolved.messages[interaction.data.target_id];
 
     if (message?.message_snapshots && message.message_snapshots.length > 0) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -41,7 +41,7 @@ createApplicationCommand({
     }
 
     if (!message) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -64,7 +64,7 @@ createApplicationCommand({
       .slice(0, 10);
 
     if (attachments.length === 0) {
-      await api.interactions.editReply(interaction.application_id, interaction.token, {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
             type: ComponentType.Container,
@@ -98,7 +98,7 @@ createApplicationCommand({
       }),
     );
 
-    await api.interactions.editReply(interaction.application_id, interaction.token, {
+    await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       content: `-# ${emoji('GIF')} Hover over the GIF to add them to your favorites`,
       files,
     });
