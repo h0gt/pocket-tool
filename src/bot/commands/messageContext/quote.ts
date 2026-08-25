@@ -150,7 +150,7 @@ createApplicationCommand({
           items: [
             {
               media: {
-                url: 'attachment://quote.gif',
+                url: `attachment://quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
               },
             },
           ],
@@ -331,7 +331,7 @@ createApplicationCommand({
                   items: [
                     {
                       media: {
-                        url: 'attachment://quote.gif',
+                        url: `attachment://quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
                       },
                     },
                   ],
@@ -522,7 +522,7 @@ createApplicationCommand({
                   items: [
                     {
                       media: {
-                        url: 'attachment://quote.gif',
+                        url: `attachment://quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
                       },
                     },
                   ],
@@ -715,7 +715,7 @@ createApplicationCommand({
                   items: [
                     {
                       media: {
-                        url: 'attachment://quote.gif',
+                        url: `attachment://quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
                       },
                     },
                   ],
@@ -888,7 +888,7 @@ createApplicationCommand({
                   items: [
                     {
                       media: {
-                        url: 'attachment://quote.gif',
+                        url: `attachment://quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
                       },
                     },
                   ],
@@ -1035,7 +1035,7 @@ createApplicationCommand({
                   items: [
                     {
                       media: {
-                        url: 'attachment://quote.gif',
+                        url: `attachment://quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
                       },
                     },
                   ],
@@ -1203,7 +1203,7 @@ createApplicationCommand({
                 items: [
                   {
                     media: {
-                      url: 'attachment://quote.gif',
+                      url: `attachment://quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
                     },
                   },
                 ],
@@ -1400,7 +1400,7 @@ createApplicationCommand({
                 items: [
                   {
                     media: {
-                      url: 'attachment://quote.gif',
+                      url: `attachment://quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
                     },
                   },
                 ],
@@ -1547,7 +1547,7 @@ createApplicationCommand({
                 items: [
                   {
                     media: {
-                      url: 'attachment://quote.gif',
+                      url: `attachment://quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
                     },
                   },
                 ],
@@ -1741,7 +1741,7 @@ createApplicationCommand({
                 items: [
                   {
                     media: {
-                      url: 'attachment://quote.gif',
+                      url: `attachment://quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
                     },
                   },
                 ],
@@ -1897,7 +1897,7 @@ createApplicationCommand({
             items: [
               {
                 media: {
-                  url: 'attachment://quote.gif',
+                  url: `attachment://quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
                 },
               },
             ],
