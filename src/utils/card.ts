@@ -22,6 +22,7 @@ const FONTS = [
   ['Poltawski Nowy', 'PoltawskiNowy-Regular.ttf'],
   ['Vina Sans', 'VinaSans-Regular.ttf'],
   ['Dancing Script', 'DancingScript-Regular.ttf'],
+  ['Minecraft', 'MinecraftStandard.otf'],
 ] as const;
 
 const attemptedFonts = new Set<string>();
@@ -174,6 +175,14 @@ export const CARD_FONTS = {
     description: 'Elegant cursive',
     family: 'Dancing Script',
     fallback: 'cursive',
+    weight: 400,
+    style: 'normal',
+  },
+  minecraft: {
+    label: 'Minecraft',
+    description: 'Minecraft-style pixel font',
+    family: 'Minecraft',
+    fallback: 'monospace',
     weight: 400,
     style: 'normal',
   },

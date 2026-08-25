@@ -7,11 +7,12 @@ import {
   MessageFlags,
 } from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
-import { getAutocompleteFocusedOption } from '../../../utils/utils';
+import { findClosestMatch, getAutocompleteFocusedOption } from '../../../utils/utils';
 import { makeRequest } from '../../../utils/request';
 import { RequestMethod, ResponseType } from '../../../types/types';
 import { emoji } from '../../../utils/markdown';
-import { LANGUAGES } from '../../constants';
+import { AZURE_LANGUAGES } from '../../constants';
+import env from '../../../utils/env';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
@@ -45,9 +46,9 @@ createApplicationCommand({
   acknowledge: true,
   async autocomplete(interaction, client) {
     const focused = getAutocompleteFocusedOption(interaction.data.options);
-    const value = String(focused?.value).toLowerCase() ?? '';
+    const value = String(focused?.value ?? '').toLowerCase();
 
-    const languages = LANGUAGES.filter((language) => {
+    const languages = AZURE_LANGUAGES.filter((language) => {
       return language.name.toLowerCase().includes(value) || language.code.toLowerCase().includes(value);
     });
 
@@ -71,7 +72,7 @@ createApplicationCommand({
       case 'to': {
         const choices = [
           {
-            name: 'Use my locale',
+            name: 'Use my Locale',
             value: 'auto',
           },
           ...languages.map((language) => ({
@@ -87,11 +88,32 @@ createApplicationCommand({
     }
   },
   async run(interaction, options, client) {
-    const { text, from, to } = options;
+    const { text: rawText, from, to } = options;
 
-    const query = text.trim();
+    const azureApiKey = env.get('azure_api_key').toString();
 
-    if (!query) {
+    if (!azureApiKey) {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
+        components: [
+          {
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Wrong')} Microsoft Azure API key not set`,
+              },
+            ],
+          },
+        ],
+        flags: MessageFlags.IsComponentsV2,
+      });
+
+      return;
+    }
+
+    const text = rawText.trim();
+
+    if (!text) {
       await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
@@ -110,22 +132,38 @@ createApplicationCommand({
       return;
     }
 
+    const sourceCode = from === 'auto' ? undefined : from;
+    const targetCode =
+      to === 'auto'
+        ? (findClosestMatch(
+            interaction.locale,
+            AZURE_LANGUAGES.map((l) => l.code),
+          ) ?? 'en')
+        : (to ?? 'en');
+
     let translation;
 
     try {
-      translation = await makeRequest('https://translate.googleapis.com/translate_a/single', {
-        method: RequestMethod.GET,
+      translation = await makeRequest('https://api.cognitive.microsofttranslator.com/translate', {
+        method: RequestMethod.POST,
         response: ResponseType.JSON,
-        params: {
-          client: 'gtx',
-          sl: from ?? 'auto',
-          tl: to === 'auto' ? interaction.locale.split('-')[0]! : (to ?? interaction.locale.split('-')[0]!),
-          dt: 't',
-          q: query,
+        headers: {
+          'Content-type': 'application/json',
+          'Ocp-Apim-Subscription-Key': azureApiKey,
         },
+        params: {
+          'api-version': '3.0',
+          ...(sourceCode ? { from: sourceCode } : {}),
+          to: targetCode,
+        },
+        body: [
+          {
+            text,
+          },
+        ],
       });
     } catch (error) {
-      if (error instanceof Error && error.message.includes('(429)')) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 429) {
         await client.api.interactions.editReply(interaction.application_id, interaction.token, {
           components: [
             {
@@ -142,21 +180,44 @@ createApplicationCommand({
         });
 
         return;
-      } else {
-        throw error;
       }
+
+      throw error;
     }
 
-    const translated = translation[0].map(([translation]: [string]) => translation).join('');
+    const result = translation[0];
+    const translated = result?.translations[0];
 
-    const sourceCode = translation[2];
-    const targetCode = to === 'auto' ? interaction.locale.split('-')[0]! : (to ?? interaction.locale.split('-')[0]!);
+    if (!result || !translated) {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
+        components: [
+          {
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Wrong')} I couldn't translate that - please try again`,
+              },
+            ],
+          },
+        ],
+        flags: MessageFlags.IsComponentsV2,
+      });
+      return;
+    }
 
-    const sourceLanguage = LANGUAGES.find((l) => l.code === sourceCode);
-    const targetLanguage = LANGUAGES.find((l) => l.code === targetCode);
+    const actualSourceCode = sourceCode ?? result.detectedLanguage?.language;
 
-    if (!sourceLanguage || !targetLanguage) {
-      throw new Error(`Unsupported language: source=${sourceCode}, target=${targetCode}`);
+    const sourceLanguage = AZURE_LANGUAGES.find((language) => language.code === actualSourceCode);
+
+    if (!sourceLanguage) {
+      throw new Error(`Unsupported source language: ${actualSourceCode}`);
+    }
+
+    const targetLanguage = AZURE_LANGUAGES.find((language) => language.code === translated.to);
+
+    if (!targetLanguage) {
+      throw new Error(`Unsupported target language: ${translated.to}`);
     }
 
     await client.api.interactions.editReply(interaction.application_id, interaction.token, {
@@ -173,7 +234,7 @@ createApplicationCommand({
             },
             {
               type: ComponentType.TextDisplay,
-              content: `${translated}${
+              content: `${translated.text}${
                 to === undefined || to === 'auto'
                   ? `\n\n-# ${emoji('Exclamation')} Target language was selected based on the user's locale`
                   : ''

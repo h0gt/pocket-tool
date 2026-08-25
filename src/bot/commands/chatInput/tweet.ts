@@ -9,12 +9,12 @@ import {
   type APIMessageTopLevelComponent,
 } from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
-import { getAutocompleteFocusedOption } from '../../../utils/utils';
+import { findClosestMatch, getAutocompleteFocusedOption } from '../../../utils/utils';
 import env from '../../../utils/env';
 import { emoji, hyperlink, timestamp } from '../../../utils/markdown';
 import { makeRequest } from '../../../utils/request';
 import { RequestMethod, ResponseType, TimestampStyle } from '../../../types/types';
-import { LANGUAGES } from '../../constants';
+import { AZURE_LANGUAGES } from '../../constants';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
@@ -41,9 +41,9 @@ createApplicationCommand({
   acknowledge: true,
   async autocomplete(interaction, client) {
     const focused = getAutocompleteFocusedOption(interaction.data.options);
-    const value = String(focused?.value).toLowerCase() ?? '';
+    const value = String(focused?.value ?? '').toLowerCase();
 
-    const languages = LANGUAGES.filter((language) => {
+    const languages = AZURE_LANGUAGES.filter((language) => {
       return language.name.toLowerCase().includes(value) || language.code.toLowerCase().includes(value);
     });
 
@@ -135,26 +135,75 @@ createApplicationCommand({
     let isTranslated = false;
 
     if (language && content) {
-      try {
-        const translated = await makeRequest('https://translate.googleapis.com/translate_a/single', {
-          method: RequestMethod.GET,
-          response: ResponseType.JSON,
-          params: {
-            client: 'gtx',
-            sl: tweet.language ?? 'auto',
-            tl: language === 'auto' ? interaction.locale : language,
-            dt: 't',
-            q: content,
-          },
+      const azureApiKey = env.get('azure_api_key').toString();
+
+      if (!azureApiKey) {
+        await client.api.interactions.editReply(interaction.application_id, interaction.token, {
+          components: [
+            {
+              type: ComponentType.Container,
+              components: [
+                {
+                  type: ComponentType.TextDisplay,
+                  content: `${emoji('Wrong')} Microsoft Azure API key not set`,
+                },
+              ],
+            },
+          ],
+          flags: MessageFlags.IsComponentsV2,
         });
 
-        content = translated[0].map(([translation]: [string]) => translation).join('');
+        return;
+      }
 
-        isTranslated = true;
+      try {
+        const sourceCode = tweet.language
+          ? findClosestMatch(
+              tweet.language,
+              AZURE_LANGUAGES.map((language) => language.code),
+            )
+          : undefined;
+
+        const targetCode =
+          language === 'auto'
+            ? (findClosestMatch(
+                interaction.locale,
+                AZURE_LANGUAGES.map((language) => language.code),
+              ) ?? 'en')
+            : language;
+
+        const translation = await makeRequest('https://api.cognitive.microsofttranslator.com/translate', {
+          method: RequestMethod.POST,
+          response: ResponseType.JSON,
+          headers: {
+            'Content-Type': 'application/json',
+            'Ocp-Apim-Subscription-Key': azureApiKey,
+          },
+          params: {
+            'api-version': '3.0',
+            ...(sourceCode ? { from: sourceCode } : {}),
+            to: targetCode,
+          },
+          body: [
+            {
+              text: content,
+            },
+          ],
+        });
+
+        const result = translation[0];
+        const translated = result?.translations[0];
+
+        if (!result || !translated) {
+          isTranslated = false;
+        } else {
+          content = translated.text;
+          isTranslated = true;
+        }
       } catch (error) {
         isTranslated = false;
 
-        if (error instanceof Error && !error.message.includes('(429)')) {
+        if (!(error && typeof error === 'object' && 'code' in error && error.code === 429)) {
           throw error;
         }
       }

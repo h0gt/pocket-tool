@@ -405,3 +405,58 @@ export async function hasPlus(userId: string, api: API): Promise<boolean> {
 export function getShardIdForGuildId(guildId: string, totalShards: number): number {
   return Number((BigInt(guildId) >> 22n) % BigInt(totalShards));
 }
+
+export function findClosestMatch(input: string, strings: string[]): string | null {
+  if (strings.length === 0) {
+    return null;
+  }
+
+  if (strings.length === 1) {
+    return strings[0]!;
+  }
+
+  let minDistance = Infinity;
+  let closestMatch: string | null = null;
+
+  for (const string of strings) {
+    const distance = levenshteinDistance(input, string);
+
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestMatch = string;
+    }
+  }
+
+  return closestMatch;
+}
+
+function levenshteinDistance(a: string, b: string): number {
+  const matrix: number[][] = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
+
+  for (let i = 0; i <= a.length; i++) {
+    matrix[i]![0] = i;
+  }
+
+  for (let j = 0; j <= b.length; j++) {
+    matrix[0]![j] = j;
+  }
+
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const currentRow = matrix[i]!;
+      const previousRow = matrix[i - 1]!;
+
+      if (a[i - 1] === b[j - 1]) {
+        currentRow[j] = previousRow[j - 1]!;
+      } else {
+        currentRow[j] = Math.min(
+          previousRow[j - 1]! + 1, // substitution
+          currentRow[j - 1]! + 1, // insertion
+          previousRow[j]! + 1, // deletion
+        );
+      }
+    }
+  }
+
+  return matrix[a.length]![b.length]!;
+}

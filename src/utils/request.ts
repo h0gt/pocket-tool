@@ -33,7 +33,7 @@ export async function makeRequest<Type extends ResponseType>(
     });
 
     if (!res.ok) {
-      throw new Error(`Request failed (${res.status})`);
+      throw new Error(`Request failed (${res.status}): ${await res.text()}`);
     }
 
     switch (options.response) {

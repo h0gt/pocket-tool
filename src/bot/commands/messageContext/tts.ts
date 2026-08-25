@@ -10,7 +10,8 @@ import env from '../../../utils/env';
 import { emoji, timestamp, truncate } from '../../../utils/markdown';
 import { redis } from '../../../utils/redis';
 import { TimestampStyle } from '../../../types/types';
-import { hasPlus } from '../../../utils/utils';
+import { findClosestMatch, hasPlus } from '../../../utils/utils';
+import { ELEVEN_LABS_LANGUAGES } from '../../constants';
 
 createApplicationCommand({
   type: ApplicationCommandType.Message,
@@ -119,6 +120,11 @@ createApplicationCommand({
 
     const audio = await elevenlabs.textToSpeech.convertWithTimestamps('M563YhMmA0S8vEYwkgYa', {
       text: truncate(message.content.trim(), plus ? 500 : 100),
+      languageCode:
+        findClosestMatch(
+          interaction.locale,
+          ELEVEN_LABS_LANGUAGES.map((language) => language.code),
+        ) ?? 'ENG',
       modelId: 'eleven_flash_v2_5',
       outputFormat: 'opus_48000_192',
     });

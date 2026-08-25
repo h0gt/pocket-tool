@@ -7,10 +7,10 @@ import {
   MessageFlags,
 } from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
-import { getAutocompleteFocusedOption, hasPlus } from '../../../utils/utils';
+import { findClosestMatch, getAutocompleteFocusedOption, hasPlus } from '../../../utils/utils';
 import env from '../../../utils/env';
 import { emoji, timestamp, truncate } from '../../../utils/markdown';
-import { SUPPORTED_LANGUAGES } from '../../constants';
+import { ELEVEN_LABS_LANGUAGES } from '../../constants';
 import { redis } from '../../../utils/redis';
 import { TimestampStyle } from '../../../types/types';
 
@@ -50,15 +50,15 @@ createApplicationCommand({
   acknowledge: true,
   async autocomplete(interaction, client) {
     const focused = getAutocompleteFocusedOption(interaction.data.options);
-    const value = String(focused?.value).toLowerCase() ?? '';
+    const value = String(focused?.value ?? '').toLowerCase();
 
-    const languages = SUPPORTED_LANGUAGES.filter((language) => {
+    const languages = ELEVEN_LABS_LANGUAGES.filter((language) => {
       return language.name.toLowerCase().includes(value) || language.code.toLowerCase().includes(value);
     });
 
     const choices = [
       {
-        name: 'Use my locale',
+        name: 'Use my Locale',
         value: 'auto',
       },
       ...languages.map((language) => ({
@@ -70,7 +70,7 @@ createApplicationCommand({
     await client.api.interactions.createAutocompleteResponse(interaction.id, interaction.token, { choices });
   },
   async run(interaction, options, client) {
-    const { text, voice, language } = options;
+    const { text: rawText, voice, language } = options;
 
     const elevenLabsApiKey = env.get('eleven_labs_api_key').toString();
 
@@ -122,7 +122,9 @@ createApplicationCommand({
       return;
     }
 
-    if (!text.trim()) {
+    const text = rawText.trim();
+
+    if (!text) {
       await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
@@ -149,8 +151,12 @@ createApplicationCommand({
     const elevenlabs = new ElevenLabsClient({ apiKey: elevenLabsApiKey });
 
     const audio = await elevenlabs.textToSpeech.convertWithTimestamps(voice ?? 'M563YhMmA0S8vEYwkgYa', {
-      text: truncate(text.trim(), plus ? 1000 : 500),
-      languageCode: !language || language === 'auto' ? interaction.locale.split('-')[0]! : language.split('-')[0]!,
+      text: truncate(text, plus ? 1000 : 500),
+      languageCode:
+        findClosestMatch(
+          !language || language === 'auto' ? interaction.locale : language,
+          ELEVEN_LABS_LANGUAGES.map((language) => language.code),
+        ) ?? 'ENG',
       modelId: 'eleven_flash_v2_5',
       outputFormat: 'opus_48000_192',
     });
