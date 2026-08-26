@@ -1,8 +1,9 @@
-import { collectors } from '../bot/collections';
 import type { Collector, CollectorEvents, CollectorOptions } from '../types/types';
 import { EventEmitter } from 'events';
 
-export default function createCollector<Type>(options: CollectorOptions<Type>) {
+export const collectors = new Set<Collector<any>>();
+
+export default function createCollector<Type>(options: CollectorOptions<Type>): Collector<Type> {
   const { duration, max, filter } = options;
 
   let collectedCount = 0;

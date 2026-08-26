@@ -10,7 +10,6 @@ import { getShardIdForGuildId, msToReadableTime, toComponentEmoji } from '../../
 import { emoji, highlight, hyperlink, timestamp } from '../../../utils/markdown';
 import { redis } from '../../../utils/redis';
 import { INVITE, SUPPORT, WEBSITE } from '../../constants';
-import { latencies, uptimes } from '../../collections';
 
 createComponent({
   type: InteractionComponentType.SelectMenu,
@@ -114,8 +113,8 @@ createComponent({
 
         const totalShards = await client.gateway.getShardCount();
         const shardId = interaction.guild_id ? getShardIdForGuildId(interaction.guild_id, totalShards) : 0;
-        const uptime = uptimes.get(shardId)!;
-        const latency = latencies.get(shardId);
+        const uptime = client.gateway.shards.get(shardId)?.uptime!;
+        const ping = client.gateway.shards.get(shardId)?.ping!;
 
         await client.api.interactions.editReply(interaction.application_id, interaction.token, {
           components: [
@@ -124,7 +123,7 @@ createComponent({
               components: [
                 {
                   type: ComponentType.TextDisplay,
-                  content: `-# **Statistics**\n> Shards: **${totalShards}**\n> Installs: **${bot.approximate_user_install_count}**\n> Servers: **${bot.approximate_guild_count}**\n> Uptime: **${msToReadableTime(Temporal.Now.instant().epochMilliseconds - uptime)} (${timestamp(uptime, TimestampStyle.LongDateShortTime)})**\n> Latency: **${latency}ms**\n-# ${emoji('Exclamation')} Viewing stats for shard **${shardId}**`,
+                  content: `-# **Statistics**\n> Shards: **${totalShards}**\n> Installs: **${bot.approximate_user_install_count}**\n> Servers: **${bot.approximate_guild_count}**\n> Uptime: **${msToReadableTime(Temporal.Now.instant().epochMilliseconds - uptime)} (${timestamp(uptime, TimestampStyle.LongDateShortTime)})**\n> Latency: **${ping}ms**\n-# ${emoji('Exclamation')} Viewing stats for shard **${shardId}**`,
                 },
                 {
                   type: ComponentType.Separator,

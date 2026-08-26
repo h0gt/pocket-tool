@@ -1,5 +1,4 @@
-import { createCanvas, GlobalFonts, loadImage } from '@napi-rs/canvas';
-import type { SKRSContext2D } from '@napi-rs/canvas';
+import { createCanvas, GlobalFonts, loadImage, type SKRSContext2D } from '@napi-rs/canvas';
 import { isHex, type Hexadecimal } from '@tolga1452/toolbox.js';
 import sharp from 'sharp';
 import emojiRegex from 'emoji-regex';

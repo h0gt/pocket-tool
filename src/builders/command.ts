@@ -1,5 +1,7 @@
+import { Collection } from '@discordjs/collection';
 import type { ApplicationCommand, ChatInputOptions } from '../types/types';
-import { commands } from '../bot/collections';
+
+export const commands = new Collection<string, ApplicationCommand>();
 
 export default function createApplicationCommand<const Options extends ChatInputOptions = ChatInputOptions>(
   command: ApplicationCommand<Options>,

@@ -15,7 +15,6 @@ import {
   type APIModalSubmitInteraction,
   type APIPrimaryEntryPointCommandInteraction,
   type APIUserApplicationCommandInteraction,
-  type Snowflake,
 } from '@discordjs/core';
 import createGatewayEvent from '../../builders/event';
 import {
@@ -31,11 +30,13 @@ import {
 } from '../../types/types';
 import env from '../../utils/env';
 import { getChatInputOption, parseCommandOptions, parseComponentArgs } from '../../utils/utils';
-import { Collection } from '@discordjs/collection';
 import { emoji, hyperlink, timestamp } from '../../utils/markdown';
 import { MESSAGE_BLOCK_REASONS, SUPPORT } from '../constants';
 import { redis } from '../../utils/redis';
-import { collectors, commands, components, cooldowns } from '../collections';
+import { commands } from '../../builders/command';
+import { checkCooldown } from '../../utils/cooldown';
+import { components } from '../../builders/component';
+import { collectors } from '../../builders/collector';
 
 createGatewayEvent({
   event: GatewayDispatchEvents.InteractionCreate,
@@ -108,56 +109,47 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         });
       }
 
-      if (!cooldowns.has(interaction.data.name)) {
-        cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
-      }
+      const expiration = checkCooldown(
+        interaction.data.name,
+        (interaction.user?.id ?? interaction.member?.user.id)!,
+        chatInput.cooldown,
+      );
 
-      const now = Temporal.Now.instant();
-      const timestamps = cooldowns.get(interaction.data.name)!;
-      const cooldown = (chatInput.cooldown ?? 0) * 1000;
-
-      if (timestamps.has((interaction.user?.id ?? interaction.member?.user.id)!)) {
-        const expiration = timestamps.get((interaction.user?.id ?? interaction.member?.user.id)!)! + cooldown;
-
-        if (now.epochMilliseconds < expiration) {
-          if (chatInput.acknowledge) {
-            await client.api.interactions.editReply(interaction.application_id, interaction.token, {
-              components: [
-                {
-                  type: ComponentType.Container,
-                  components: [
-                    {
-                      type: ComponentType.TextDisplay,
-                      content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
-                    },
-                  ],
-                },
-              ],
-              flags: MessageFlags.IsComponentsV2,
-            });
-          } else {
-            await client.api.interactions.reply(interaction.id, interaction.token, {
-              components: [
-                {
-                  type: ComponentType.Container,
-                  components: [
-                    {
-                      type: ComponentType.TextDisplay,
-                      content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
-                    },
-                  ],
-                },
-              ],
-              flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-            });
-          }
-
-          return;
+      if (expiration) {
+        if (chatInput.acknowledge) {
+          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
+            components: [
+              {
+                type: ComponentType.Container,
+                components: [
+                  {
+                    type: ComponentType.TextDisplay,
+                    content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                  },
+                ],
+              },
+            ],
+            flags: MessageFlags.IsComponentsV2,
+          });
+        } else {
+          await client.api.interactions.reply(interaction.id, interaction.token, {
+            components: [
+              {
+                type: ComponentType.Container,
+                components: [
+                  {
+                    type: ComponentType.TextDisplay,
+                    content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                  },
+                ],
+              },
+            ],
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+          });
         }
-      }
 
-      timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now.epochMilliseconds);
-      setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
+        return;
+      }
 
       try {
         await chatInput.run(
@@ -229,56 +221,47 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         });
       }
 
-      if (!cooldowns.has(interaction.data.name)) {
-        cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
-      }
+      const expiration = checkCooldown(
+        interaction.data.name,
+        (interaction.user?.id ?? interaction.member?.user.id)!,
+        messageContext.cooldown,
+      );
 
-      const now = Temporal.Now.instant();
-      const timestamps = cooldowns.get(interaction.data.name)!;
-      const cooldown = (messageContext.cooldown ?? 0) * 1000;
-
-      if (timestamps.has((interaction.user?.id ?? interaction.member?.user.id)!)) {
-        const expiration = timestamps.get((interaction.user?.id ?? interaction.member?.user.id)!)!;
-
-        if (now.epochMilliseconds < expiration) {
-          if (messageContext.acknowledge) {
-            await client.api.interactions.editReply(interaction.application_id, interaction.token, {
-              components: [
-                {
-                  type: ComponentType.Container,
-                  components: [
-                    {
-                      type: ComponentType.TextDisplay,
-                      content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
-                    },
-                  ],
-                },
-              ],
-              flags: MessageFlags.IsComponentsV2,
-            });
-          } else {
-            await client.api.interactions.reply(interaction.id, interaction.token, {
-              components: [
-                {
-                  type: ComponentType.Container,
-                  components: [
-                    {
-                      type: ComponentType.TextDisplay,
-                      content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
-                    },
-                  ],
-                },
-              ],
-              flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-            });
-          }
-
-          return;
+      if (expiration) {
+        if (messageContext.acknowledge) {
+          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
+            components: [
+              {
+                type: ComponentType.Container,
+                components: [
+                  {
+                    type: ComponentType.TextDisplay,
+                    content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                  },
+                ],
+              },
+            ],
+            flags: MessageFlags.IsComponentsV2,
+          });
+        } else {
+          await client.api.interactions.reply(interaction.id, interaction.token, {
+            components: [
+              {
+                type: ComponentType.Container,
+                components: [
+                  {
+                    type: ComponentType.TextDisplay,
+                    content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                  },
+                ],
+              },
+            ],
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+          });
         }
-      }
 
-      timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now.epochMilliseconds);
-      setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
+        return;
+      }
 
       try {
         await messageContext.run(interaction as APIMessageApplicationCommandInteraction, client);
@@ -346,57 +329,47 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
         });
       }
 
-      if (!cooldowns.has(interaction.data.name)) {
-        cooldowns.set(interaction.data.name, new Collection<Snowflake, number>());
-      }
+      const expiration = checkCooldown(
+        interaction.data.name,
+        (interaction.user?.id ?? interaction.member?.user.id)!,
+        userContext.cooldown,
+      );
 
-      const now = Temporal.Now.instant();
-      const timestamps = cooldowns.get(interaction.data.name)!;
-      const cooldown = (userContext.cooldown ?? 0) * 1000;
-
-      if (timestamps.has((interaction.user?.id ?? interaction.member?.user.id)!)) {
-        const expiration = timestamps.get((interaction.user?.id ?? interaction.member?.user.id)!)!;
-
-        if (now.epochMilliseconds < expiration) {
-          if (userContext.acknowledge) {
-            await client.api.interactions.editReply(interaction.application_id, interaction.token, {
-              components: [
-                {
-                  type: ComponentType.Container,
-                  components: [
-                    {
-                      type: ComponentType.TextDisplay,
-                      content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
-                    },
-                  ],
-                },
-              ],
-              flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-            });
-          } else {
-            await client.api.interactions.reply(interaction.id, interaction.token, {
-              components: [
-                {
-                  type: ComponentType.Container,
-                  components: [
-                    {
-                      type: ComponentType.TextDisplay,
-                      content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
-                    },
-                  ],
-                },
-              ],
-              flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-            });
-          }
-
-          return;
+      if (expiration) {
+        if (userContext.acknowledge) {
+          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
+            components: [
+              {
+                type: ComponentType.Container,
+                components: [
+                  {
+                    type: ComponentType.TextDisplay,
+                    content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                  },
+                ],
+              },
+            ],
+            flags: MessageFlags.IsComponentsV2,
+          });
+        } else {
+          await client.api.interactions.reply(interaction.id, interaction.token, {
+            components: [
+              {
+                type: ComponentType.Container,
+                components: [
+                  {
+                    type: ComponentType.TextDisplay,
+                    content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                  },
+                ],
+              },
+            ],
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+          });
         }
+
+        return;
       }
-
-      timestamps.set((interaction.user?.id ?? interaction.member?.user.id)!, now.epochMilliseconds);
-      setTimeout(() => timestamps.delete((interaction.user?.id ?? interaction.member?.user.id)!), cooldown);
-
       try {
         await userContext.run(interaction as APIUserApplicationCommandInteraction, client);
       } catch (error) {

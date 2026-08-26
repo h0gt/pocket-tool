@@ -1,7 +1,8 @@
 import { Collection } from '@discordjs/collection';
-import type { BooleanChatInputOption } from '../types/types';
+import type { BooleanChatInputOption, GatewayShard } from '../types/types';
 import {
   ActivityType,
+  API,
   ApplicationCommandOptionType,
   ApplicationCommandType,
   Client,
@@ -19,7 +20,8 @@ import { REST } from '@discordjs/rest';
 import env from '../utils/env';
 import { CompressionMethod, SimpleShardingStrategy, WebSocketManager, WebSocketShardEvents } from '@discordjs/ws';
 import { scheduleReshardCheck } from '../crons/reshard';
-import { commands, events, latencies, uptimes } from './collections';
+import { events } from '../builders/event';
+import { commands } from '../builders/command';
 
 process.on('uncaughtException', console.error);
 process.on('unhandledRejection', console.error);
@@ -38,7 +40,11 @@ const gateway = new WebSocketManager({
   buildStrategy: (manager) => new SimpleShardingStrategy(manager),
 });
 
+// @ts-ignore
 const client = new Client({ rest, gateway });
+
+// some sort of workaround to have gateway.shards on prod
+client.gateway.shards = new Collection<number, GatewayShard>();
 
 client.on(GatewayDispatchEvents.Ready, async (payload) => {
   console.log(`shard #${payload.shardId} is ready!`);
@@ -59,11 +65,17 @@ client.on(GatewayDispatchEvents.Ready, async (payload) => {
 
 // track uptime and latency
 gateway.on(WebSocketShardEvents.Ready, (_, shardId) => {
-  uptimes.set(shardId, Temporal.Now.instant().epochMilliseconds);
+  client.gateway.shards.set(shardId, {
+    uptime: Temporal.Now.instant().epochMilliseconds,
+  });
 });
 
 gateway.on(WebSocketShardEvents.HeartbeatComplete, (payload, shardId) => {
-  latencies.set(shardId, payload.latency);
+  const shard = client.gateway.shards.get(shardId);
+
+  if (shard) {
+    shard.ping = payload.latency;
+  }
 });
 
 events.forEach((event) => {

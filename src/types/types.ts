@@ -1,5 +1,4 @@
 import type {
-  API,
   APIApplicationCommandAutocompleteInteraction,
   APIAttachment,
   APIChannel,
@@ -364,4 +363,9 @@ export interface CollectorData<Type> {
 export interface Collector<Type> extends EventEmitter<CollectorEvents<Type>> {
   collect(item: Type): Promise<void>;
   end(reason?: string): void;
+}
+
+export interface GatewayShard {
+  ping?: number;
+  uptime?: number;
 }
