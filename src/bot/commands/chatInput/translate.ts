@@ -163,7 +163,7 @@ createApplicationCommand({
         ],
       });
     } catch (error) {
-      if (error && typeof error === 'object' && 'code' in error && error.code === 429) {
+      if (error instanceof Error && error.message.includes('(429)')) {
         await client.api.interactions.editReply(interaction.application_id, interaction.token, {
           components: [
             {

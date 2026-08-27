@@ -325,6 +325,7 @@ export type RequestOptions<Type extends ResponseType> = {
   headers?: Record<string, string>;
   params?: Record<string, string | number | boolean>;
   body?: unknown;
+  form?: Record<string, string>;
   timeout?: number;
 };
 

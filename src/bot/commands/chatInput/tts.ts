@@ -82,7 +82,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} Eleven Labs client.api key not set`,
+                content: `${emoji('Wrong')} Eleven Labs API key not set`,
               },
             ],
           },

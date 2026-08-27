@@ -30,6 +30,9 @@ export async function makeRequest<Type extends ResponseType>(
         options.method !== RequestMethod.GET && {
           body: JSON.stringify(options.body),
         }),
+      ...(options.form !== undefined && {
+        body: new URLSearchParams(options.form),
+      }),
     });
 
     if (!res.ok) {

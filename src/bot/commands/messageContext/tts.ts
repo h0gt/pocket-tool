@@ -31,7 +31,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} Eleven Labs client.api key not set`,
+                content: `${emoji('Wrong')} Eleven Labs API key not set`,
               },
             ],
           },
@@ -111,6 +111,8 @@ createApplicationCommand({
       return;
     }
 
+    const text = message.content.trim();
+
     const [{ ElevenLabsClient }, { decodeOpusBytes, getWaveform }] = await Promise.all([
       import('@elevenlabs/elevenlabs-js'),
       import('../../../utils/opus'),
@@ -119,7 +121,7 @@ createApplicationCommand({
     const elevenlabs = new ElevenLabsClient({ apiKey: elevenLabsApiKey });
 
     const audio = await elevenlabs.textToSpeech.convertWithTimestamps('M563YhMmA0S8vEYwkgYa', {
-      text: truncate(message.content.trim(), plus ? 500 : 100),
+      text: truncate(text, plus ? 500 : 100),
       languageCode:
         findClosestMatch(
           interaction.locale,
