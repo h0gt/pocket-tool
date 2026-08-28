@@ -27,7 +27,7 @@ const FONTS = [
 const attemptedFonts = new Set<string>();
 
 function loadFonts(font: FontKey): void {
-  const requiredFamilies = new Set([CARD_FONTS[font].family, 'Exo 2', 'Inconsolata']);
+  const requiredFamilies = new Set([CARD_FONTS[font].label, 'Exo 2', 'Inconsolata']);
 
   for (const [family, file] of FONTS) {
     if (!requiredFamilies.has(family) || attemptedFonts.has(family)) {
@@ -52,146 +52,145 @@ export const CARD_FONTS = {
   modern: {
     label: 'M PLUS Rounded 1c',
     description: 'Clean rounded sans-serif',
-    family: 'M PLUS Rounded 1c',
     fallback: 'sans-serif',
     weight: 400,
     style: 'normal',
+    emoji: 'MPlusRounded',
   },
   display: {
     label: 'Dela Gothic One',
     description: 'Bold display lettering',
-    family: 'Dela Gothic One',
     fallback: 'sans-serif',
     weight: 400,
     style: 'normal',
+    emoji: 'DelaGothicOne',
   },
   pixel: {
     label: 'DotGothic16',
     description: 'Pixel-inspired gothic',
-    family: 'DotGothic16',
     fallback: 'monospace',
     weight: 400,
     style: 'normal',
+    emoji: 'DotGothic16',
   },
   pop: {
     label: 'Hachi Maru Pop',
     description: 'Cute handwritten style',
-    family: 'Hachi Maru Pop',
     fallback: 'sans-serif',
     weight: 400,
     style: 'normal',
+    emoji: 'HachiMaruPop',
   },
   graffiti: {
     label: 'Rampart One',
     description: 'Bold playful lettering',
-    family: 'Rampart One',
     fallback: 'sans-serif',
     weight: 400,
     style: 'normal',
+    emoji: 'RampartOne',
   },
   reggae: {
     label: 'Reggae One',
     description: 'Fun decorative display',
-    family: 'Reggae One',
     fallback: 'sans-serif',
     weight: 400,
     style: 'normal',
+    emoji: 'ReggaeOne',
   },
   rock: {
     label: 'RocknRoll One',
     description: 'Strong expressive display',
-    family: 'RocknRoll One',
     fallback: 'sans-serif',
     weight: 400,
     style: 'normal',
+    emoji: 'RocknRollOne',
   },
   editorial: {
     label: 'Zen Old Mincho',
     description: 'Classic serif',
-    family: 'Zen Old Mincho',
     fallback: 'serif',
     weight: 400,
     style: 'normal',
+    emoji: 'ZenOldMincho',
   },
   calligraphy: {
     label: 'Yuji Syuku',
     description: 'Traditional calligraphy',
-    family: 'Yuji Syuku',
     fallback: 'serif',
     weight: 400,
     style: 'normal',
+    emoji: 'YujiSyuku',
   },
   magic: {
     label: 'Yusei Magic',
     description: 'Friendly handwritten',
-    family: 'Yusei Magic',
     fallback: 'sans-serif',
     weight: 400,
     style: 'normal',
+    emoji: 'YuseiMagic',
   },
   mono: {
     label: 'Inconsolata',
     description: 'Modern monospace',
-    family: 'Inconsolata',
     fallback: 'monospace',
     weight: 400,
     style: 'normal',
+    emoji: 'Inconsolata',
   },
   exo: {
     label: 'Exo 2',
     description: 'Modern geometric sans',
-    family: 'Exo 2',
     fallback: 'sans-serif',
     weight: 400,
     style: 'normal',
+    emoji: 'Exo2',
   },
   titling: {
     label: 'Castoro Titling',
     description: 'Elegant titles',
-    family: 'Castoro Titling',
     fallback: 'serif',
     weight: 400,
     style: 'normal',
+    emoji: 'CastoroTitling',
   },
   classic: {
     label: 'Poltawski Nowy',
     description: 'Traditional serif',
-    family: 'Poltawski Nowy',
     fallback: 'serif',
     weight: 400,
     style: 'normal',
+    emoji: 'PoltawskiNowy',
   },
   vina: {
     label: 'Vina Sans',
     description: 'Heavy condensed display',
-    family: 'Vina Sans',
     fallback: 'sans-serif',
     weight: 400,
     style: 'normal',
+    emoji: 'VinaSans',
   },
   script: {
     label: 'Dancing Script',
     description: 'Elegant cursive',
-    family: 'Dancing Script',
     fallback: 'cursive',
     weight: 400,
     style: 'normal',
+    emoji: 'DancingScript',
   },
   minecraft: {
     label: 'Minecraft',
     description: 'Minecraft-style pixel font',
-    family: 'Minecraft',
     fallback: 'monospace',
     weight: 400,
     style: 'normal',
+    emoji: 'Minecraft',
   },
 } as const;
 
-export const CARD_SIZES = {
+export const FONT_SIZES = {
   auto: {
     label: 'Smart Fit',
     description: 'Fits the text to the card',
-    pixels: 42,
   },
   compact: {
     label: 'Compact - 28px',
@@ -225,36 +224,43 @@ export const CARD_COLORS = {
     label: 'Pearl',
     description: 'Soft white',
     value: '#f7f3ec',
+    emoji: 'Pearl',
   },
   ink: {
     label: 'Ink',
     description: 'Deep near-black',
     value: '#16161a',
+    emoji: 'Ink',
   },
   rose: {
     label: 'Rose',
     description: 'Warm muted pink',
     value: '#ffb4c8',
+    emoji: 'Rose',
   },
   sky: {
     label: 'Electric Sky',
     description: 'Bright cool blue',
     value: '#8bd5ff',
+    emoji: 'Electric Sky',
   },
   citrus: {
     label: 'Citrus',
     description: 'Fresh golden yellow',
     value: '#ffd76a',
+    emoji: 'Citrus',
   },
   mint: {
     label: 'Mint',
     description: 'Soft vivid green',
     value: '#9fffc5',
+    emoji: 'Mint',
   },
   violet: {
     label: 'Violet',
     description: 'Dreamy lavender',
     value: '#c9b6ff',
+    emoji: 'Violet',
   },
 } as const;
 
@@ -310,7 +316,7 @@ export const CARD_EFFECTS = {
 } as const;
 
 export type FontKey = keyof typeof CARD_FONTS;
-export type SizeKey = keyof typeof CARD_SIZES;
+export type FontSizeKey = keyof typeof FONT_SIZES;
 export type ColorKey = keyof typeof CARD_COLORS;
 export type EffectKey = keyof typeof CARD_EFFECTS;
 export type Layout = (typeof CARD_EFFECTS)[EffectKey]['layout'];
@@ -321,7 +327,7 @@ export type CardOptions = {
   credit: string;
   mention: string;
   font: FontKey;
-  size: SizeKey | number;
+  fontSize: FontSizeKey | number;
   color: ColorKey | Hexadecimal;
   effects: EffectKey[];
 };
@@ -546,25 +552,31 @@ async function drawQuote(
   emojiImages: Record<string, LoadedImage>,
 ): Promise<void> {
   const selectedFont = CARD_FONTS[options.font];
-  let fontSize =
-    typeof options.size === 'number'
-      ? options.size
-      : options.size === 'auto'
-        ? smartFontSize(options.quote)
-        : CARD_SIZES[options.size].pixels;
+
+  const fontSize =
+    typeof options.fontSize === 'number'
+      ? options.fontSize
+      : options.fontSize === 'auto'
+        ? findBestFontSize(ctx, options.quote, selectedFont, area)
+        : FONT_SIZES[options.fontSize].pixels;
+
   const minFontSize = 20;
   const maxLines = 7;
-  let lines: RichLine[] = [];
 
-  while (fontSize >= minFontSize) {
-    ctx.font = resolveFont(selectedFont, fontSize);
-    lines = wrapRichText(ctx, options.quote, area.width, fontSize);
+  ctx.font = resolveFont(selectedFont, fontSize);
 
-    if (lines.length <= maxLines && lines.length * fontSize * 1.16 <= area.height - 62) {
-      break;
-    }
+  let lines = wrapRichText(ctx, options.quote, area.width, fontSize);
 
-    fontSize -= 2;
+  // Segurança caso um tamanho explícito não caiba.
+  let finalFontSize = fontSize;
+
+  while (
+    finalFontSize > minFontSize &&
+    (lines.length > maxLines || lines.length * finalFontSize * 1.16 > area.height - 62)
+  ) {
+    finalFontSize -= 2;
+    ctx.font = resolveFont(selectedFont, finalFontSize);
+    lines = wrapRichText(ctx, options.quote, area.width, finalFontSize);
   }
 
   if (lines.length > maxLines) {
@@ -572,8 +584,8 @@ async function drawQuote(
     appendText(lines[maxLines - 1]!, '…');
   }
 
-  const lineHeight = fontSize * 1.16;
-  const creditSize = Math.max(15, Math.min(22, fontSize * 0.48));
+  const lineHeight = finalFontSize * 1.16;
+  const creditSize = Math.max(15, Math.min(22, finalFontSize * 0.48));
   const handleSize = Math.max(13, Math.min(17, creditSize * 0.78));
   const creditGap = options.credit ? 18 + creditSize + handleSize : 0;
   const contentHeight = lines.length * lineHeight + creditGap;
@@ -592,10 +604,10 @@ async function drawQuote(
 
   ctx.textBaseline = 'top';
   ctx.fillStyle = color;
-  ctx.font = resolveFont(selectedFont, fontSize);
+  ctx.font = resolveFont(selectedFont, finalFontSize);
 
   for (const [index, line] of lines.entries()) {
-    await drawRichLine(ctx, line, drawX, startY + index * lineHeight, area.align, fontSize, emojiImages);
+    await drawRichLine(ctx, line, drawX, startY + index * lineHeight, area.align, finalFontSize, emojiImages);
   }
 
   const creditY = startY + lines.length * lineHeight + 14;
@@ -618,7 +630,7 @@ async function drawQuote(
 }
 
 function resolveFont(font: (typeof CARD_FONTS)[FontKey], size: number): string {
-  return `${font.style} ${font.weight} ${size}px "${font.family}", ${font.fallback}`;
+  return `${font.style} ${font.weight} ${size}px "${font.label}", ${font.fallback}`;
 }
 
 function wrapRichText(ctx: SKRSContext2D, input: string, maxWidth: number, fontSize: number): RichLine[] {
@@ -804,20 +816,31 @@ function appendText(line: RichLine, value: string): void {
   }
 }
 
-function smartFontSize(quote: string): number {
-  const length = [...quote].length;
+function findBestFontSize(
+  ctx: SKRSContext2D,
+  quote: string,
+  font: (typeof CARD_FONTS)[FontKey],
+  area: TextArea,
+): number {
+  const minFontSize = 20;
+  const maxFontSize = 72;
+  const maxLines = 7;
+  const lineHeightMultiplier = 1.16;
+  const reservedHeight = 62;
 
-  if (length <= 35) {
-    return 42;
-  } else if (length <= 75) {
-    return 36;
-  } else if (length <= 140) {
-    return 31;
-  } else if (length <= 240) {
-    return 26;
-  } else {
-    return 22;
+  for (let fontSize = maxFontSize; fontSize >= minFontSize; fontSize -= 2) {
+    ctx.font = resolveFont(font, fontSize);
+
+    const lines = wrapRichText(ctx, quote, area.width, fontSize);
+
+    const contentHeight = lines.length * fontSize * lineHeightMultiplier;
+
+    if (lines.length <= maxLines && contentHeight <= area.height - reservedHeight) {
+      return fontSize;
+    }
   }
+
+  return minFontSize;
 }
 
 function drawBrandMark(ctx: SKRSContext2D): void {

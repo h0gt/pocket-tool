@@ -32,6 +32,32 @@ export enum Emoji {
   Repost = '<:twitter_repost:1504947753745121421>',
   Reply = '<:twitter_reply:1504947725471322286>',
   Verified = '<:twitter_verified:1504947691363238008>',
+  // colors
+  Pearl = '<:pearl:1542924160588714094>',
+  Ink = '<:ink:1542924034923040818>',
+  Rose = '<:rose:1542924233020153986>',
+  EletricSky = '<:eletric_sky:1542924297226551377>',
+  Citrus = '<:citrus:1542924396006482042>',
+  Mint = '<:mint:1542924446929522838>',
+  Violet = '<:violet:1542924494740394085>',
+  // fonts
+  MPlusRounded = '<:m_plus_rounded:1542924656829268148>',
+  DelaGothicOne = '<:dela_gothic_one:1542925070614134925>',
+  DotGothic16 = '<:dot_gothic_16:1542925228009725952>',
+  HachiMaruPop = '<:hachi_maru_pop:1542925328249393172>',
+  RampartOne = '<:rampart_one:1542925467328454686>',
+  ReggaeOne = '<:reggae_one:1542925563377745990>',
+  RocknRollOne = '<:rocknroll_one:1542925700049141770>',
+  ZenOldMincho = '<:zen_old_mincho:1542925832341688330>',
+  YujiSyuku = '<:yuji_syuku:1542925955444641842>',
+  YuseiMagic = '<:yusei_magic:1542926051620167763>',
+  Inconsolatra = '<:inconsolata:1542926144951685151>',
+  Exo2 = '<:exo_2:1542926220923248762>',
+  CastoroTitling = '<:castoro_titling:1542926325143175239>',
+  PoltawskiNowy = '<:poltawski_nowy:1542926428306276502>',
+  VinaSans = '<:vina_sans:1542926549576065145>',
+  DancingScript = '<:dancing_script:1542926637631275038>',
+  Minecraft = '<:minecraft:1542926722708672592>',
 }
 
 export const MESSAGE_BLOCK_REASONS = {

@@ -113,15 +113,13 @@ if (env.get('register_commands').toBoolean() === true) {
 
     command.options ??= [];
 
-    const subcommands = command.options.flatMap((option) => {
-      if (option.type === ApplicationCommandOptionType.Subcommand) {
-        return [option];
-      } else if (option.type === ApplicationCommandOptionType.SubcommandGroup) {
-        return option.options ?? [];
-      } else {
-        return [];
-      }
-    });
+    const subcommands = command.options.flatMap((option) =>
+      option.type === ApplicationCommandOptionType.Subcommand
+        ? [option]
+        : option.type === ApplicationCommandOptionType.SubcommandGroup
+          ? (option.options ?? [])
+          : [],
+    );
 
     const subcommandOptions =
       subcommands.length > 0 ? subcommands.map((subcommand) => (subcommand.options ??= [])) : [command.options];
