@@ -35,7 +35,7 @@ cp .env.example .env
 ```
 
 4. Edit the `.env` file to add your bot token and other configuration options.
-5. Build and run the bot:
+5. Run the bot:
 
 ```bash
 bun run start
