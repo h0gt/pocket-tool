@@ -119,8 +119,14 @@ export function toComponentEmoji(name: keyof typeof Emoji): APIMessageComponentE
     throw new Error(`Emoji "${name}" not found`);
   }
 
+  const match = emoji.match(/^<a?:\w+:(\d+)>$/);
+
+  if (!match) {
+    throw new Error(`Invalid emoji format: ${emoji}`);
+  }
+
   return {
-    id: emoji.replace(/<a?:[a-z0-9_]*:([0-9]*)>/g, '$1'),
+    id: match[1]!,
     name: 'e',
     animated: emoji.startsWith('<a:'),
   };
