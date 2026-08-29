@@ -10,12 +10,16 @@ export function checkForReshard(gateway: WebSocketManager, recommended: number, 
 }
 
 export function scheduleReshardCheck(gateway: WebSocketManager, api: API): void {
-  Bun.cron('0 */12 * * *', async () => {
+  const check = async () => {
     console.log('running reshard check...');
 
     const recommended = (await api.gateway.getBot()).shards;
     const current = await gateway.getShardCount();
 
     checkForReshard(gateway, recommended, current);
-  });
+  };
+
+  void check();
+
+  setInterval(check, 12 * 60 * 60 * 1000);
 }
