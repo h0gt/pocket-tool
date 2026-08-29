@@ -219,6 +219,7 @@ export const CARD_COLORS = {
     label: 'Automatic',
     description: 'Matches the selected layout',
     value: 'auto',
+    emoji: 'Auto',
   },
   pearl: {
     label: 'Pearl',
@@ -242,7 +243,7 @@ export const CARD_COLORS = {
     label: 'Electric Sky',
     description: 'Bright cool blue',
     value: '#8bd5ff',
-    emoji: 'Electric Sky',
+    emoji: 'ElectricSky',
   },
   citrus: {
     label: 'Citrus',
@@ -270,48 +271,56 @@ export const CARD_EFFECTS = {
     description: 'Avatar fills the entire card',
     layout: 'full-bleed',
     effect: 'original',
+    emoji: 'FullBleedSplit',
   },
   flip: {
     label: 'Flip Image',
     description: 'Mirror the avatar horizontally',
     layout: 'split',
     effect: 'flip',
+    emoji: 'Flip',
   },
   grayscale: {
     label: 'Grayscale',
     description: 'Convert avatar to black and white',
     layout: 'split',
     effect: 'grayscale',
+    emoji: 'Grayscale',
   },
   blur: {
     label: 'Blur',
     description: 'Gaussian blur on the avatar',
     layout: 'split',
     effect: 'blur',
+    emoji: 'Blur',
   },
   brightness: {
     label: 'Brightness Boost',
     description: 'Brighten the avatar',
     layout: 'split',
     effect: 'brightness',
+    emoji: 'BrightnessBoost',
   },
   pixelate: {
     label: 'Pixelate',
     description: 'Pixelate the avatar',
     layout: 'split',
     effect: 'pixelate',
+    emoji: 'Pixelate',
   },
   'remove-watermark': {
     label: 'Remove Watermark',
     description: 'Hide the Pocket Tool watermark',
     layout: 'split',
     effect: 'remove-watermark',
+    emoji: 'RemoveWatermark',
   },
   gif: {
     label: 'GIF',
     description: 'Export the card as an animated GIF',
     layout: 'split',
     effect: 'gif',
+    emoji: 'GIF2',
   },
 } as const;
 

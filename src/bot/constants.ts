@@ -23,9 +23,13 @@ export enum Emoji {
   Translate = '<:translate:1533284546097840228>',
   Quote = '<:quote:1533288342052016138>',
   Search = '<:search:1535622633058598942>',
+  CustomFontSize = '<:custom_font_size:1543070826881089737>',
+  CustomColor = '<:custom_color:1543070858380054548>',
+  Auto = '<:auto:1543217554674155571>',
   // pagination
   Previous = '<:previous:1535622582454194228>',
   Next = '<:next:1535622608429654037>',
+  Selected = '<:selected:1543217252063772683>',
   // twitter
   Bookmark = '<:twitter_bookmark:1504947779548479669>',
   Like = '<:twitter_like:1504947769717162076>',
@@ -36,7 +40,7 @@ export enum Emoji {
   Pearl = '<:pearl:1542924160588714094>',
   Ink = '<:ink:1542924034923040818>',
   Rose = '<:rose:1542924233020153986>',
-  EletricSky = '<:eletric_sky:1542924297226551377>',
+  ElectricSky = '<:electric_sky:1542924297226551377>',
   Citrus = '<:citrus:1542924396006482042>',
   Mint = '<:mint:1542924446929522838>',
   Violet = '<:violet:1542924494740394085>',
@@ -51,13 +55,22 @@ export enum Emoji {
   ZenOldMincho = '<:zen_old_mincho:1542925832341688330>',
   YujiSyuku = '<:yuji_syuku:1542925955444641842>',
   YuseiMagic = '<:yusei_magic:1542926051620167763>',
-  Inconsolatra = '<:inconsolata:1542926144951685151>',
+  Inconsolata = '<:inconsolata:1542926144951685151>',
   Exo2 = '<:exo_2:1542926220923248762>',
   CastoroTitling = '<:castoro_titling:1542926325143175239>',
   PoltawskiNowy = '<:poltawski_nowy:1542926428306276502>',
   VinaSans = '<:vina_sans:1542926549576065145>',
   DancingScript = '<:dancing_script:1542926637631275038>',
   Minecraft = '<:minecraft:1542926722708672592>',
+  // image effects
+  FullBleedSplit = '<:full_bleed_split:1543069033484783647>',
+  Grayscale = '<:grayscale:1543069930663190538>',
+  Blur = '<:blur:1543069955203928207>',
+  BrightnessBoost = '<:brightness_boost:1543070020056129566>',
+  RemoveWatermark = '<:remove_watermark:1543070663491719248>',
+  GIF2 = '<:GIF:1543070706021965895>',
+  Flip = '<:flip:1543214106209681469>',
+  Pixelate = '<:pixelate:1543214158731022357>',
 }
 
 export const MESSAGE_BLOCK_REASONS = {
