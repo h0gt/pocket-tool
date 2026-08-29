@@ -363,6 +363,7 @@ createApplicationCommand({
                         default: value === session.fontSize,
                       })),
                       {
+                        emoji: toComponentEmoji('CustomFontSize'),
                         label: 'Custom Font Size',
                         description: 'Provide a custom font size',
                         value: 'custom',
@@ -560,6 +561,7 @@ createApplicationCommand({
                           default: value === session.fontSize,
                         })),
                         {
+                          emoji: toComponentEmoji('CustomFontSize'),
                           label: 'Custom Font Size',
                           description: 'Provide a custom font size',
                           value: 'custom',
@@ -760,6 +762,7 @@ createApplicationCommand({
                           default: value === session.fontSize,
                         })),
                         {
+                          emoji: toComponentEmoji('CustomFontSize'),
                           label: 'Custom Font Size',
                           description: 'Provide a custom font size',
                           value: 'custom',
@@ -939,6 +942,7 @@ createApplicationCommand({
                         default: value === session.fontSize,
                       })),
                       {
+                        emoji: toComponentEmoji('CustomFontSize'),
                         label: 'Custom Font Size',
                         description: 'Provide a custom font size',
                         value: 'custom',
@@ -1113,6 +1117,7 @@ createApplicationCommand({
                         default: value === session.fontSize,
                       })),
                       {
+                        emoji: toComponentEmoji('CustomFontSize'),
                         label: 'Custom Font Size',
                         description: 'Provide a custom font size',
                         value: 'custom',
@@ -1317,6 +1322,7 @@ createApplicationCommand({
                         default: value === session.fontSize,
                       })),
                       {
+                        emoji: toComponentEmoji('CustomFontSize'),
                         label: 'Custom Font Size',
                         description: 'Provide a custom font size',
                         value: 'custom',
@@ -1518,6 +1524,7 @@ createApplicationCommand({
                         default: value === session.fontSize,
                       })),
                       {
+                        emoji: toComponentEmoji('CustomFontSize'),
                         label: 'Custom Font Size',
                         description: 'Provide a custom font size',
                         value: 'custom',
@@ -1681,6 +1688,7 @@ createApplicationCommand({
                     default: value === session.fontSize,
                   })),
                   {
+                    emoji: toComponentEmoji('CustomFontSize'),
                     label: 'Custom Font Size',
                     description: 'Provide a custom font size',
                     value: 'custom',
