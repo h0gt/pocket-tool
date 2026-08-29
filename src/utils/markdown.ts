@@ -60,7 +60,7 @@ export function timestamp(time: number, flag: TimestampStyle = TimestampStyle.Sh
   return `<t:${Math.floor(time / 1000)}:${flag}>`;
 }
 
-export function truncate(content: string = '', length: number): string {
+export function ellipsis(content: string = '', length: number): string {
   if (content.length <= length) {
     return content;
   }

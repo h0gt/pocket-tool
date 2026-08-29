@@ -6,7 +6,7 @@ import {
   MessageFlags,
 } from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
-import { codeblock, emoji, timestamp, truncate } from '../../../utils/markdown';
+import { codeblock, emoji, timestamp, ellipsis } from '../../../utils/markdown';
 import env from '../../../utils/env';
 import { makeRequest } from '../../../utils/request';
 import { RequestMethod, ResponseType, TimestampStyle } from '../../../types/types';
@@ -178,7 +178,7 @@ createApplicationCommand({
           components: [
             {
               type: ComponentType.TextDisplay,
-              content: codeblock('ansi', truncate(transcript.text, 3995)),
+              content: codeblock('ansi', ellipsis(transcript.text, 3995)),
             },
           ],
         },

@@ -132,7 +132,7 @@ createApplicationCommand({
 
     let content = tweet.hasText ? tweet.displayText : undefined;
 
-    let isTranslated = false;
+    let isTranslated: boolean = false;
 
     if (language && content) {
       const azureApiKey = env.get('azure_api_key').toString();
@@ -156,56 +156,48 @@ createApplicationCommand({
         return;
       }
 
-      try {
-        const sourceCode = tweet.language
-          ? findClosestMatch(
-              tweet.language,
+      const sourceCode = tweet.language
+        ? findClosestMatch(
+            tweet.language,
+            AZURE_LANGUAGES.map((language) => language.code),
+          )
+        : undefined;
+
+      const targetCode =
+        language === 'auto'
+          ? (findClosestMatch(
+              interaction.locale,
               AZURE_LANGUAGES.map((language) => language.code),
-            )
-          : undefined;
+            ) ?? 'en')
+          : language;
 
-        const targetCode =
-          language === 'auto'
-            ? (findClosestMatch(
-                interaction.locale,
-                AZURE_LANGUAGES.map((language) => language.code),
-              ) ?? 'en')
-            : language;
-
-        const translation = await makeRequest('https://api.cognitive.microsofttranslator.com/translate', {
-          method: RequestMethod.POST,
-          response: ResponseType.JSON,
-          headers: {
-            'Content-Type': 'application/json',
-            'Ocp-Apim-Subscription-Key': azureApiKey,
+      const translation = await makeRequest('https://api.cognitive.microsofttranslator.com/translate', {
+        method: RequestMethod.POST,
+        response: ResponseType.JSON,
+        headers: {
+          'Content-Type': 'application/json',
+          'Ocp-Apim-Subscription-Key': azureApiKey,
+        },
+        params: {
+          'api-version': '3.0',
+          ...(sourceCode ? { from: sourceCode } : {}),
+          to: targetCode,
+        },
+        body: [
+          {
+            text: content,
           },
-          params: {
-            'api-version': '3.0',
-            ...(sourceCode ? { from: sourceCode } : {}),
-            to: targetCode,
-          },
-          body: [
-            {
-              text: content,
-            },
-          ],
-        });
+        ],
+      });
 
-        const result = translation[0];
-        const translated = result?.translations[0];
+      const result = translation[0];
+      const translated = result?.translations[0];
 
-        if (!result || !translated) {
-          isTranslated = false;
-        } else {
-          content = translated.text;
-          isTranslated = true;
-        }
-      } catch (error) {
+      if (!result || !translated) {
         isTranslated = false;
-
-        if (!(error && typeof error === 'object' && 'code' in error && error.code === 429)) {
-          throw error;
-        }
+      } else {
+        content = translated.text;
+        isTranslated = true;
       }
     }
 

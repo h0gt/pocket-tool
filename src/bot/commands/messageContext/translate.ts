@@ -90,71 +90,25 @@ createApplicationCommand({
         AZURE_LANGUAGES.map((language) => language.code),
       ) ?? 'en';
 
-    let translation;
-
-    try {
-      translation = await makeRequest('https://api.cognitive.microsofttranslator.com/translate', {
-        method: RequestMethod.POST,
-        response: ResponseType.JSON,
-        headers: {
-          'Content-type': 'application/json',
-          'Ocp-Apim-Subscription-Key': azureApiKey,
+    const translation = await makeRequest('https://api.cognitive.microsofttranslator.com/translate', {
+      method: RequestMethod.POST,
+      response: ResponseType.JSON,
+      headers: {
+        'Content-type': 'application/json',
+        'Ocp-Apim-Subscription-Key': azureApiKey,
+      },
+      params: {
+        'api-version': '3.0',
+        to: targetCode,
+      },
+      body: [
+        {
+          text,
         },
-        params: {
-          'api-version': '3.0',
-          to: targetCode,
-        },
-        body: [
-          {
-            text,
-          },
-        ],
-      });
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('(429)')) {
-        await client.api.interactions.editReply(interaction.application_id, interaction.token, {
-          components: [
-            {
-              type: ComponentType.Container,
-              components: [
-                {
-                  type: ComponentType.TextDisplay,
-                  content: `${emoji('Wrong')} I'm temporarily rate limited - please try again in a moment`,
-                },
-              ],
-            },
-          ],
-          flags: MessageFlags.IsComponentsV2,
-        });
+      ],
+    });
 
-        return;
-      }
-
-      throw error;
-    }
-
-    const result = translation[0];
-    const translated = result?.translations[0];
-
-    if (!result || !translated) {
-      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
-        components: [
-          {
-            type: ComponentType.Container,
-            components: [
-              {
-                type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} I couldn't translate that - please try again`,
-              },
-            ],
-          },
-        ],
-        flags: MessageFlags.IsComponentsV2,
-      });
-      return;
-    }
-
-    const sourceCode = result.detectedLanguage?.language;
+    const sourceCode = translation[0].detectedLanguage?.language;
 
     const sourceLanguage = AZURE_LANGUAGES.find((language) => language.code === sourceCode);
 
@@ -162,10 +116,10 @@ createApplicationCommand({
       throw new Error(`Unsupported source language: ${sourceCode}`);
     }
 
-    const targetLanguage = AZURE_LANGUAGES.find((language) => language.code === translated.to);
+    const targetLanguage = AZURE_LANGUAGES.find((language) => language.code === translation[0].translations[0].to);
 
     if (!targetLanguage) {
-      throw new Error(`Unsupported target language: ${translated.to}`);
+      throw new Error(`Unsupported target language: ${translation[0].translations[0].to}`);
     }
 
     await client.api.interactions.editReply(interaction.application_id, interaction.token, {
@@ -182,7 +136,7 @@ createApplicationCommand({
             },
             {
               type: ComponentType.TextDisplay,
-              content: `${translated.text}\n\n-# ${emoji('Exclamation')} Target language was selected based on the user's locale`,
+              content: `${translation[0].translations[0].text}\n\n-# ${emoji('Exclamation')} Target language was selected based on the user's locale`,
             },
           ],
         },

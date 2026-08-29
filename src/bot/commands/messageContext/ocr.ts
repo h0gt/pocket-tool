@@ -6,22 +6,22 @@ import {
   MessageFlags,
 } from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
+import env from '../../../utils/env';
 import { codeblock, emoji, ellipsis } from '../../../utils/markdown';
 import { makeRequest } from '../../../utils/request';
-import env from '../../../utils/env';
 import { RequestMethod, ResponseType } from '../../../types/types';
 
 createApplicationCommand({
   type: ApplicationCommandType.Message,
-  name: 'What Did They Type?',
+  name: 'OCR',
   integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   cooldown: 5,
   acknowledge: true,
   async run(interaction, client) {
-    const saplingApiKey = env.get('sapling_api_key').toString();
+    const ocrApiKey = env.get('ocr_api_key').toString();
 
-    if (!saplingApiKey) {
+    if (!ocrApiKey) {
       await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
@@ -29,7 +29,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} Sapling API key not set`,
+                content: `${emoji('Wrong')} OCR API key not set`,
               },
             ],
           },
@@ -61,7 +61,7 @@ createApplicationCommand({
       return;
     }
 
-    if (!message || !message.content.trim()) {
+    if (!message || message.attachments.length === 0) {
       await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
@@ -69,7 +69,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please select a message with text to spellcheck`,
+                content: `${emoji('Exclamation')} Please select an image to turn into a GIF`,
               },
             ],
           },
@@ -80,21 +80,51 @@ createApplicationCommand({
       return;
     }
 
-    const text = message.content.trim();
+    const attachment = Object.values(message.attachments).find((attachment) =>
+      attachment.content_type?.startsWith('image/'),
+    );
 
-    const spellcheck = await makeRequest('https://api.sapling.ai/api/v1/spellcheck', {
-      method: RequestMethod.POST,
-      response: ResponseType.JSON,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: {
-        key: saplingApiKey,
-        text: text,
-      },
+    if (!attachment) {
+      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
+        components: [
+          {
+            type: ComponentType.Container,
+            components: [
+              {
+                type: ComponentType.TextDisplay,
+                content: `${emoji('Exclamation')} Please select at least one image to OCR`,
+              },
+            ],
+          },
+        ],
+        flags: MessageFlags.IsComponentsV2,
+      });
+
+      return;
+    }
+
+    const image = await makeRequest(attachment.url, {
+      method: RequestMethod.GET,
+      response: ResponseType.BUFFER,
     });
 
-    const corrected = applyCorrections(text, spellcheck.edits ?? []);
+    const form = new FormData();
+
+    form.append('apikey', ocrApiKey);
+    form.append('language', 'por');
+    form.append(
+      'file',
+      new Blob([image], {
+        type: attachment.content_type ?? 'image/jpeg',
+      }),
+      attachment.filename ?? 'image.jpg',
+    );
+
+    const ocr = await makeRequest('https://api.ocr.space/parse/image', {
+      method: RequestMethod.POST,
+      response: ResponseType.JSON,
+      body: form,
+    });
 
     await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
@@ -103,7 +133,7 @@ createApplicationCommand({
           components: [
             {
               type: ComponentType.TextDisplay,
-              content: codeblock('ansi', ellipsis(corrected, 3995)),
+              content: codeblock('ansi', ellipsis(ocr.ParsedResults[0].ParsedText, 3995)),
             },
           ],
         },
@@ -112,11 +142,3 @@ createApplicationCommand({
     });
   },
 });
-
-function applyCorrections(text: string, edits: any[]) {
-  for (const edit of [...edits].sort((a, b) => b.start - a.start)) {
-    text = text.slice(0, edit.start) + edit.replacement + text.slice(edit.end);
-  }
-
-  return text;
-}

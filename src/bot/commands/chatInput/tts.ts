@@ -9,7 +9,7 @@ import {
 import createApplicationCommand from '../../../builders/command';
 import { findClosestMatch, getAutocompleteFocusedOption, hasPlus } from '../../../utils/utils';
 import env from '../../../utils/env';
-import { emoji, timestamp, truncate } from '../../../utils/markdown';
+import { emoji, timestamp, ellipsis } from '../../../utils/markdown';
 import { ELEVEN_LABS_LANGUAGES } from '../../constants';
 import { redis } from '../../../utils/redis';
 import { TimestampStyle } from '../../../types/types';
@@ -151,7 +151,7 @@ createApplicationCommand({
     const elevenlabs = new ElevenLabsClient({ apiKey: elevenLabsApiKey });
 
     const audio = await elevenlabs.textToSpeech.convertWithTimestamps(voice ?? 'M563YhMmA0S8vEYwkgYa', {
-      text: truncate(text, plus ? 1000 : 500),
+      text: ellipsis(text, plus ? 1000 : 500),
       languageCode:
         findClosestMatch(
           !language || language === 'auto' ? interaction.locale : language,

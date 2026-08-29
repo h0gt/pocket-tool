@@ -25,14 +25,13 @@ export async function makeRequest<Type extends ResponseType>(
     const res = await fetch(parsedUrl.toString(), {
       method: options.method,
       signal: controller.signal,
-      ...(options.headers !== undefined && { headers: options.headers }),
+      ...(options.headers !== undefined && {
+        headers: options.headers,
+      }),
       ...(options.body !== undefined &&
         options.method !== RequestMethod.GET && {
-          body: JSON.stringify(options.body),
+          body: options.body instanceof FormData ? options.body : JSON.stringify(options.body),
         }),
-      ...(options.form !== undefined && {
-        body: new URLSearchParams(options.form),
-      }),
     });
 
     if (!res.ok) {

@@ -7,7 +7,7 @@ import {
 } from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
 import env from '../../../utils/env';
-import { emoji, timestamp, truncate } from '../../../utils/markdown';
+import { emoji, timestamp, ellipsis } from '../../../utils/markdown';
 import { redis } from '../../../utils/redis';
 import { TimestampStyle } from '../../../types/types';
 import { findClosestMatch, hasPlus } from '../../../utils/utils';
@@ -121,7 +121,7 @@ createApplicationCommand({
     const elevenlabs = new ElevenLabsClient({ apiKey: elevenLabsApiKey });
 
     const audio = await elevenlabs.textToSpeech.convertWithTimestamps('M563YhMmA0S8vEYwkgYa', {
-      text: truncate(text, plus ? 500 : 100),
+      text: ellipsis(text, plus ? 500 : 100),
       languageCode:
         findClosestMatch(
           interaction.locale,

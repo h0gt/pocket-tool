@@ -8,7 +8,7 @@ import {
 } from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
 import util from 'util';
-import { codeblock, truncate } from '../../../utils/markdown';
+import { codeblock, ellipsis } from '../../../utils/markdown';
 
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
@@ -57,7 +57,7 @@ createApplicationCommand({
           components: [
             {
               type: ComponentType.TextDisplay,
-              content: codeblock('ts', truncate(formatted, 3985)),
+              content: codeblock('ts', ellipsis(formatted, 3985)),
             },
           ],
         },
