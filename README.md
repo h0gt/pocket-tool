@@ -18,7 +18,7 @@ Pocket Tool is a **lightweight, fast, and versatile Discord bot** designed to be
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/mloetta/pocket-tool
+git clone https://github.com/melotheunbound/pocket-tool
 cd pocket-tool
 ```
 
