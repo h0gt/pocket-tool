@@ -1,7 +1,7 @@
 import type { Collector, CollectorEvents, CollectorOptions } from '../types/types';
 import { EventEmitter } from 'events';
 
-export const collectors = new Set<Collector<any>>();
+export const collectors = new Set<Collector<unknown>>();
 
 export default function createCollector<Type>(options: CollectorOptions<Type>): Collector<Type> {
   const { duration, max, filter } = options;
@@ -27,12 +27,18 @@ export default function createCollector<Type>(options: CollectorOptions<Type>): 
   collectors.add(emitter);
   resetTimeout();
 
-  emitter.collect = async (item: Type) => {
+  emitter.collect = (item: Type) => {
     if (stopped) {
       return;
     }
 
-    const pass = filter ? await filter(item) : true;
+    if (max && collectedCount >= max) {
+      emitter.end('max reached');
+      return;
+    }
+
+    const pass = filter ? filter(item) : true;
+
     if (!pass) {
       return;
     }
@@ -40,11 +46,6 @@ export default function createCollector<Type>(options: CollectorOptions<Type>): 
     collectedCount++;
 
     emitter.emit('collect', item);
-
-    if (max && collectedCount >= max) {
-      emitter.end('max reached');
-      return;
-    }
 
     resetTimeout();
   };

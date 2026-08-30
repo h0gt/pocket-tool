@@ -2,7 +2,7 @@ import { join } from 'path';
 import { pathToFileURL } from 'url';
 import { readdir } from 'fs/promises';
 import { Emoji } from '../bot/constants';
-import type { ApplicationCommand, ChatInputOptions, Component, Localization } from '../types/types';
+import type { ApplicationCommand, ChatInputOptions, Localization } from '../types/types';
 import {
   API,
   ApplicationCommandOptionType,
@@ -284,71 +284,39 @@ export function parseCommandOptions(
   for (const option of options) {
     switch (option.type) {
       case ApplicationCommandOptionType.SubcommandGroup:
-      case ApplicationCommandOptionType.Subcommand: {
+      case ApplicationCommandOptionType.Subcommand:
         args[option.name] = parseCommandOptions(interaction, option.options);
         break;
-      }
-      case ApplicationCommandOptionType.Channel: {
+      case ApplicationCommandOptionType.Channel:
         args[option.name] = interaction.data.resolved?.channels?.[option.value];
         break;
-      }
-      case ApplicationCommandOptionType.Role: {
+      case ApplicationCommandOptionType.Role:
         args[option.name] = interaction.data.resolved?.roles?.[option.value];
         break;
-      }
-      case ApplicationCommandOptionType.User: {
+      case ApplicationCommandOptionType.User:
         args[option.name] = {
           user: interaction.data.resolved?.users?.[option.value],
           member: interaction.data.resolved?.members?.[option.value],
         };
 
         break;
-      }
-      case ApplicationCommandOptionType.Attachment: {
+      case ApplicationCommandOptionType.Attachment:
         args[option.name] = interaction.data.resolved?.attachments?.[option.value];
         break;
-      }
-      case ApplicationCommandOptionType.Mentionable: {
+      case ApplicationCommandOptionType.Mentionable:
         args[option.name] = interaction.data.resolved?.roles?.[option.value] ?? {
           user: interaction.data.resolved?.users?.[option.value],
           member: interaction.data.resolved?.members?.[option.value],
         };
 
         break;
-      }
-      default: {
+      default:
         args[option.name] = option.value;
         break;
-      }
     }
   }
 
   return args;
-}
-
-export function parseComponentArgs<Args extends readonly string[]>(
-  component: Component<any>,
-  args: string[],
-): Record<Args[number], string> {
-  const result = {} as Record<Args[number], string>;
-
-  const keys = component.args;
-  if (!keys) {
-    return result;
-  }
-
-  for (let i = 0; i < keys.length; i++) {
-    const key = keys[i];
-    const value = args[i];
-
-    if (!key || value === undefined) {
-      continue;
-    }
-
-    result[key as Args[number]] = value;
-  }
-
-  return result;
 }
 
 export function getChatInputOption(

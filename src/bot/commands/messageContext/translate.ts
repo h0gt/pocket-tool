@@ -21,7 +21,7 @@ createApplicationCommand({
   cooldown: 5,
   acknowledge: true,
   async run(interaction, client) {
-    const azureApiKey = env.get('azure_api_key').toString();
+    const azureApiKey = env.get('azure_api_key')?.toString();
 
     if (!azureApiKey) {
       await client.api.interactions.editReply(interaction.application_id, interaction.token, {

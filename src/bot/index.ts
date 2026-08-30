@@ -2,7 +2,6 @@ import { Collection } from '@discordjs/collection';
 import type { BooleanChatInputOption, GatewayShard } from '../types/types';
 import {
   ActivityType,
-  API,
   ApplicationCommandOptionType,
   ApplicationCommandType,
   Client,
@@ -22,17 +21,17 @@ import { CompressionMethod, SimpleShardingStrategy, WebSocketManager, WebSocketS
 import { scheduleReshardCheck } from '../crons/reshard';
 import { events } from '../builders/event';
 import { commands } from '../builders/command';
+import createCollector from '../builders/collector';
 
 process.on('uncaughtException', console.error);
 process.on('unhandledRejection', console.error);
 
 await readDirectory(path.join(process.cwd(), 'src', 'bot', 'commands'));
-await readDirectory(path.join(process.cwd(), 'src', 'bot', 'components'));
 await readDirectory(path.join(process.cwd(), 'src', 'bot', 'events'));
 
-const rest = new REST().setToken(env.get('token', true).toString());
+const rest = new REST().setToken(env.get('token', true)!.toString());
 const gateway = new WebSocketManager({
-  token: env.get('token', true).toString(),
+  token: env.get('token', true)!.toString(),
   intents: GatewayIntentBits.Guilds,
   shardCount: null,
   rest,
@@ -43,8 +42,9 @@ const gateway = new WebSocketManager({
 // @ts-ignore
 const client = new Client({ rest, gateway });
 
-// some sort of workaround to have gateway.shards on prod
+// some sort of workaround to have extra utilities
 client.gateway.shards = new Collection<number, GatewayShard>();
+client.api.interactions.createCollector = createCollector;
 
 client.on(GatewayDispatchEvents.Ready, async (payload) => {
   console.log(`shard #${payload.shardId} is ready!`);
@@ -103,7 +103,7 @@ await gateway.connect().then(() => {
   scheduleReshardCheck(gateway, client.api);
 });
 
-if (env.get('register_commands').toBoolean() === true) {
+if (env.get('register_commands')!.toBoolean() === true) {
   console.log('refreshing application (/) commands');
 
   commands.forEach((command) => {
@@ -160,7 +160,7 @@ if (env.get('register_commands').toBoolean() === true) {
 
   if (globalCommands.length > 0) {
     await client.api.applicationCommands.bulkOverwriteGlobalCommands(
-      atob(env.get('token', true).toString().split('.')[0]!),
+      atob(env.get('token', true)!.toString().split('.')[0]!),
       globalCommands,
     );
   }
@@ -168,7 +168,7 @@ if (env.get('register_commands').toBoolean() === true) {
   for (const [guildId, commandsForGuild] of commandsForGuilds) {
     if (commandsForGuild.length > 0) {
       await client.api.applicationCommands.bulkOverwriteGuildCommands(
-        atob(env.get('token', true).toString().split('.')[0]!),
+        atob(env.get('token', true)!.toString().split('.')[0]!),
         guildId,
         commandsForGuild,
       );

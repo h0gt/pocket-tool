@@ -25,7 +25,7 @@ class EnvParser {
   }
 
   toArray(): any[] {
-    if (this.value[0] !== '[' && this.value[this.value.length - 1] !== ']') {
+    if (this.value[0] !== '[' || this.value[this.value.length - 1] !== ']') {
       throw new Error(`Item '${this.key}' is not a valid array`);
     }
 
@@ -33,7 +33,7 @@ class EnvParser {
   }
 
   toObject(): object {
-    if (this.value[0] !== '{' && this.value[this.value.length - 1] !== '}') {
+    if (this.value[0] !== '{' || this.value[this.value.length - 1] !== '}') {
       throw new Error(`Item '${this.key}' is not a valid object`);
     }
 
@@ -60,12 +60,18 @@ class Env {
     return this.#cache.has(key);
   }
 
-  public get(key: string, required: boolean = false) {
-    if (required && !this.has(key)) {
+  public get(key: string, required = false): EnvParser | undefined {
+    const value = this.#cache.get(key);
+
+    if (required && value === undefined) {
       throw new Error(`Env error: '${key}' is required`);
     }
 
-    return new EnvParser(this.#cache.get(key)!, key);
+    if (value === undefined) {
+      return undefined;
+    }
+
+    return new EnvParser(value, key);
   }
 }
 

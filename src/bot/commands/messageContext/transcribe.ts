@@ -21,7 +21,7 @@ createApplicationCommand({
   cooldown: 5,
   acknowledge: true,
   async run(interaction, client) {
-    const elevenLabsApiKey = env.get('eleven_labs_api_key').toString();
+    const elevenLabsApiKey = env.get('eleven_labs_api_key')?.toString();
 
     if (!elevenLabsApiKey) {
       await client.api.interactions.editReply(interaction.application_id, interaction.token, {

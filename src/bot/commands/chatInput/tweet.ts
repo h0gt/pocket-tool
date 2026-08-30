@@ -63,7 +63,7 @@ createApplicationCommand({
   async run(interaction, options, client) {
     const { url, language } = options;
 
-    const tolgchuTwitterApiKey = env.get('tolgchu_twitter_api_key').toString();
+    const tolgchuTwitterApiKey = env.get('tolgchu_twitter_api_key')?.toString();
 
     if (!tolgchuTwitterApiKey) {
       await client.api.interactions.editReply(interaction.application_id, interaction.token, {
@@ -135,7 +135,7 @@ createApplicationCommand({
     let isTranslated: boolean = false;
 
     if (language && content) {
-      const azureApiKey = env.get('azure_api_key').toString();
+      const azureApiKey = env.get('azure_api_key')?.toString();
 
       if (!azureApiKey) {
         await client.api.interactions.editReply(interaction.application_id, interaction.token, {

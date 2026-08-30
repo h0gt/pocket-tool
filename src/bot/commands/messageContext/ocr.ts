@@ -19,7 +19,7 @@ createApplicationCommand({
   cooldown: 5,
   acknowledge: true,
   async run(interaction, client) {
-    const ocrApiKey = env.get('ocr_api_key').toString();
+    const ocrApiKey = env.get('ocr_api_key')?.toString();
 
     if (!ocrApiKey) {
       await client.api.interactions.editReply(interaction.application_id, interaction.token, {

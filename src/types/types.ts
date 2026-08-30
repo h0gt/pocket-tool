@@ -223,55 +223,6 @@ export type NonPrimaryEntryPointCommand<Options extends ChatInputOptions = ChatI
 export type ApplicationCommand<Options extends ChatInputOptions = ChatInputOptions> =
   NonPrimaryEntryPointCommand<Options> | PrimaryEntryPointCommand;
 
-export enum InteractionComponentType {
-  Button = 'button',
-  SelectMenu = 'select_menu',
-  Modal = 'modal',
-}
-
-export interface BaseComponent<
-  Type extends InteractionComponentType = InteractionComponentType,
-  Args extends readonly string[] = readonly string[],
-> {
-  type: Type;
-  customId: Snowflake;
-  args?: Args;
-}
-
-export interface ButtonComponent<Args extends readonly string[] = readonly string[]> extends BaseComponent<
-  InteractionComponentType.Button,
-  Args
-> {
-  acknowledge?: boolean;
-  run: (
-    interaction: APIMessageComponentButtonInteraction,
-    args: Record<Args[number], string>,
-    client: Client,
-  ) => Promise<void>;
-}
-
-export interface SelectMenuComponent<Args extends readonly string[] = readonly string[]> extends BaseComponent<
-  InteractionComponentType.SelectMenu,
-  Args
-> {
-  acknowledge?: boolean;
-  run: (
-    interaction: APIMessageComponentSelectMenuInteraction,
-    args: Record<Args[number], string>,
-    client: Client,
-  ) => Promise<void>;
-}
-
-export interface ModalComponent<Args extends readonly string[] = readonly string[]> extends BaseComponent<
-  InteractionComponentType.Modal,
-  Args
-> {
-  run: (interaction: APIModalSubmitInteraction, args: Record<Args[number], string>, client: Client) => Promise<void>;
-}
-
-export type Component<Args extends readonly string[] = readonly string[]> =
-  ButtonComponent<Args> | SelectMenuComponent<Args> | ModalComponent<Args>;
-
 export interface GatewayEvent<Event extends GatewayDispatchEvents = GatewayDispatchEvents> {
   event: Event;
   once?: boolean;
@@ -342,7 +293,7 @@ export interface Track {
 
 export interface CollectorOptions<Type> {
   key: string;
-  filter?: (item: Type) => boolean | Promise<boolean>;
+  filter?: (item: Type) => boolean;
   duration?: number;
   max?: number;
 }
@@ -352,16 +303,8 @@ export interface CollectorEvents<Type> {
   end: [string];
 }
 
-export interface CollectorData<Type> {
-  id: string;
-  key: string;
-  max?: number;
-  filter?: (item: Type) => boolean | Promise<boolean>;
-  emitter: EventEmitter<CollectorEvents<Type>>;
-}
-
 export interface Collector<Type> extends EventEmitter<CollectorEvents<Type>> {
-  collect(item: Type): Promise<void>;
+  collect(item: Type): void;
   end(reason?: string): void;
 }
 

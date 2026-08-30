@@ -10,9 +10,6 @@ import {
   type APIApplicationCommandInteractionDataBooleanOption,
   type APIChatInputApplicationCommandInteraction,
   type APIMessageApplicationCommandInteraction,
-  type APIMessageComponentButtonInteraction,
-  type APIMessageComponentSelectMenuInteraction,
-  type APIModalSubmitInteraction,
   type APIPrimaryEntryPointCommandInteraction,
   type APIUserApplicationCommandInteraction,
 } from '@discordjs/core';
@@ -20,22 +17,18 @@ import createGatewayEvent from '../../builders/event';
 import {
   TimestampStyle,
   type ApplicationCommand,
-  type ButtonComponent,
   type ChatInputCommand,
   type MessageContextMenuCommand,
-  type ModalComponent,
   type PrimaryEntryPointCommand,
-  type SelectMenuComponent,
   type UserContextMenuCommand,
 } from '../../types/types';
 import env from '../../utils/env';
-import { getChatInputOption, parseCommandOptions, parseComponentArgs } from '../../utils/utils';
+import { getChatInputOption, parseCommandOptions } from '../../utils/utils';
 import { emoji, hyperlink, timestamp } from '../../utils/markdown';
 import { MESSAGE_BLOCK_REASONS, SUPPORT } from '../constants';
 import { redis } from '../../utils/redis';
 import { commands } from '../../builders/command';
 import { checkCooldown } from '../../utils/cooldown';
-import { components } from '../../builders/component';
 import { collectors } from '../../builders/collector';
 
 createGatewayEvent({
@@ -46,30 +39,18 @@ createGatewayEvent({
     );
 
     switch (interaction.type) {
-      case InteractionType.ApplicationCommand: {
+      case InteractionType.ApplicationCommand:
         await handleApplicationCommand(interaction, client);
         break;
-      }
-      case InteractionType.ApplicationCommandAutocomplete: {
+      case InteractionType.ApplicationCommandAutocomplete:
         await handleChatInputCommandAutocomplete(interaction, client);
         break;
-      }
-      case InteractionType.MessageComponent: {
-        if (interaction.data.component_type === ComponentType.Button) {
-          await handleButtonComponent(interaction as APIMessageComponentButtonInteraction, client);
-        } else {
-          await handleSelectMenuComponent(interaction as APIMessageComponentSelectMenuInteraction, client);
-        }
-
+      case InteractionType.MessageComponent:
+      case InteractionType.ModalSubmit:
+        collectors.forEach((collector) => collector.collect(interaction));
         break;
-      }
-      case InteractionType.ModalSubmit: {
-        await handleModalSubmit(interaction as APIModalSubmitInteraction, client);
-        break;
-      }
-      default: {
+      default:
         return console.log('unknown interaction type', interaction.type);
-      }
     }
   },
 });
@@ -81,7 +62,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
     return;
   }
 
-  const devIds = env.get('dev_ids', true).toArray();
+  const devIds = env.get('dev_ids', true)!.toArray();
 
   if (
     'dev' in command &&
@@ -511,82 +492,5 @@ async function handleChatInputCommandAutocomplete(
     await command.autocomplete(interaction, client);
   } catch (error) {
     console.error(`Autocomplete for command ${interaction.data.name} encountered an error:`, error);
-  }
-}
-
-async function handleButtonComponent(interaction: APIMessageComponentButtonInteraction, client: Client) {
-  const args = interaction.data.custom_id?.split('_') ?? [];
-  const customId = args.shift();
-
-  if (!customId) {
-    return;
-  }
-
-  const button = components.get(customId) as ButtonComponent;
-
-  if (!button) {
-    await Promise.all(Array.from(collectors, (collector) => collector.collect(interaction)));
-
-    return;
-  }
-
-  if (button.acknowledge) {
-    await client.api.interactions.deferMessageUpdate(interaction.id, interaction.token);
-  }
-
-  try {
-    await button.run(interaction, parseComponentArgs(button, args), client);
-  } catch (error) {
-    console.error(`Button ${customId} encountered an error:`, error);
-  }
-}
-
-async function handleSelectMenuComponent(interaction: APIMessageComponentSelectMenuInteraction, client: Client) {
-  const args = interaction.data.custom_id?.split('_') ?? [];
-  const customId = args.shift();
-
-  if (!customId) {
-    return;
-  }
-
-  const selectMenu = components.get(customId) as SelectMenuComponent;
-
-  if (!selectMenu) {
-    await Promise.all(Array.from(collectors, (collector) => collector.collect(interaction)));
-
-    return;
-  }
-
-  if (selectMenu.acknowledge) {
-    await client.api.interactions.deferMessageUpdate(interaction.id, interaction.token);
-  }
-
-  try {
-    await selectMenu.run(interaction, parseComponentArgs(selectMenu, args), client);
-  } catch (error) {
-    console.error(`Select menu ${customId} encountered an error:`, error);
-  }
-}
-
-async function handleModalSubmit(interaction: APIModalSubmitInteraction, client: Client) {
-  const args = interaction.data.custom_id?.split('_') ?? [];
-  const customId = args.shift();
-
-  if (!customId) {
-    return;
-  }
-
-  const modal = components.get(customId) as ModalComponent;
-
-  if (!modal) {
-    await Promise.all(Array.from(collectors, (collector) => collector.collect(interaction)));
-
-    return;
-  }
-
-  try {
-    await modal.run(interaction, parseComponentArgs(modal, args), client);
-  } catch (error) {
-    console.error(`Modal ${customId} encountered an error:`, error);
   }
 }

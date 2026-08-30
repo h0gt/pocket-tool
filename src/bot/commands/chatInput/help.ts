@@ -14,7 +14,6 @@ import {
 } from '@discordjs/core';
 import createApplicationCommand from '../../../builders/command';
 import List from '../../../utils/list';
-import createCollector from '../../../builders/collector';
 import { toComponentEmoji } from '../../../utils/utils';
 import { emoji } from '../../../utils/markdown';
 
@@ -110,7 +109,9 @@ createApplicationCommand({
       flags: MessageFlags.IsComponentsV2,
     });
 
-    const collector = createCollector<APIMessageComponentButtonInteraction | APIModalSubmitInteraction>({
+    const collector = client.api.interactions.createCollector<
+      APIMessageComponentButtonInteraction | APIModalSubmitInteraction
+    >({
       key: 'commands',
       filter: (i) =>
         i.message?.id === originalReply.id &&

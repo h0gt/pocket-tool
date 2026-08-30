@@ -16,7 +16,6 @@ import {
 import createApplicationCommand from '../../../builders/command';
 import { cdn, emoji, hyperlink } from '../../../utils/markdown';
 import type { ColorKey, EffectKey, FontKey, FontSizeKey } from '../../../utils/card';
-import createCollector from '../../../builders/collector';
 import { Collection } from '@discordjs/collection';
 import { makeRequest } from '../../../utils/request';
 import { RequestMethod, ResponseType } from '../../../types/types';
@@ -139,7 +138,7 @@ createApplicationCommand({
       effects: session.effects,
     });
 
-    const originalReply = await client.api.interactions.editReply(interaction.application_id, interaction.token, {
+    const response = await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
         {
           type: ComponentType.TextDisplay,
@@ -271,12 +270,12 @@ createApplicationCommand({
       flags: MessageFlags.IsComponentsV2,
     });
 
-    const collector = createCollector<
+    const collector = client.api.interactions.createCollector<
       APIMessageComponentSelectMenuInteraction | APIMessageComponentButtonInteraction | APIModalSubmitInteraction
     >({
       key: 'quote',
       filter: (i) =>
-        i.message?.id === originalReply.id &&
+        i.message?.id === response.id &&
         (i.user?.id ?? i.member?.user.id) === (interaction.user?.id ?? interaction.member?.user.id),
       duration: 5 * 60 * 1000,
     });
@@ -304,11 +303,11 @@ createApplicationCommand({
             effects: session.effects,
           });
 
-          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
+          await client.api.interactions.editReply(i.application_id, i.token, {
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
+                content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${i.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
               },
               {
                 type: ComponentType.MediaGallery,
@@ -502,11 +501,11 @@ createApplicationCommand({
               effects: session.effects,
             });
 
-            await client.api.interactions.editReply(interaction.application_id, interaction.token, {
+            await client.api.interactions.editReply(i.application_id, i.token, {
               components: [
                 {
                   type: ComponentType.TextDisplay,
-                  content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
+                  content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${i.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
                 },
                 {
                   type: ComponentType.MediaGallery,
@@ -703,11 +702,11 @@ createApplicationCommand({
               effects: session.effects,
             });
 
-            await client.api.interactions.editReply(interaction.application_id, interaction.token, {
+            await client.api.interactions.editReply(i.application_id, i.token, {
               components: [
                 {
                   type: ComponentType.TextDisplay,
-                  content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
+                  content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${i.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
                 },
                 {
                   type: ComponentType.MediaGallery,
@@ -883,11 +882,11 @@ createApplicationCommand({
             effects: session.effects,
           });
 
-          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
+          await client.api.interactions.editReply(i.application_id, i.token, {
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
+                content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${i.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
               },
               {
                 type: ComponentType.MediaGallery,
@@ -1058,11 +1057,11 @@ createApplicationCommand({
             effects: session.effects,
           });
 
-          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
+          await client.api.interactions.editReply(i.application_id, i.token, {
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
+                content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${i.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
               },
               {
                 type: ComponentType.MediaGallery,
@@ -1263,11 +1262,11 @@ createApplicationCommand({
             effects: session.effects,
           });
 
-          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
+          await client.api.interactions.editReply(i.application_id, i.token, {
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
+                content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${i.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
               },
               {
                 type: ComponentType.MediaGallery,
@@ -1465,11 +1464,11 @@ createApplicationCommand({
             effects: session.effects,
           });
 
-          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
+          await client.api.interactions.editReply(i.application_id, i.token, {
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
+                content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${i.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
               },
               {
                 type: ComponentType.MediaGallery,
