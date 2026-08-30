@@ -15,7 +15,7 @@ import { getAutocompleteFocusedOption } from '../../../utils/utils';
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'timestamp',
-  description: 'Generates a Discord style timestamp for the given time',
+  description: 'Generates a Discord-style timestamp for the given time',
   integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   options: [
@@ -114,7 +114,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please provide a valid time to convert`,
+                content: `${emoji('Exclamation')} Please provide a valid time to convert.`,
               },
             ],
           },

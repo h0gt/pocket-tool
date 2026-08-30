@@ -17,7 +17,7 @@ import env from '../../../utils/env';
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'translate',
-  description: 'Translates the given text to pretty much any language',
+  description: 'Translates the given text into almost any language',
   integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   options: [
@@ -56,7 +56,7 @@ createApplicationCommand({
       case 'from': {
         const choices = [
           {
-            name: 'Auto Detect',
+            name: 'Detect Automatically',
             value: 'auto',
           },
           ...languages.map((language) => ({
@@ -72,7 +72,7 @@ createApplicationCommand({
       case 'to': {
         const choices = [
           {
-            name: 'Use my Locale',
+            name: 'Use M6y Locale',
             value: 'auto',
           },
           ...languages.map((language) => ({
@@ -100,7 +100,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} Microsoft Azure API key not set`,
+                content: `${emoji('Wrong')} The Microsoft Azure API key is not set.`,
               },
             ],
           },
@@ -121,7 +121,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please provide a text message to translate`,
+                content: `${emoji('Exclamation')} Please provide some text to translate.`,
               },
             ],
           },
@@ -190,7 +190,7 @@ createApplicationCommand({
               type: ComponentType.TextDisplay,
               content: `${translation[0].translations[0].text}${
                 to === undefined || to === 'auto'
-                  ? `\n\n-# ${emoji('Exclamation')} Target language was selected based on the user's locale`
+                  ? `\n\n-# ${emoji('Exclamation')} The target language was selected based on the user's locale`
                   : ''
               }`,
             },

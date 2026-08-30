@@ -38,7 +38,7 @@ createApplicationCommand({
       };
     }
 
-    const { user, member } = target;
+    const { user } = target;
 
     if (!user) {
       await client.api.interactions.editReply(interaction.application_id, interaction.token, {
@@ -48,7 +48,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please provide a valid user to view their banner`,
+                content: `${emoji('Exclamation')} Please provide a valid user to view their banner.`,
               },
             ],
           },
@@ -69,7 +69,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} <@${user.id}> doesn't have a banner`,
+                content: `${emoji('Exclamation')} <@${user.id}> doesn't have a banner.`,
               },
             ],
           },

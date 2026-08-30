@@ -60,7 +60,7 @@ createApplicationCommand({
                 {
                   type: ComponentType.TextDisplay,
                   content:
-                    '### Command Browser\n-# Find all the available commands through pagination or search for a specific one',
+                    '### Command Browser\n-# Browse all available commands using pagination, or search for a specific command',
                 },
               ],
               accessory: {
@@ -146,7 +146,7 @@ createApplicationCommand({
                         content:
                           query !== null
                             ? `### Command Browser\n-# Search results for **${query}**`
-                            : '### Command Browser\n-# Find all the available commands through pagination or search for a specific one',
+                            : '### Command Browser\n-# Browse all available commands using pagination, or search for a specific command',
                       },
                     ],
                     accessory: {
@@ -232,7 +232,7 @@ createApplicationCommand({
                         content:
                           query !== null
                             ? `### Command Browser\n-# Search results for **${query}**`
-                            : '### Command Browser\n-# Find all the available commands through pagination or search for a specific one',
+                            : '### Command Browser\n-# Browse all available commands using pagination, or search for a specific command',
                       },
                     ],
                     accessory: {
@@ -304,7 +304,7 @@ createApplicationCommand({
                 component: {
                   type: ComponentType.TextInput,
                   custom_id: 'commands-search-input',
-                  placeholder: 'Write down the command name to search for',
+                  placeholder: 'Enter a command name',
                   style: TextInputStyle.Short,
                   required: true,
                 },
@@ -341,7 +341,7 @@ createApplicationCommand({
                   components: [
                     {
                       type: ComponentType.TextDisplay,
-                      content: `${emoji('Exclamation')} No results found for the given name`,
+                      content: `${emoji('Exclamation')} No commands found matching your search.`,
                     },
                   ],
                 },
@@ -459,7 +459,7 @@ createApplicationCommand({
                       {
                         type: ComponentType.TextDisplay,
                         content:
-                          '### Command Browser\n-# Find all the available commands through pagination or search for a specific one',
+                          '### Command Browser\n-# Browse all available commands using pagination, or search for a specific command',
                       },
                     ],
                     accessory: {
@@ -527,7 +527,7 @@ createApplicationCommand({
                     content:
                       query !== null
                         ? `### Command Browser\n-# Search results for **${query}**`
-                        : '### Command Browser\n-# Find all the available commands through pagination or search for a specific one',
+                        : '### Command Browser\n-# Browse all available commands using pagination, or search for a specific command',
                   },
                 ],
                 accessory: {

@@ -29,7 +29,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Forwarded messages are currently not supported`,
+                content: `${emoji('Exclamation')} Forwarded messages are currently unsupported.`,
               },
             ],
           },
@@ -48,7 +48,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please select an image to turn into a GIF`,
+                content: `${emoji('Exclamation')} Please select an image to turn into a GIF.`,
               },
             ],
           },
@@ -71,7 +71,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please select at least one image to turn into a GIF`,
+                content: `${emoji('Exclamation')} Please select at least one image to turn into a GIF.`,
               },
             ],
           },
@@ -99,7 +99,7 @@ createApplicationCommand({
     );
 
     await client.api.interactions.editReply(interaction.application_id, interaction.token, {
-      content: `-# ${emoji('GIF')} Hover over the GIF to add them to your favorites`,
+      content: `-# ${emoji('GIF')} Hover over the GIFs to add them to your favorites!`,
       files,
     });
   },

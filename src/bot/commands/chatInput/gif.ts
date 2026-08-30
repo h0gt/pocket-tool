@@ -39,7 +39,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please provide a valid image to turn into a GIF`,
+                content: `${emoji('Exclamation')} Please provide a valid image to turn into a GIF!`,
               },
             ],
           },
@@ -58,7 +58,7 @@ createApplicationCommand({
     const gif = await sharp(buffer).gif({ effort: 10 }).toBuffer();
 
     await client.api.interactions.editReply(interaction.application_id, interaction.token, {
-      content: `-# ${emoji('GIF')} Hover over the GIF to add it to your favorites`,
+      content: `-# ${emoji('GIF')} Hover over the GIF to add it to your favorites!`,
       files: [
         {
           name: 'gif.gif',

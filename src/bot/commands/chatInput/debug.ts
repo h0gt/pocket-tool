@@ -23,7 +23,6 @@ createApplicationCommand({
   cooldown: 3,
   acknowledge: true,
   async run(interaction, options, client) {
-    client.api.interactions;
     const response = await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [
         {
@@ -31,19 +30,18 @@ createApplicationCommand({
           components: [
             {
               type: ComponentType.TextDisplay,
-              content: `### ${hyperlink(WEBSITE, 'Welcome to Pocket Tool!')}\nYou can view all the available slash commands by typing ${highlight('/', HighlightStyle.Bold)}\n-# additionally, you can view context menu commands by right-clicking or long-pressing a message or user`,
+              content: `### ${hyperlink(WEBSITE, 'Welcome to Pocket Tool!')}\nYou can view all available slash commands by typing ${highlight('/', HighlightStyle.Bold)}\n-# Additionally, you can view context menu commands by right-clicking or long-pressing a message or user`,
             },
             {
               type: ComponentType.TextDisplay,
-              content: `-# **Quickstart:**\n> </help:1504215560865448037> - View and search through all the available commands\n> </debug:1533585400138961059> - View stats and information about me!`,
+              content: `-# **Quickstart:**\n> </help:1504215560865448037> - View and search through all available commands\n> </debug:1533585400138961059> - View stats and information about me!`,
             },
             {
               type: ComponentType.Separator,
             },
             {
               type: ComponentType.TextDisplay,
-              content:
-                '### How to report bugs?\nTo report bugs, join our __support server__ and create a post at https://discord.com/channels/1533439024637939792/1533485684961054781',
+              content: `### How to report bugs?\nTo report a bug, join our __support server__ and create a post in the ${hyperlink('https://discord.com/channels/1533439024637939792/1533485684961054781', 'bug reports channel')}.`,
             },
             {
               type: ComponentType.Separator,
@@ -125,19 +123,18 @@ createApplicationCommand({
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `### ${hyperlink(WEBSITE, 'Welcome to Pocket Tool!')}\nYou can view all the available slash commands by typing ${highlight('/', HighlightStyle.Bold)}\n-# additionally, you can view context menu commands by right-clicking or long-pressing a message or user`,
+                    content: `### ${hyperlink(WEBSITE, 'Welcome to Pocket Tool!')}\nYou can view all available slash commands by typing ${highlight('/', HighlightStyle.Bold)}\n-# Additionally, you can view context menu commands by right-clicking or long-pressing a message or user`,
                   },
                   {
                     type: ComponentType.TextDisplay,
-                    content: `-# **Quickstart:**\n> </help:1504215560865448037> - View and search through all the available commands\n> </debug:1533585400138961059> - View stats and information about me!`,
+                    content: `-# **Quickstart:**\n> </help:1504215560865448037> - View and search through all available commands\n> </debug:1533585400138961059> - View stats and information about me!`,
                   },
                   {
                     type: ComponentType.Separator,
                   },
                   {
                     type: ComponentType.TextDisplay,
-                    content:
-                      '### How to report bugs?\nTo report bugs, join our __support server__ and create a post at https://discord.com/channels/1533439024637939792/1533485684961054781',
+                    content: `### How to report bugs?\nTo report a bug, join our __support server__ and create a post in the ${hyperlink('https://discord.com/channels/1533439024637939792/1533485684961054781', 'bug reports channel')}.`,
                   },
                   {
                     type: ComponentType.Separator,
@@ -212,7 +209,7 @@ createApplicationCommand({
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `-# **Statistics**\n> Shards: **${totalShards}**\n> Installs: **${bot.approximate_user_install_count}**\n> Servers: **${bot.approximate_guild_count}**\n> Uptime: **${msToReadableTime(Temporal.Now.instant().epochMilliseconds - uptime)} (${timestamp(uptime, TimestampStyle.LongDateShortTime)})**\n> Latency: **${ping}ms**\n-# ${emoji('Exclamation')} Viewing stats for shard **${shardId}**`,
+                    content: `-# **Statistics:**\n> Shards: **${totalShards}**\n> Installs: **${bot.approximate_user_install_count}**\n> Servers: **${bot.approximate_guild_count}**\n> Uptime: **${msToReadableTime(Temporal.Now.instant().epochMilliseconds - uptime)} (${timestamp(uptime, TimestampStyle.LongDateShortTime)})**\n> Latency: **${ping}ms**\n-# ${emoji('Exclamation')} Viewing statistics for shard **${shardId}**`,
                   },
                   {
                     type: ComponentType.Separator,
@@ -316,7 +313,7 @@ createApplicationCommand({
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `-# **Today's command usage:**\n> Today: **${today}**\n> Last Hour: **${lastHour}**\n> Last Minute: **${lastMinute}**\n-# **Today's top commands:**\n${topCommands}`,
+                    content: `-# **Today's Command Usage:**\n> Today: **${today}**\n> Last Hour: **${lastHour}**\n> Last Minute: **${lastMinute}**\n-# **Today's Top Commands:**\n${topCommands}`,
                   },
                   {
                     type: ComponentType.Separator,
@@ -457,19 +454,18 @@ createApplicationCommand({
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `### ${hyperlink(WEBSITE, 'Welcome to Pocket Tool!')}\nYou can view all the available slash commands by typing ${highlight('/', HighlightStyle.Bold)}\n-# additionally, you can view context menu commands by right-clicking or long-pressing a message or user`,
+                    content: `### ${hyperlink(WEBSITE, 'Welcome to Pocket Tool!')}\nYou can view all available slash commands by typing ${highlight('/', HighlightStyle.Bold)}\n-# Additionally, you can view context menu commands by right-clicking or long-pressing a message or user`,
                   },
                   {
                     type: ComponentType.TextDisplay,
-                    content: `-# **Quickstart:**\n> </help:1504215560865448037> - View and search through all the available commands\n> </debug:1533585400138961059> - View stats and information about me!`,
+                    content: `-# **Quickstart:**\n> </help:1504215560865448037> - View and search through all available commands\n> </debug:1533585400138961059> - View stats and information about me!`,
                   },
                   {
                     type: ComponentType.Separator,
                   },
                   {
                     type: ComponentType.TextDisplay,
-                    content:
-                      '### How to report bugs?\nTo report bugs, join our __support server__ and create a post at https://discord.com/channels/1533439024637939792/1533485684961054781',
+                    content: `### How to report bugs?\nTo report a bug, join our __support server__ and create a post in the ${hyperlink('https://discord.com/channels/1533439024637939792/1533485684961054781', 'bug reports channel')}.`,
                   },
                   {
                     type: ComponentType.Separator,
@@ -499,7 +495,6 @@ createApplicationCommand({
                             value: 'credits',
                           },
                         ],
-                        disabled: true,
                       },
                     ],
                   },
@@ -545,7 +540,7 @@ createApplicationCommand({
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `-# **Statistics**\n> Shards: **${totalShards}**\n> Installs: **${bot.approximate_user_install_count}**\n> Servers: **${bot.approximate_guild_count}**\n> Uptime: **${msToReadableTime(Temporal.Now.instant().epochMilliseconds - uptime)} (${timestamp(uptime, TimestampStyle.LongDateShortTime)})**\n> Latency: **${ping}ms**\n-# ${emoji('Exclamation')} Viewing stats for shard **${shardId}**`,
+                    content: `-# **Statistics**\n> Shards: **${totalShards}**\n> Installs: **${bot.approximate_user_install_count}**\n> Servers: **${bot.approximate_guild_count}**\n> Uptime: **${msToReadableTime(Temporal.Now.instant().epochMilliseconds - uptime)} (${timestamp(uptime, TimestampStyle.LongDateShortTime)})**\n> Latency: **${ping}ms**\n-# ${emoji('Exclamation')} Viewing statistics for shard **${shardId}**`,
                   },
                   {
                     type: ComponentType.Separator,
@@ -650,7 +645,7 @@ createApplicationCommand({
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `-# **Today's command usage:**\n> Today: **${today}**\n> Last Hour: **${lastHour}**\n> Last Minute: **${lastMinute}**\n-# **Today's top commands:**\n${topCommands}`,
+                    content: `-# **Today's Command Usage:**\n> Today: **${today}**\n> Last Hour: **${lastHour}**\n> Last Minute: **${lastMinute}**\n-# **Today's Top Commands:**\n${topCommands}`,
                   },
                   {
                     type: ComponentType.Separator,

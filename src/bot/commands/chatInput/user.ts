@@ -15,7 +15,7 @@ import { TimestampStyle } from '../../../types/types';
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'user',
-  description: 'Views information about an user or yourself',
+  description: 'View information about a user or yourself',
   integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   options: [
@@ -28,15 +28,15 @@ createApplicationCommand({
     {
       type: ApplicationCommandOptionType.String,
       name: 'scope',
-      description: 'The scope of the information to view',
+      description: 'The scope of the information to display',
       choices: [
         {
           name: 'Global',
           value: 'global',
         },
         {
-          name: 'Guild',
-          value: 'guild',
+          name: 'Server',
+          value: 'server',
         },
       ],
       required: false,
@@ -63,7 +63,7 @@ createApplicationCommand({
         components: [
           {
             type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Please provide a valid user to view`,
+            content: `${emoji('Exclamation')} Please provide a valid user to view information for.`,
           },
         ],
         flags: MessageFlags.IsComponentsV2,
@@ -72,7 +72,7 @@ createApplicationCommand({
       return;
     }
 
-    if (scope === 'guild' && member) {
+    if (scope === 'server' && member) {
       await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
@@ -114,7 +114,7 @@ createApplicationCommand({
                         .map((id) => `<@&${id}>`)
                         .join(', ')}`
                     : ''
-                }${member.roles.length > 5 ? ` ${highlight(`+${(member.roles.length - 5).toLocaleString('en-US')}`)}` : ``}\n\n-# ${emoji('Exclamation')} Due to Discord limitations, this profile can't be fully displayed ${hyperlink(`discord://-/users/${user.id}`, 'open it in Discord')}`,
+                }${member.roles.length > 5 ? ` ${highlight(`+${(member.roles.length - 5).toLocaleString('en-US')}`)}` : ``}\n\n-# ${emoji('Exclamation')} Due to Discord limitations, this profile can't be fully displayed. ${hyperlink(`discord://-/users/${user.id}`, 'Open it in Discord.')}`,
               },
             ],
           },
@@ -149,7 +149,7 @@ createApplicationCommand({
               },
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Calendar')} **Created At:**\n${timestamp(getTimestampFromSnowflake(user.id), TimestampStyle.LongDate)} (${timestamp(getTimestampFromSnowflake(user.id), TimestampStyle.RelativeTime)})\n\n-# ${emoji('Exclamation')} Due to Discord limitations, this profile can't be fully displayed ${hyperlink(`discord://-/users/${user.id}`, 'open it in Discord')}`,
+                content: `${emoji('Calendar')} **Created At:**\n${timestamp(getTimestampFromSnowflake(user.id), TimestampStyle.LongDate)} (${timestamp(getTimestampFromSnowflake(user.id), TimestampStyle.RelativeTime)})\n\n-# ${emoji('Exclamation')} Due to Discord limitations, this profile can't be fully displayed. ${hyperlink(`discord://-/users/${user.id}`, 'Open it in Discord.')}`,
               },
             ],
           },

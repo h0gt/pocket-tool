@@ -31,7 +31,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} Microsoft Azure API key not set`,
+                content: `${emoji('Wrong')} The Microsoft Azure API key is not set.`,
               },
             ],
           },
@@ -52,7 +52,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Forwarded messages are currently not supported`,
+                content: `${emoji('Exclamation')} Forwarded messages are currently unsupported.`,
               },
             ],
           },
@@ -71,7 +71,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please select a text message to translate`,
+                content: `${emoji('Exclamation')} Please select a text message to translate.`,
               },
             ],
           },
@@ -136,7 +136,7 @@ createApplicationCommand({
             },
             {
               type: ComponentType.TextDisplay,
-              content: `${translation[0].translations[0].text}\n\n-# ${emoji('Exclamation')} Target language was selected based on the user's locale`,
+              content: `${translation[0].translations[0].text}\n\n-# ${emoji('Exclamation')} The target language was selected based on the user's locale`,
             },
           ],
         },

@@ -31,7 +31,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} Eleven Labs API key not set`,
+                content: `${emoji('Wrong')} The ElevenLabs API key is not set.`,
               },
             ],
           },
@@ -52,7 +52,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Forwarded messages are currently not supported`,
+                content: `${emoji('Exclamation')} Forwarded messages are currently unsupported.`,
               },
             ],
           },
@@ -81,7 +81,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} You have reached your daily TTS limit of ${limit} messages - try again ${timestamp(resetAt.epochMilliseconds, TimestampStyle.RelativeTime)}.`,
+                content: `${emoji('Exclamation')} You have reached your daily TTS limit of ${limit} messages. Try again ${timestamp(resetAt.epochMilliseconds, TimestampStyle.RelativeTime)}.`,
               },
             ],
           },
@@ -100,7 +100,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please select a text message to convert to speech`,
+                content: `${emoji('Exclamation')} Please select a text message to convert to speech.`,
               },
             ],
           },
@@ -130,25 +130,6 @@ createApplicationCommand({
       modelId: 'eleven_flash_v2_5',
       outputFormat: 'opus_48000_192',
     });
-
-    if (!audio) {
-      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
-        components: [
-          {
-            type: ComponentType.Container,
-            components: [
-              {
-                type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} Failed to generate TTS audio`,
-              },
-            ],
-          },
-        ],
-        flags: MessageFlags.IsComponentsV2,
-      });
-
-      return;
-    }
 
     const buffer = Buffer.from(audio.audioBase64, 'base64');
     const decoded = await decodeOpusBytes(buffer);

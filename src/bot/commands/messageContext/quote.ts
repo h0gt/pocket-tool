@@ -50,7 +50,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Forwarded messages are currently not supported`,
+                content: `${emoji('Exclamation')} Forwarded messages are currently unsupported.`,
               },
             ],
           },
@@ -69,7 +69,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please select a message with text to quote`,
+                content: `${emoji('Exclamation')} Please select a message containing text to quote.`,
               },
             ],
           },
@@ -159,7 +159,7 @@ createApplicationCommand({
           components: [
             {
               type: ComponentType.TextDisplay,
-              content: '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+              content: '### Quote Editor\n-# Use the menus below to customize your quote or generate a random card',
             },
           ],
         },
@@ -169,7 +169,7 @@ createApplicationCommand({
             {
               type: ComponentType.StringSelect,
               custom_id: 'quote-font',
-              placeholder: 'Choose a font',
+              placeholder: 'Choose a Font',
               options: Object.entries(CARD_FONTS).map(([value, item]) => ({
                 emoji: toComponentEmoji(item.emoji),
                 label: item.label,
@@ -186,7 +186,7 @@ createApplicationCommand({
             {
               type: ComponentType.StringSelect,
               custom_id: 'quote-size',
-              placeholder: 'Choose a size ',
+              placeholder: 'Choose a Size',
               options: [
                 ...Object.entries(FONT_SIZES).map(([value, item]) => ({
                   ...(value === session.fontSize ? { emoji: toComponentEmoji('Selected') } : {}),
@@ -198,7 +198,7 @@ createApplicationCommand({
                 {
                   emoji: toComponentEmoji('CustomFontSize'),
                   label: 'Custom Font Size',
-                  description: 'Provide a custom font size',
+                  description: 'Enter a custom font size',
                   value: 'custom',
                 },
               ],
@@ -211,7 +211,7 @@ createApplicationCommand({
             {
               type: ComponentType.StringSelect,
               custom_id: 'quote-color',
-              placeholder: 'Choose a color',
+              placeholder: 'Choose a Color',
               options: [
                 ...Object.entries(CARD_COLORS).map(([value, item]) => ({
                   emoji: toComponentEmoji(item.emoji),
@@ -223,7 +223,7 @@ createApplicationCommand({
                 {
                   emoji: toComponentEmoji('CustomColor'),
                   label: 'Custom Text Color',
-                  description: 'Provide a custom text color',
+                  description: 'Enter a custom color',
                   value: 'custom',
                 },
               ],
@@ -325,7 +325,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.TextDisplay,
                     content:
-                      '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+                      '### Quote Editor\n-# Use the menus below to customize your quote or generate a random card',
                   },
                 ],
               },
@@ -335,7 +335,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.StringSelect,
                     custom_id: 'quote-font',
-                    placeholder: 'Choose a font',
+                    placeholder: 'Choose a Font',
                     options: Object.entries(CARD_FONTS).map(([value, item]) => ({
                       emoji: toComponentEmoji(item.emoji),
                       label: item.label,
@@ -352,7 +352,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.StringSelect,
                     custom_id: 'quote-size',
-                    placeholder: 'Choose a size ',
+                    placeholder: 'Choose a Size',
                     options: [
                       ...Object.entries(FONT_SIZES).map(([value, item]) => ({
                         ...(value === session.fontSize ? { emoji: toComponentEmoji('Selected') } : {}),
@@ -364,7 +364,7 @@ createApplicationCommand({
                       {
                         emoji: toComponentEmoji('CustomFontSize'),
                         label: 'Custom Font Size',
-                        description: 'Provide a custom font size',
+                        description: 'Enter a custom font size',
                         value: 'custom',
                       },
                       ...(!(session.fontSize in FONT_SIZES)
@@ -388,7 +388,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.StringSelect,
                     custom_id: 'quote-color',
-                    placeholder: 'Choose a color',
+                    placeholder: 'Choose a Color',
                     options: [
                       ...Object.entries(CARD_COLORS).map(([value, item]) => ({
                         emoji: toComponentEmoji(item.emoji),
@@ -400,7 +400,7 @@ createApplicationCommand({
                       {
                         emoji: toComponentEmoji('CustomColor'),
                         label: 'Custom Text Color',
-                        description: 'Provide a custom text color',
+                        description: 'Enter a custom color',
                         value: 'custom',
                       },
                       ...(!(session.color in CARD_COLORS)
@@ -468,16 +468,16 @@ createApplicationCommand({
 
           if (size === 'custom') {
             await client.api.interactions.createModal(i.id, i.token, {
-              title: 'Text Font Size Customization',
+              title: 'Custom Font Size',
               custom_id: 'custom-font-size',
               components: [
                 {
                   type: ComponentType.Label,
-                  label: 'Provide a custom font size',
+                  label: 'Enter a custom font size',
                   component: {
                     type: ComponentType.TextInput,
                     custom_id: 'custom-font-size-input',
-                    placeholder: 'Use whole numbers from 20px to 100px',
+                    placeholder: 'Use a whole number between 20px and 100px',
                     style: TextInputStyle.Short,
                     required: true,
                   },
@@ -523,7 +523,7 @@ createApplicationCommand({
                     {
                       type: ComponentType.TextDisplay,
                       content:
-                        '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+                        '### Quote Editor\n-# Use the menus below to customize your quote or generate a random card',
                     },
                   ],
                 },
@@ -533,7 +533,7 @@ createApplicationCommand({
                     {
                       type: ComponentType.StringSelect,
                       custom_id: 'quote-font',
-                      placeholder: 'Choose a font',
+                      placeholder: 'Choose a Font',
                       options: Object.entries(CARD_FONTS).map(([value, item]) => ({
                         emoji: toComponentEmoji(item.emoji),
                         label: item.label,
@@ -550,7 +550,7 @@ createApplicationCommand({
                     {
                       type: ComponentType.StringSelect,
                       custom_id: 'quote-size',
-                      placeholder: 'Choose a size ',
+                      placeholder: 'Choose a Size',
                       options: [
                         ...Object.entries(FONT_SIZES).map(([value, item]) => ({
                           ...(value === session.fontSize ? { emoji: toComponentEmoji('Selected') } : {}),
@@ -562,7 +562,7 @@ createApplicationCommand({
                         {
                           emoji: toComponentEmoji('CustomFontSize'),
                           label: 'Custom Font Size',
-                          description: 'Provide a custom font size',
+                          description: 'Enter a custom font size',
                           value: 'custom',
                         },
                         ...(!(session.fontSize in FONT_SIZES)
@@ -586,7 +586,7 @@ createApplicationCommand({
                     {
                       type: ComponentType.StringSelect,
                       custom_id: 'quote-color',
-                      placeholder: 'Choose a color',
+                      placeholder: 'Choose a Color',
                       options: [
                         ...Object.entries(CARD_COLORS).map(([value, item]) => ({
                           emoji: toComponentEmoji(item.emoji),
@@ -598,7 +598,7 @@ createApplicationCommand({
                         {
                           emoji: toComponentEmoji('CustomColor'),
                           label: 'Custom Text Color',
-                          description: 'Provide a custom text color',
+                          description: 'Enter a custom color',
                           value: 'custom',
                         },
                         ...(!(session.color in CARD_COLORS)
@@ -667,20 +667,20 @@ createApplicationCommand({
 
           if (color === 'custom') {
             await client.api.interactions.createModal(i.id, i.token, {
-              title: 'Text Color Customization',
+              title: 'Custom Text Color',
               custom_id: 'custom-color',
               components: [
                 {
                   type: ComponentType.Label,
-                  label: 'Provide a custom color',
+                  label: 'Enter a custom color',
                   component: {
                     type: ComponentType.TextInput,
                     custom_id: 'custom-color-input',
-                    placeholder: 'Use a hex color code',
+                    placeholder: 'Enter a hexadecimal color code',
                     style: TextInputStyle.Short,
                     required: true,
                     min_length: 1,
-                    max_length: 6,
+                    max_length: 7,
                   },
                 },
               ],
@@ -724,7 +724,7 @@ createApplicationCommand({
                     {
                       type: ComponentType.TextDisplay,
                       content:
-                        '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+                        '### Quote Editor\n-# Use the menus below to customize your quote or generate a random card',
                     },
                   ],
                 },
@@ -734,7 +734,7 @@ createApplicationCommand({
                     {
                       type: ComponentType.StringSelect,
                       custom_id: 'quote-font',
-                      placeholder: 'Choose a font',
+                      placeholder: 'Choose a Font',
                       options: Object.entries(CARD_FONTS).map(([value, item]) => ({
                         emoji: toComponentEmoji(item.emoji),
                         label: item.label,
@@ -751,7 +751,7 @@ createApplicationCommand({
                     {
                       type: ComponentType.StringSelect,
                       custom_id: 'quote-size',
-                      placeholder: 'Choose a size ',
+                      placeholder: 'Choose a Size',
                       options: [
                         ...Object.entries(FONT_SIZES).map(([value, item]) => ({
                           ...(value === session.fontSize ? { emoji: toComponentEmoji('Selected') } : {}),
@@ -763,7 +763,7 @@ createApplicationCommand({
                         {
                           emoji: toComponentEmoji('CustomFontSize'),
                           label: 'Custom Font Size',
-                          description: 'Provide a custom font size',
+                          description: 'Enter a custom font size',
                           value: 'custom',
                         },
                         ...(!(session.fontSize in FONT_SIZES)
@@ -787,7 +787,7 @@ createApplicationCommand({
                     {
                       type: ComponentType.StringSelect,
                       custom_id: 'quote-color',
-                      placeholder: 'Choose a color',
+                      placeholder: 'Choose a Color',
                       options: [
                         ...Object.entries(CARD_COLORS).map(([value, item]) => ({
                           emoji: toComponentEmoji(item.emoji),
@@ -799,7 +799,7 @@ createApplicationCommand({
                         {
                           emoji: toComponentEmoji('CustomColor'),
                           label: 'Custom Text Color',
-                          description: 'Provide a custom text color',
+                          description: 'Enter a custom color',
                           value: 'custom',
                         },
                         ...(!(session.color in CARD_COLORS)
@@ -904,7 +904,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.TextDisplay,
                     content:
-                      '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+                      '### Quote Editor\n-# Use the menus below to customize your quote or generate a random card',
                   },
                 ],
               },
@@ -914,7 +914,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.StringSelect,
                     custom_id: 'quote-font',
-                    placeholder: 'Choose a font',
+                    placeholder: 'Choose a Font',
                     options: Object.entries(CARD_FONTS).map(([value, item]) => ({
                       emoji: toComponentEmoji(item.emoji),
                       label: item.label,
@@ -931,7 +931,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.StringSelect,
                     custom_id: 'quote-size',
-                    placeholder: 'Choose a size ',
+                    placeholder: 'Choose a Size',
                     options: [
                       ...Object.entries(FONT_SIZES).map(([value, item]) => ({
                         ...(value === session.fontSize ? { emoji: toComponentEmoji('Selected') } : {}),
@@ -943,7 +943,7 @@ createApplicationCommand({
                       {
                         emoji: toComponentEmoji('CustomFontSize'),
                         label: 'Custom Font Size',
-                        description: 'Provide a custom font size',
+                        description: 'Enter a custom font size',
                         value: 'custom',
                       },
                       ...(!(session.fontSize in FONT_SIZES)
@@ -967,7 +967,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.StringSelect,
                     custom_id: 'quote-color',
-                    placeholder: 'Choose a color',
+                    placeholder: 'Choose a Color',
                     options: [
                       ...Object.entries(CARD_COLORS).map(([value, item]) => ({
                         emoji: toComponentEmoji(item.emoji),
@@ -979,7 +979,7 @@ createApplicationCommand({
                       {
                         emoji: toComponentEmoji('CustomColor'),
                         label: 'Custom Text Color',
-                        description: 'Provide a custom text color',
+                        description: 'Enter a custom color',
                         value: 'custom',
                       },
                       ...(!(session.color in CARD_COLORS)
@@ -1079,7 +1079,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.TextDisplay,
                     content:
-                      '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+                      '### Quote Editor\n-# Use the menus below to customize your quote or generate a random card',
                   },
                 ],
               },
@@ -1089,7 +1089,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.StringSelect,
                     custom_id: 'quote-font',
-                    placeholder: 'Choose a font',
+                    placeholder: 'Choose a Font',
                     options: Object.entries(CARD_FONTS).map(([value, item]) => ({
                       emoji: toComponentEmoji(item.emoji),
                       label: item.label,
@@ -1106,7 +1106,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.StringSelect,
                     custom_id: 'quote-size',
-                    placeholder: 'Choose a size ',
+                    placeholder: 'Choose a Size',
                     options: [
                       ...Object.entries(FONT_SIZES).map(([value, item]) => ({
                         ...(value === session.fontSize ? { emoji: toComponentEmoji('Selected') } : {}),
@@ -1118,7 +1118,7 @@ createApplicationCommand({
                       {
                         emoji: toComponentEmoji('CustomFontSize'),
                         label: 'Custom Font Size',
-                        description: 'Provide a custom font size',
+                        description: 'Enter a custom font size',
                         value: 'custom',
                       },
                       ...(!(session.fontSize in FONT_SIZES)
@@ -1142,7 +1142,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.StringSelect,
                     custom_id: 'quote-color',
-                    placeholder: 'Choose a color',
+                    placeholder: 'Choose a Color',
                     options: [
                       ...Object.entries(CARD_COLORS).map(([value, item]) => ({
                         emoji: toComponentEmoji(item.emoji),
@@ -1154,7 +1154,7 @@ createApplicationCommand({
                       {
                         emoji: toComponentEmoji('CustomColor'),
                         label: 'Custom Text Color',
-                        description: 'Provide a custom text color',
+                        description: 'Enter a custom color',
                         value: 'custom',
                       },
                       ...(!(session.color in CARD_COLORS)
@@ -1237,7 +1237,7 @@ createApplicationCommand({
                   components: [
                     {
                       type: ComponentType.TextDisplay,
-                      content: `${emoji('Exclamation')} Please provide a font size between 20px and 100px`,
+                      content: `${emoji('Exclamation')} Please provide a font size between 20px and 100px.`,
                     },
                   ],
                 },
@@ -1284,7 +1284,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.TextDisplay,
                     content:
-                      '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+                      '### Quote Editor\n-# Use the menus below to customize your quote or generate a random card',
                   },
                 ],
               },
@@ -1294,7 +1294,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.StringSelect,
                     custom_id: 'quote-font',
-                    placeholder: 'Choose a font',
+                    placeholder: 'Choose a Font',
                     options: Object.entries(CARD_FONTS).map(([value, item]) => ({
                       emoji: toComponentEmoji(item.emoji),
                       label: item.label,
@@ -1311,7 +1311,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.StringSelect,
                     custom_id: 'quote-size',
-                    placeholder: 'Choose a size ',
+                    placeholder: 'Choose a Size',
                     options: [
                       ...Object.entries(FONT_SIZES).map(([value, item]) => ({
                         ...(value === session.fontSize ? { emoji: toComponentEmoji('Selected') } : {}),
@@ -1323,7 +1323,7 @@ createApplicationCommand({
                       {
                         emoji: toComponentEmoji('CustomFontSize'),
                         label: 'Custom Font Size',
-                        description: 'Provide a custom font size',
+                        description: 'Enter a custom font size',
                         value: 'custom',
                       },
                       ...(!(session.fontSize in FONT_SIZES)
@@ -1347,7 +1347,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.StringSelect,
                     custom_id: 'quote-color',
-                    placeholder: 'Choose a color',
+                    placeholder: 'Choose a Color',
                     options: [
                       ...Object.entries(CARD_COLORS).map(([value, item]) => ({
                         emoji: toComponentEmoji(item.emoji),
@@ -1359,7 +1359,7 @@ createApplicationCommand({
                       {
                         emoji: toComponentEmoji('CustomColor'),
                         label: 'Custom Text Color',
-                        description: 'Provide a custom text color',
+                        description: 'Enter a custom color',
                         value: 'custom',
                       },
                       ...(!(session.color in CARD_COLORS)
@@ -1439,7 +1439,7 @@ createApplicationCommand({
                   components: [
                     {
                       type: ComponentType.TextDisplay,
-                      content: `${emoji('Exclamation')} Please provide a valid hexadecimal color`,
+                      content: `${emoji('Exclamation')} Please provide a valid hexadecimal color code.`,
                     },
                   ],
                 },
@@ -1486,7 +1486,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.TextDisplay,
                     content:
-                      '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+                      '### Quote Editor\n-# Use the menus below to customize your quote or generate a random card',
                   },
                 ],
               },
@@ -1496,7 +1496,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.StringSelect,
                     custom_id: 'quote-font',
-                    placeholder: 'Choose a font',
+                    placeholder: 'Choose a Font',
                     options: Object.entries(CARD_FONTS).map(([value, item]) => ({
                       emoji: toComponentEmoji(item.emoji),
                       label: item.label,
@@ -1513,7 +1513,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.StringSelect,
                     custom_id: 'quote-size',
-                    placeholder: 'Choose a size ',
+                    placeholder: 'Choose a Size',
                     options: [
                       ...Object.entries(FONT_SIZES).map(([value, item]) => ({
                         ...(value === session.fontSize ? { emoji: toComponentEmoji('Selected') } : {}),
@@ -1525,7 +1525,7 @@ createApplicationCommand({
                       {
                         emoji: toComponentEmoji('CustomFontSize'),
                         label: 'Custom Font Size',
-                        description: 'Provide a custom font size',
+                        description: 'Enter a custom font size',
                         value: 'custom',
                       },
                       ...(!(session.fontSize in FONT_SIZES)
@@ -1549,7 +1549,7 @@ createApplicationCommand({
                   {
                     type: ComponentType.StringSelect,
                     custom_id: 'quote-color',
-                    placeholder: 'Choose a color',
+                    placeholder: 'Choose a Color',
                     options: [
                       ...Object.entries(CARD_COLORS).map(([value, item]) => ({
                         emoji: toComponentEmoji(item.emoji),
@@ -1561,7 +1561,7 @@ createApplicationCommand({
                       {
                         emoji: toComponentEmoji('CustomColor'),
                         label: 'Custom Text Color',
-                        description: 'Provide a custom text color',
+                        description: 'Enter a custom color',
                         value: 'custom',
                       },
                       ...(!(session.color in CARD_COLORS)
@@ -1649,7 +1649,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: '### Quote Editor\n-# Use the select menus below to customize your quote or get a random card',
+                content: '### Quote Editor\n-# Use the menus below to customize your quote or generate a random card',
               },
             ],
           },
@@ -1659,7 +1659,7 @@ createApplicationCommand({
               {
                 type: ComponentType.StringSelect,
                 custom_id: 'quote-font',
-                placeholder: 'Choose a font',
+                placeholder: 'Choose a Font',
                 options: Object.entries(CARD_FONTS).map(([value, item]) => ({
                   emoji: toComponentEmoji(item.emoji),
                   label: item.label,
@@ -1667,7 +1667,6 @@ createApplicationCommand({
                   value,
                   default: value === session.font,
                 })),
-                disabled: true,
               },
             ],
           },
@@ -1677,7 +1676,7 @@ createApplicationCommand({
               {
                 type: ComponentType.StringSelect,
                 custom_id: 'quote-size',
-                placeholder: 'Choose a size ',
+                placeholder: 'Choose a Size',
                 options: [
                   ...Object.entries(FONT_SIZES).map(([value, item]) => ({
                     ...(value === session.fontSize ? { emoji: toComponentEmoji('Selected') } : {}),
@@ -1689,7 +1688,7 @@ createApplicationCommand({
                   {
                     emoji: toComponentEmoji('CustomFontSize'),
                     label: 'Custom Font Size',
-                    description: 'Provide a custom font size',
+                    description: 'Enter a custom font size',
                     value: 'custom',
                   },
                   ...(!(session.fontSize in FONT_SIZES)
@@ -1704,7 +1703,6 @@ createApplicationCommand({
                       ]
                     : []),
                 ],
-                disabled: true,
               },
             ],
           },
@@ -1714,7 +1712,7 @@ createApplicationCommand({
               {
                 type: ComponentType.StringSelect,
                 custom_id: 'quote-color',
-                placeholder: 'Choose a color',
+                placeholder: 'Choose a Color',
                 options: [
                   ...Object.entries(CARD_COLORS).map(([value, item]) => ({
                     emoji: toComponentEmoji(item.emoji),
@@ -1726,7 +1724,7 @@ createApplicationCommand({
                   {
                     emoji: toComponentEmoji('CustomColor'),
                     label: 'Custom Text Color',
-                    description: 'Provide a custom text color',
+                    description: 'Enter a custom color',
                     value: 'custom',
                   },
                   ...(!(session.color in CARD_COLORS)
@@ -1741,7 +1739,6 @@ createApplicationCommand({
                       ]
                     : []),
                 ],
-                disabled: true,
               },
             ],
           },
@@ -1761,7 +1758,6 @@ createApplicationCommand({
                   value,
                   default: session.effects.includes(value as EffectKey),
                 })),
-                disabled: true,
               },
             ],
           },
@@ -1774,7 +1770,6 @@ createApplicationCommand({
                 label: 'Surprise Me!',
                 emoji: toComponentEmoji('Spark'),
                 style: ButtonStyle.Secondary,
-                disabled: true,
               },
             ],
           },

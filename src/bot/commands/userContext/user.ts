@@ -30,7 +30,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please select a valid user to view`,
+                content: `${emoji('Exclamation')} Please select a valid user to view information for.`,
               },
             ],
           },
@@ -86,7 +86,7 @@ createApplicationCommand({
                         : ''
                     }${member.roles.length > 5 ? ` ${highlight(`+${(member.roles.length - 5).toLocaleString('en-US')}`)}` : ``}`
                   : ''
-              }\n\n-# ${emoji('Exclamation')} Due to Discord limitations, this profile can't be fully displayed ${hyperlink(`discord://-/users/${user.id}`, 'open it in Discord')}`,
+              }\n\n-# ${emoji('Exclamation')} Due to Discord limitations, this profile can't be fully displayed. ${hyperlink(`discord://-/users/${user.id}`, 'Open it in Discord.')}`,
             },
           ],
         },

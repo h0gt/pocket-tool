@@ -30,7 +30,7 @@ createApplicationCommand({
     {
       type: ApplicationCommandOptionType.String,
       name: 'voice',
-      description: 'The voice to use for the TTS',
+      description: 'The voice to use for TTS',
       required: false,
       choices: [
         { name: 'Male', value: 'UgBBYS2sOqTuMpoF3BR0' },
@@ -41,7 +41,7 @@ createApplicationCommand({
     {
       type: ApplicationCommandOptionType.String,
       name: 'language',
-      description: 'The language to use for the TTS',
+      description: 'The language to use for TTS',
       required: false,
       autocomplete: true,
     },
@@ -58,7 +58,7 @@ createApplicationCommand({
 
     const choices = [
       {
-        name: 'Use my Locale',
+        name: 'Use My Locale',
         value: 'auto',
       },
       ...languages.map((language) => ({
@@ -82,7 +82,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} Eleven Labs API key not set`,
+                content: `${emoji('Wrong')} The ElevenLabs API key is not set.`,
               },
             ],
           },
@@ -111,7 +111,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} You have reached your daily TTS limit of ${limit} messages - try again ${timestamp(resetAt.epochMilliseconds, TimestampStyle.RelativeTime)}.`,
+                content: `${emoji('Exclamation')} You have reached your daily TTS limit of ${limit} messages. Try again ${timestamp(resetAt.epochMilliseconds, TimestampStyle.RelativeTime)}.`,
               },
             ],
           },
@@ -132,7 +132,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please provide a text message to convert to speech`,
+                content: `${emoji('Exclamation')} Please provide some text to convert to speech.`,
               },
             ],
           },
@@ -160,25 +160,6 @@ createApplicationCommand({
       modelId: 'eleven_flash_v2_5',
       outputFormat: 'opus_48000_192',
     });
-
-    if (!audio) {
-      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
-        components: [
-          {
-            type: ComponentType.Container,
-            components: [
-              {
-                type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} Failed to generate TTS audio`,
-              },
-            ],
-          },
-        ],
-        flags: MessageFlags.IsComponentsV2,
-      });
-
-      return;
-    }
 
     const buffer = Buffer.from(audio.audioBase64, 'base64');
     const decoded = await decodeOpusBytes(buffer);

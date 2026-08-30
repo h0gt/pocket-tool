@@ -35,8 +35,8 @@ createApplicationCommand({
           value: 'global',
         },
         {
-          name: 'Guild',
-          value: 'guild',
+          name: 'Server',
+          value: 'server',
         },
       ],
       required: false,
@@ -66,7 +66,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please provide a valid user to view their avatar`,
+                content: `${emoji('Exclamation')} Please provide a valid user to view their avatar.`,
               },
             ],
           },
@@ -77,7 +77,7 @@ createApplicationCommand({
       return;
     }
 
-    if (scope === 'guild' && member) {
+    if (scope === 'server' && member) {
       if (!member.avatar) {
         await client.api.interactions.editReply(interaction.application_id, interaction.token, {
           components: [
@@ -86,7 +86,7 @@ createApplicationCommand({
               components: [
                 {
                   type: ComponentType.TextDisplay,
-                  content: `${emoji('Exclamation')} <@${user.id}> doesn't have a guild avatar`,
+                  content: `${emoji('Exclamation')} <@${user.id}> doesn't have a server avatar.`,
                 },
               ],
             },
@@ -171,7 +171,7 @@ createApplicationCommand({
               components: [
                 {
                   type: ComponentType.TextDisplay,
-                  content: `${emoji('Exclamation')} <@${user.id}> doesn't have an avatar`,
+                  content: `${emoji('Exclamation')} <@${user.id}> doesn't have an avatar.`,
                 },
               ],
             },

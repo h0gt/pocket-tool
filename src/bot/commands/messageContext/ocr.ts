@@ -29,7 +29,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} OCR API key not set`,
+                content: `${emoji('Wrong')} OCR API key is not set.`,
               },
             ],
           },
@@ -50,7 +50,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Forwarded messages are currently not supported`,
+                content: `${emoji('Exclamation')} Forwarded messages are currently unsupported.`,
               },
             ],
           },
@@ -69,7 +69,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please select an image to turn into a GIF`,
+                content: `${emoji('Exclamation')} Please select an image to extract text from.`,
               },
             ],
           },
@@ -92,7 +92,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please select at least one image to OCR`,
+                content: `${emoji('Exclamation')} Please select a valid image to extract text from.`,
               },
             ],
           },

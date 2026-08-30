@@ -105,7 +105,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                    content: `${emoji('Exclamation')} Please wait! You're on cooldown for </${interaction.data.name}:${interaction.data.id}>. You can use this command again ${timestamp(expiration, TimestampStyle.RelativeTime)}.`,
                   },
                 ],
               },
@@ -120,7 +120,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                    content: `${emoji('Exclamation')} Please wait! You're on cooldown for </${interaction.data.name}:${interaction.data.id}>. You can use this command again ${timestamp(expiration, TimestampStyle.RelativeTime)}.`,
                   },
                 ],
               },
@@ -147,7 +147,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
             await client.api.interactions.deleteReply(interaction.application_id, interaction.token);
 
           await client.api.interactions.followUp(interaction.application_id, interaction.token, {
-            content: `-# </${interaction.data.name}:${interaction.data.id}> was blocked due to ${hyperlink(err.article, err.reason)} - please try again with **ephemeral** enabled`,
+            content: `-# </${interaction.data.name}:${interaction.data.id}> was blocked due to ${hyperlink(err.article, err.reason)}. Please try again with **ephemeral** enabled.`,
             flags: MessageFlags.Ephemeral,
           });
 
@@ -164,7 +164,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Wrong')} ${error instanceof Error ? error.message : String(error)}\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
+                    content: `${emoji('Wrong')} ${error instanceof Error ? error.message : String(error)}\n-# If you believe this is a bug, please report it in our **${hyperlink(SUPPORT, 'support server', '', false)}**.`,
                   },
                 ],
               },
@@ -179,7 +179,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Wrong')} ${error instanceof Error ? error.message : String(error)}\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
+                    content: `${emoji('Wrong')} ${error instanceof Error ? error.message : String(error)}\n-# If you believe this is a bug, please report it in our **${hyperlink(SUPPORT, 'support server', '', false)}**.`,
                   },
                 ],
               },
@@ -217,7 +217,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                    content: `${emoji('Exclamation')} Please wait! You're on cooldown for </${interaction.data.name}:${interaction.data.id}>. You can use this command again ${timestamp(expiration, TimestampStyle.RelativeTime)}.`,
                   },
                 ],
               },
@@ -232,7 +232,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                    content: `${emoji('Exclamation')} Please wait! You're on cooldown for </${interaction.data.name}:${interaction.data.id}>. You can use this command again ${timestamp(expiration, TimestampStyle.RelativeTime)}.`,
                   },
                 ],
               },
@@ -255,7 +255,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
             await client.api.interactions.deleteReply(interaction.application_id, interaction.token);
 
           await client.api.interactions.followUp(interaction.application_id, interaction.token, {
-            content: `-# </${interaction.data.name}:${interaction.data.id}> was blocked due to ${hyperlink(err.article, err.reason)}`,
+            content: `-# </${interaction.data.name}:${interaction.data.id}> was blocked due to ${hyperlink(err.article, err.reason)}.`,
             flags: MessageFlags.Ephemeral,
           });
 
@@ -272,7 +272,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Wrong')} ${error instanceof Error ? error.message : String(error)}\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
+                    content: `${emoji('Wrong')} ${error instanceof Error ? error.message : String(error)}\n-# If you believe this is a bug, please report it in our **${hyperlink(SUPPORT, 'support server', '', false)}**.`,
                   },
                 ],
               },
@@ -287,7 +287,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Wrong')} ${error instanceof Error ? error.message : String(error)}\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
+                    content: `${emoji('Wrong')} ${error instanceof Error ? error.message : String(error)}\n-# If you believe this is a bug, please report it in our **${hyperlink(SUPPORT, 'support server', '', false)}**.`,
                   },
                 ],
               },
@@ -325,7 +325,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                    content: `${emoji('Exclamation')} Please wait! You're on cooldown for </${interaction.data.name}:${interaction.data.id}>. You can use this command again ${timestamp(expiration, TimestampStyle.RelativeTime)}.`,
                   },
                 ],
               },
@@ -340,7 +340,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Exclamation')} Please wait, you are on a cooldown for </${interaction.data.name}:${interaction.data.id}> - you can use it again ${timestamp(expiration, TimestampStyle.RelativeTime)}`,
+                    content: `${emoji('Exclamation')} Please wait! You're on cooldown for </${interaction.data.name}:${interaction.data.id}>. You can use this command again ${timestamp(expiration, TimestampStyle.RelativeTime)}.`,
                   },
                 ],
               },
@@ -362,7 +362,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
             await client.api.interactions.deleteReply(interaction.application_id, interaction.token);
 
           await client.api.interactions.followUp(interaction.application_id, interaction.token, {
-            content: `-# </${interaction.data.name}:${interaction.data.id}> was blocked due to ${hyperlink(err.article, err.reason)}`,
+            content: `-# </${interaction.data.name}:${interaction.data.id}> was blocked due to ${hyperlink(err.article, err.reason)}.`,
             flags: MessageFlags.Ephemeral,
           });
 
@@ -379,7 +379,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Wrong')} ${error instanceof Error ? error.message : String(error)}\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
+                    content: `${emoji('Wrong')} ${error instanceof Error ? error.message : String(error)}\n-# If you believe this is a bug, please report it in our **${hyperlink(SUPPORT, 'support server', '', false)}**.`,
                   },
                 ],
               },
@@ -394,7 +394,7 @@ async function handleApplicationCommand(interaction: APIApplicationCommandIntera
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `${emoji('Wrong')} ${error instanceof Error ? error.message : String(error)}\n-# If you believe this is a bug, please report it at the **${hyperlink(SUPPORT, 'support server', '', false)}**`,
+                    content: `${emoji('Wrong')} ${error instanceof Error ? error.message : String(error)}\n-# If you believe this is a bug, please report it in our **${hyperlink(SUPPORT, 'support server', '', false)}**.`,
                   },
                 ],
               },

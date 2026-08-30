@@ -13,7 +13,7 @@ import { codeblock, ellipsis } from '../../../utils/markdown';
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'eval',
-  description: 'Evaluates the provided code',
+  description: 'Evaluate the provided code',
   integrationTypes: [ApplicationIntegrationType.GuildInstall],
   contexts: [InteractionContextType.Guild],
   options: [

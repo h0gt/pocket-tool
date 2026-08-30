@@ -16,7 +16,7 @@ import { TimestampStyle } from '../../../types/types';
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'role',
-  description: 'Views information about a role',
+  description: 'View information about a role',
   integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.Guild],
   options: [

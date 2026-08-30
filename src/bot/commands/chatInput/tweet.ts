@@ -32,7 +32,7 @@ createApplicationCommand({
     {
       type: ApplicationCommandOptionType.String,
       name: 'language',
-      description: 'The language of the tweet (auto for discord locale)',
+      description: 'The language of the tweet (auto for Discord locale)',
       required: false,
       autocomplete: true,
     },
@@ -49,7 +49,7 @@ createApplicationCommand({
 
     const choices = [
       {
-        name: 'Use my locale',
+        name: 'Use My Locale',
         value: 'auto',
       },
       ...languages.map((language) => ({
@@ -73,7 +73,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} Twitter API key not set`,
+                content: `${emoji('Wrong')} The Tolgchu Twitter API key is not set.`,
               },
             ],
           },
@@ -94,7 +94,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please provide a valid tweet URL or ID to view`,
+                content: `${emoji('Exclamation')} Please provide a valid tweet URL or ID to view the tweet.`,
               },
             ],
           },
@@ -121,7 +121,7 @@ createApplicationCommand({
         components: [
           {
             type: ComponentType.TextDisplay,
-            content: `${emoji('Exclamation')} Failed to find the tweet`,
+            content: `${emoji('Exclamation')} Failed to find the tweet.`,
           },
         ],
         flags: MessageFlags.IsComponentsV2,
@@ -145,7 +145,7 @@ createApplicationCommand({
               components: [
                 {
                   type: ComponentType.TextDisplay,
-                  content: `${emoji('Wrong')} Microsoft Azure API key not set`,
+                  content: `${emoji('Wrong')} The Microsoft Azure API key is not set.`,
                 },
               ],
             },

@@ -14,7 +14,7 @@ import { HighlightStyle, TimestampStyle } from '../../../types/types';
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'invite',
-  description: 'Views information about an invite',
+  description: 'View information about an invite',
   integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   options: [
@@ -42,7 +42,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please provide an invite link to view`,
+                content: `${emoji('Exclamation')} Please provide an invite link to view information about.`,
               },
             ],
           },
@@ -63,7 +63,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please provide a valid invite link to view`,
+                content: `${emoji('Exclamation')} Please provide a valid invite link to view information about.`,
               },
             ],
           },

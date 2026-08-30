@@ -31,7 +31,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} Eleven Labs API key not set`,
+                content: `${emoji('Wrong')} The Eleven Labs API key is not set.`,
               },
             ],
           },
@@ -60,7 +60,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} You have reached your daily STT limit of ${limit} messages - try again ${timestamp(resetAt.epochMilliseconds, TimestampStyle.RelativeTime)}.`,
+                content: `${emoji('Exclamation')} You have reached your daily STT limit of ${limit} messages. Try again ${timestamp(resetAt.epochMilliseconds, TimestampStyle.RelativeTime)}.`,
               },
             ],
           },
@@ -81,7 +81,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Forwarded messages are currently not supported`,
+                content: `${emoji('Exclamation')} Forwarded messages are currently unsupported.`,
               },
             ],
           },
@@ -104,7 +104,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please select a voice message to convert to speech`,
+                content: `${emoji('Exclamation')} Please select a voice message to transcribe.`,
               },
             ],
           },
@@ -125,7 +125,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Voice message must be less than ${plus ? '5' : '1'} minutes`,
+                content: `${emoji('Exclamation')} Voice message must be shorter than ${plus ? '5' : '1'} minutes.`,
               },
             ],
           },
@@ -151,25 +151,6 @@ createApplicationCommand({
         type: voice.content_type ?? 'audio/ogg',
       }),
     });
-
-    if (!transcript) {
-      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
-        components: [
-          {
-            type: ComponentType.Container,
-            components: [
-              {
-                type: ComponentType.TextDisplay,
-                content: `${emoji('Wrong')} Failed to transcribe voice message`,
-              },
-            ],
-          },
-        ],
-        flags: MessageFlags.IsComponentsV2,
-      });
-
-      return;
-    }
 
     await client.api.interactions.editReply(interaction.application_id, interaction.token, {
       components: [

@@ -20,7 +20,7 @@ createApplicationCommand({
     {
       type: ApplicationCommandOptionType.String,
       name: 'zone',
-      description: 'The timezone to view the current time for',
+      description: 'The timezone to view the current time in',
       required: true,
       autocomplete: true,
     },
