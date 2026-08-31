@@ -514,81 +514,83 @@ createApplicationCommand({
     });
 
     collector.once('end', async () => {
-      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
-        components: [
-          {
-            type: ComponentType.Container,
-            components: [
-              {
-                type: ComponentType.Section,
-                components: [
-                  {
-                    type: ComponentType.TextDisplay,
-                    content:
-                      query !== null
-                        ? `### Command Browser\n-# Search results for **${query}**`
-                        : '### Command Browser\n-# Browse all available commands using pagination, or search for a specific command',
+      await client.api.interactions
+        .editReply(interaction.application_id, interaction.token, {
+          components: [
+            {
+              type: ComponentType.Container,
+              components: [
+                {
+                  type: ComponentType.Section,
+                  components: [
+                    {
+                      type: ComponentType.TextDisplay,
+                      content:
+                        query !== null
+                          ? `### Command Browser\n-# Search results for **${query}**`
+                          : '### Command Browser\n-# Browse all available commands using pagination, or search for a specific command',
+                    },
+                  ],
+                  accessory: {
+                    type: ComponentType.Button,
+                    custom_id: 'commands-search',
+                    emoji: toComponentEmoji('Search'),
+                    style: ButtonStyle.Secondary,
+                    disabled: true,
                   },
-                ],
-                accessory: {
-                  type: ComponentType.Button,
-                  custom_id: 'commands-search',
-                  emoji: toComponentEmoji('Search'),
-                  style: ButtonStyle.Secondary,
-                  disabled: true,
                 },
-              },
-            ],
-          },
-          {
-            type: ComponentType.Container,
-            components: [
-              {
-                type: ComponentType.TextDisplay,
-                content: commands,
-              },
-              {
-                type: ComponentType.Separator,
-              },
-              {
-                type: ComponentType.TextDisplay,
-                content: `-# Page **${pages.pointer + 1}** of **${pages.length}**`,
-              },
-              {
-                type: ComponentType.ActionRow,
-                components: [
-                  {
-                    type: ComponentType.Button,
-                    custom_id: 'commands-prev',
-                    emoji: toComponentEmoji('Previous'),
-                    style: ButtonStyle.Secondary,
-                    disabled: true,
-                  },
-                  ...(query !== null
-                    ? ([
-                        {
-                          type: ComponentType.Button,
-                          custom_id: 'commands-back',
-                          emoji: toComponentEmoji('Home'),
-                          style: ButtonStyle.Secondary,
-                          disabled: true,
-                        },
-                      ] satisfies APIComponentInActionRow[])
-                    : []),
-                  {
-                    type: ComponentType.Button,
-                    custom_id: 'commands-next',
-                    emoji: toComponentEmoji('Next'),
-                    style: ButtonStyle.Secondary,
-                    disabled: true,
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-        flags: MessageFlags.IsComponentsV2,
-      });
+              ],
+            },
+            {
+              type: ComponentType.Container,
+              components: [
+                {
+                  type: ComponentType.TextDisplay,
+                  content: commands,
+                },
+                {
+                  type: ComponentType.Separator,
+                },
+                {
+                  type: ComponentType.TextDisplay,
+                  content: `-# Page **${pages.pointer + 1}** of **${pages.length}**`,
+                },
+                {
+                  type: ComponentType.ActionRow,
+                  components: [
+                    {
+                      type: ComponentType.Button,
+                      custom_id: 'commands-prev',
+                      emoji: toComponentEmoji('Previous'),
+                      style: ButtonStyle.Secondary,
+                      disabled: true,
+                    },
+                    ...(query !== null
+                      ? ([
+                          {
+                            type: ComponentType.Button,
+                            custom_id: 'commands-back',
+                            emoji: toComponentEmoji('Home'),
+                            style: ButtonStyle.Secondary,
+                            disabled: true,
+                          },
+                        ] satisfies APIComponentInActionRow[])
+                      : []),
+                    {
+                      type: ComponentType.Button,
+                      custom_id: 'commands-next',
+                      emoji: toComponentEmoji('Next'),
+                      style: ButtonStyle.Secondary,
+                      disabled: true,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          flags: MessageFlags.IsComponentsV2,
+        })
+        .catch(() => null);
     });
   },
 });

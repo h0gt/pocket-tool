@@ -1628,160 +1628,165 @@ createApplicationCommand({
     collector.on('end', async () => {
       sessions.delete(interaction.token);
 
-      await client.api.interactions.editReply(interaction.application_id, interaction.token, {
-        components: [
-          {
-            type: ComponentType.TextDisplay,
-            content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
-          },
-          {
-            type: ComponentType.MediaGallery,
-            items: [
-              {
-                media: {
-                  url: `attachment://quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
-                },
-              },
-            ],
-          },
-          {
-            type: ComponentType.Container,
-            components: [
-              {
-                type: ComponentType.TextDisplay,
-                content: '### Quote Editor\n-# Use the menus below to customize your quote or generate a random card',
-              },
-            ],
-          },
-          {
-            type: ComponentType.ActionRow,
-            components: [
-              {
-                type: ComponentType.StringSelect,
-                custom_id: 'quote-font',
-                placeholder: 'Choose a Font',
-                options: Object.entries(CARD_FONTS).map(([value, item]) => ({
-                  emoji: toComponentEmoji(item.emoji),
-                  label: item.label,
-                  description: item.description,
-                  value,
-                  default: value === session.font,
-                })),
-              },
-            ],
-          },
-          {
-            type: ComponentType.ActionRow,
-            components: [
-              {
-                type: ComponentType.StringSelect,
-                custom_id: 'quote-size',
-                placeholder: 'Choose a Size',
-                options: [
-                  ...Object.entries(FONT_SIZES).map(([value, item]) => ({
-                    ...(value === session.fontSize ? { emoji: toComponentEmoji('Selected') } : {}),
-                    label: item.label,
-                    description: item.description,
-                    value,
-                    default: value === session.fontSize,
-                  })),
-                  {
-                    emoji: toComponentEmoji('CustomFontSize'),
-                    label: 'Custom Font Size',
-                    description: 'Enter a custom font size',
-                    value: 'custom',
+      await client.api.interactions
+        .editReply(interaction.application_id, interaction.token, {
+          components: [
+            {
+              type: ComponentType.TextDisplay,
+              content: `-# ${emoji('Quote')} ${hyperlink(`https://discord.com/channels/${interaction.guild_id ?? '@me'}/${message.channel_id}/${message.id}`, 'Jump to original message')}`,
+            },
+            {
+              type: ComponentType.MediaGallery,
+              items: [
+                {
+                  media: {
+                    url: `attachment://quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
                   },
-                  ...(!(session.fontSize in FONT_SIZES)
-                    ? [
-                        {
-                          emoji: toComponentEmoji('Selected'),
-                          label: `Custom Text Size: ${session.fontSize}px`,
-                          description: 'Currently selected custom size',
-                          value: String(session.fontSize),
-                          default: true,
-                        },
-                      ]
-                    : []),
-                ],
-              },
-            ],
-          },
-          {
-            type: ComponentType.ActionRow,
-            components: [
-              {
-                type: ComponentType.StringSelect,
-                custom_id: 'quote-color',
-                placeholder: 'Choose a Color',
-                options: [
-                  ...Object.entries(CARD_COLORS).map(([value, item]) => ({
+                },
+              ],
+            },
+            {
+              type: ComponentType.Container,
+              components: [
+                {
+                  type: ComponentType.TextDisplay,
+                  content: '### Quote Editor\n-# Use the menus below to customize your quote or generate a random card',
+                },
+              ],
+            },
+            {
+              type: ComponentType.ActionRow,
+              components: [
+                {
+                  type: ComponentType.StringSelect,
+                  custom_id: 'quote-font',
+                  placeholder: 'Choose a Font',
+                  options: Object.entries(CARD_FONTS).map(([value, item]) => ({
                     emoji: toComponentEmoji(item.emoji),
                     label: item.label,
                     description: item.description,
                     value,
-                    default: value === session.color,
+                    default: value === session.font,
                   })),
-                  {
-                    emoji: toComponentEmoji('CustomColor'),
-                    label: 'Custom Text Color',
-                    description: 'Enter a custom color',
-                    value: 'custom',
-                  },
-                  ...(!(session.color in CARD_COLORS)
-                    ? [
-                        {
-                          emoji: toComponentEmoji('Selected'),
-                          label: `Custom Text Color: ${session.color}`,
-                          description: 'Currently selected custom color',
-                          value: session.color,
-                          default: true,
-                        },
-                      ]
-                    : []),
-                ],
-              },
-            ],
-          },
-          {
-            type: ComponentType.ActionRow,
-            components: [
-              {
-                type: ComponentType.StringSelect,
-                custom_id: 'quote-effects',
-                placeholder: 'Choose Some Effects!',
-                min_values: 0,
-                max_values: Object.keys(CARD_EFFECTS).length,
-                options: Object.entries(CARD_EFFECTS).map(([value, item]) => ({
-                  emoji: toComponentEmoji(item.emoji),
-                  label: item.label,
-                  description: item.description,
-                  value,
-                  default: session.effects.includes(value as EffectKey),
-                })),
-              },
-            ],
-          },
-          {
-            type: ComponentType.ActionRow,
-            components: [
-              {
-                type: ComponentType.Button,
-                custom_id: 'random',
-                label: 'Surprise Me!',
-                emoji: toComponentEmoji('Spark'),
-                style: ButtonStyle.Secondary,
-              },
-            ],
-          },
-        ],
-        files: [
-          {
-            name: `quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
-            data: card,
-          },
-        ],
-        flags: MessageFlags.IsComponentsV2,
-      });
+                  disabled: true,
+                },
+              ],
+            },
+            {
+              type: ComponentType.ActionRow,
+              components: [
+                {
+                  type: ComponentType.StringSelect,
+                  custom_id: 'quote-size',
+                  placeholder: 'Choose a Size',
+                  options: [
+                    ...Object.entries(FONT_SIZES).map(([value, item]) => ({
+                      ...(value === session.fontSize ? { emoji: toComponentEmoji('Selected') } : {}),
+                      label: item.label,
+                      description: item.description,
+                      value,
+                      default: value === session.fontSize,
+                    })),
+                    {
+                      emoji: toComponentEmoji('CustomFontSize'),
+                      label: 'Custom Font Size',
+                      description: 'Enter a custom font size',
+                      value: 'custom',
+                    },
+                    ...(!(session.fontSize in FONT_SIZES)
+                      ? [
+                          {
+                            emoji: toComponentEmoji('Selected'),
+                            label: `Custom Text Size: ${session.fontSize}px`,
+                            description: 'Currently selected custom size',
+                            value: String(session.fontSize),
+                          },
+                        ]
+                      : []),
+                  ],
+                  disabled: true,
+                },
+              ],
+            },
+            {
+              type: ComponentType.ActionRow,
+              components: [
+                {
+                  type: ComponentType.StringSelect,
+                  custom_id: 'quote-color',
+                  placeholder: 'Choose a Color',
+                  options: [
+                    ...Object.entries(CARD_COLORS).map(([value, item]) => ({
+                      emoji: toComponentEmoji(item.emoji),
+                      label: item.label,
+                      description: item.description,
+                      value,
+                      default: value === session.color,
+                    })),
+                    {
+                      emoji: toComponentEmoji('CustomColor'),
+                      label: 'Custom Text Color',
+                      description: 'Enter a custom color',
+                      value: 'custom',
+                    },
+                    ...(!(session.color in CARD_COLORS)
+                      ? [
+                          {
+                            emoji: toComponentEmoji('Selected'),
+                            label: `Custom Text Color: ${session.color}`,
+                            description: 'Currently selected custom color',
+                            value: session.color,
+                          },
+                        ]
+                      : []),
+                  ],
+                  disabled: true,
+                },
+              ],
+            },
+            {
+              type: ComponentType.ActionRow,
+              components: [
+                {
+                  type: ComponentType.StringSelect,
+                  custom_id: 'quote-effects',
+                  placeholder: 'Choose Some Effects!',
+                  min_values: 0,
+                  max_values: Object.keys(CARD_EFFECTS).length,
+                  options: Object.entries(CARD_EFFECTS).map(([value, item]) => ({
+                    emoji: toComponentEmoji(item.emoji),
+                    label: item.label,
+                    description: item.description,
+                    value,
+                    default: session.effects.includes(value as EffectKey),
+                  })),
+                  disabled: true,
+                },
+              ],
+            },
+            {
+              type: ComponentType.ActionRow,
+              components: [
+                {
+                  type: ComponentType.Button,
+                  custom_id: 'random',
+                  label: 'Surprise Me!',
+                  emoji: toComponentEmoji('Spark'),
+                  style: ButtonStyle.Secondary,
+                  disabled: true,
+                },
+              ],
+            },
+          ],
+          files: [
+            {
+              name: `quote.${session.effects.includes('gif') ? 'gif' : 'png'}`,
+              data: card,
+            },
+          ],
+          flags: MessageFlags.IsComponentsV2,
+        })
+        .catch(() => null);
     });
   },
 });

@@ -64,7 +64,7 @@ export enum Emoji {
   Minecraft = '<:minecraft:1542926722708672592>',
   // image effects
   FullBleedSplit = '<:full_bleed_split:1543069033484783647>',
-  Grayscale = '<:grayscale:1543069930663190538>',
+  Grayscale = '<:grayscale:1544020080076005386>',
   Blur = '<:blur:1543069955203928207>',
   BrightnessBoost = '<:brightness_boost:1543070020056129566>',
   RemoveWatermark = '<:remove_watermark:1543070663491719248>',

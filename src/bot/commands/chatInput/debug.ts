@@ -447,81 +447,84 @@ createApplicationCommand({
     collector.on('end', async () => {
       switch (page) {
         case 'about': {
-          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
-            components: [
-              {
-                type: ComponentType.Container,
-                components: [
-                  {
-                    type: ComponentType.TextDisplay,
-                    content: `### ${hyperlink(WEBSITE, 'Welcome to Pocket Tool!')}\nYou can view all available slash commands by typing ${highlight('/', HighlightStyle.Bold)}\n-# Additionally, you can view context menu commands by right-clicking or long-pressing a message or user`,
-                  },
-                  {
-                    type: ComponentType.TextDisplay,
-                    content: `-# **Quickstart:**\n> </help:1504215560865448037> - View and search through all available commands\n> </debug:1533585400138961059> - View stats and information about me!`,
-                  },
-                  {
-                    type: ComponentType.Separator,
-                  },
-                  {
-                    type: ComponentType.TextDisplay,
-                    content: `### How to report bugs?\nTo report a bug, join our __support server__ and create a post in the ${hyperlink('https://discord.com/channels/1533439024637939792/1533485684961054781', 'bug reports channel')}.`,
-                  },
-                  {
-                    type: ComponentType.Separator,
-                  },
-                  {
-                    type: ComponentType.ActionRow,
-                    components: [
-                      {
-                        type: ComponentType.StringSelect,
-                        custom_id: 'debug-pages',
-                        options: [
-                          {
-                            label: 'About',
-                            value: 'about',
-                            default: true,
-                          },
-                          {
-                            label: 'Stats',
-                            value: 'stats',
-                          },
-                          {
-                            label: 'Usage',
-                            value: 'usage',
-                          },
-                          {
-                            label: 'Credits',
-                            value: 'credits',
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                  {
-                    type: ComponentType.ActionRow,
-                    components: [
-                      {
-                        type: ComponentType.Button,
-                        label: 'Authorize',
-                        emoji: toComponentEmoji('Link'),
-                        url: INVITE,
-                        style: ButtonStyle.Link,
-                      },
-                      {
-                        type: ComponentType.Button,
-                        label: 'Support Server',
-                        emoji: toComponentEmoji('Discord'),
-                        url: SUPPORT,
-                        style: ButtonStyle.Link,
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-            flags: MessageFlags.IsComponentsV2,
-          });
+          await client.api.interactions
+            .editReply(interaction.application_id, interaction.token, {
+              components: [
+                {
+                  type: ComponentType.Container,
+                  components: [
+                    {
+                      type: ComponentType.TextDisplay,
+                      content: `### ${hyperlink(WEBSITE, 'Welcome to Pocket Tool!')}\nYou can view all available slash commands by typing ${highlight('/', HighlightStyle.Bold)}\n-# Additionally, you can view context menu commands by right-clicking or long-pressing a message or user`,
+                    },
+                    {
+                      type: ComponentType.TextDisplay,
+                      content: `-# **Quickstart:**\n> </help:1504215560865448037> - View and search through all available commands\n> </debug:1533585400138961059> - View stats and information about me!`,
+                    },
+                    {
+                      type: ComponentType.Separator,
+                    },
+                    {
+                      type: ComponentType.TextDisplay,
+                      content: `### How to report bugs?\nTo report a bug, join our __support server__ and create a post in the ${hyperlink('https://discord.com/channels/1533439024637939792/1533485684961054781', 'bug reports channel')}.`,
+                    },
+                    {
+                      type: ComponentType.Separator,
+                    },
+                    {
+                      type: ComponentType.ActionRow,
+                      components: [
+                        {
+                          type: ComponentType.StringSelect,
+                          custom_id: 'debug-pages',
+                          options: [
+                            {
+                              label: 'About',
+                              value: 'about',
+                              default: true,
+                            },
+                            {
+                              label: 'Stats',
+                              value: 'stats',
+                            },
+                            {
+                              label: 'Usage',
+                              value: 'usage',
+                            },
+                            {
+                              label: 'Credits',
+                              value: 'credits',
+                            },
+                          ],
+                          disabled: true,
+                        },
+                      ],
+                    },
+                    {
+                      type: ComponentType.ActionRow,
+                      components: [
+                        {
+                          type: ComponentType.Button,
+                          label: 'Authorize',
+                          emoji: toComponentEmoji('Link'),
+                          url: INVITE,
+                          style: ButtonStyle.Link,
+                        },
+                        {
+                          type: ComponentType.Button,
+                          label: 'Support Server',
+                          emoji: toComponentEmoji('Discord'),
+                          url: SUPPORT,
+                          style: ButtonStyle.Link,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+              flags: MessageFlags.IsComponentsV2,
+            })
+            .catch(() => null);
 
           break;
         }
@@ -533,71 +536,73 @@ createApplicationCommand({
           const uptime = client.gateway.shards.get(shardId)?.uptime!;
           const ping = client.gateway.shards.get(shardId)?.ping!;
 
-          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
-            components: [
-              {
-                type: ComponentType.Container,
-                components: [
-                  {
-                    type: ComponentType.TextDisplay,
-                    content: `-# **Statistics**\n> Shards: **${totalShards}**\n> Installs: **${bot.approximate_user_install_count}**\n> Servers: **${bot.approximate_guild_count}**\n> Uptime: **${msToReadableTime(Temporal.Now.instant().epochMilliseconds - uptime)} (${timestamp(uptime, TimestampStyle.LongDateShortTime)})**\n> Latency: **${ping}ms**\n-# ${emoji('Exclamation')} Viewing statistics for shard **${shardId}**`,
-                  },
-                  {
-                    type: ComponentType.Separator,
-                  },
-                  {
-                    type: ComponentType.ActionRow,
-                    components: [
-                      {
-                        type: ComponentType.StringSelect,
-                        custom_id: 'debug-pages',
-                        options: [
-                          {
-                            label: 'About',
-                            value: 'about',
-                          },
-                          {
-                            label: 'Stats',
-                            value: 'stats',
-                            default: true,
-                          },
-                          {
-                            label: 'Usage',
-                            value: 'usage',
-                          },
-                          {
-                            label: 'Credits',
-                            value: 'credits',
-                          },
-                        ],
-                        disabled: true,
-                      },
-                    ],
-                  },
-                  {
-                    type: ComponentType.ActionRow,
-                    components: [
-                      {
-                        type: ComponentType.Button,
-                        label: 'Authorize',
-                        emoji: toComponentEmoji('Link'),
-                        url: INVITE,
-                        style: ButtonStyle.Link,
-                      },
-                      {
-                        type: ComponentType.Button,
-                        label: 'Support Server',
-                        emoji: toComponentEmoji('Discord'),
-                        url: SUPPORT,
-                        style: ButtonStyle.Link,
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-            flags: MessageFlags.IsComponentsV2,
-          });
+          await client.api.interactions
+            .editReply(interaction.application_id, interaction.token, {
+              components: [
+                {
+                  type: ComponentType.Container,
+                  components: [
+                    {
+                      type: ComponentType.TextDisplay,
+                      content: `-# **Statistics**\n> Shards: **${totalShards}**\n> Installs: **${bot.approximate_user_install_count}**\n> Servers: **${bot.approximate_guild_count}**\n> Uptime: **${msToReadableTime(Temporal.Now.instant().epochMilliseconds - uptime)} (${timestamp(uptime, TimestampStyle.LongDateShortTime)})**\n> Latency: **${ping}ms**\n-# ${emoji('Exclamation')} Viewing statistics for shard **${shardId}**`,
+                    },
+                    {
+                      type: ComponentType.Separator,
+                    },
+                    {
+                      type: ComponentType.ActionRow,
+                      components: [
+                        {
+                          type: ComponentType.StringSelect,
+                          custom_id: 'debug-pages',
+                          options: [
+                            {
+                              label: 'About',
+                              value: 'about',
+                            },
+                            {
+                              label: 'Stats',
+                              value: 'stats',
+                              default: true,
+                            },
+                            {
+                              label: 'Usage',
+                              value: 'usage',
+                            },
+                            {
+                              label: 'Credits',
+                              value: 'credits',
+                            },
+                          ],
+                          disabled: true,
+                        },
+                      ],
+                    },
+                    {
+                      type: ComponentType.ActionRow,
+                      components: [
+                        {
+                          type: ComponentType.Button,
+                          label: 'Authorize',
+                          emoji: toComponentEmoji('Link'),
+                          url: INVITE,
+                          style: ButtonStyle.Link,
+                        },
+                        {
+                          type: ComponentType.Button,
+                          label: 'Support Server',
+                          emoji: toComponentEmoji('Discord'),
+                          url: SUPPORT,
+                          style: ButtonStyle.Link,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+              flags: MessageFlags.IsComponentsV2,
+            })
+            .catch(() => null);
 
           break;
         }
@@ -638,140 +643,144 @@ createApplicationCommand({
             )
             .join('\n');
 
-          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
-            components: [
-              {
-                type: ComponentType.Container,
-                components: [
-                  {
-                    type: ComponentType.TextDisplay,
-                    content: `-# **Today's Command Usage:**\n> Today: **${today}**\n> Last Hour: **${lastHour}**\n> Last Minute: **${lastMinute}**\n-# **Today's Top Commands:**\n${topCommands}`,
-                  },
-                  {
-                    type: ComponentType.Separator,
-                  },
-                  {
-                    type: ComponentType.ActionRow,
-                    components: [
-                      {
-                        type: ComponentType.StringSelect,
-                        custom_id: 'debug-pages',
-                        options: [
-                          {
-                            label: 'About',
-                            value: 'about',
-                          },
-                          {
-                            label: 'Stats',
-                            value: 'stats',
-                          },
-                          {
-                            label: 'Usage',
-                            value: 'usage',
-                            default: true,
-                          },
-                          {
-                            label: 'Credits',
-                            value: 'credits',
-                          },
-                        ],
-                        disabled: true,
-                      },
-                    ],
-                  },
-                  {
-                    type: ComponentType.ActionRow,
-                    components: [
-                      {
-                        type: ComponentType.Button,
-                        label: 'Authorize',
-                        emoji: toComponentEmoji('Link'),
-                        url: INVITE,
-                        style: ButtonStyle.Link,
-                      },
-                      {
-                        type: ComponentType.Button,
-                        label: 'Support Server',
-                        emoji: toComponentEmoji('Discord'),
-                        url: SUPPORT,
-                        style: ButtonStyle.Link,
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-            flags: MessageFlags.IsComponentsV2,
-          });
+          await client.api.interactions
+            .editReply(interaction.application_id, interaction.token, {
+              components: [
+                {
+                  type: ComponentType.Container,
+                  components: [
+                    {
+                      type: ComponentType.TextDisplay,
+                      content: `-# **Today's Command Usage:**\n> Today: **${today}**\n> Last Hour: **${lastHour}**\n> Last Minute: **${lastMinute}**\n-# **Today's Top Commands:**\n${topCommands}`,
+                    },
+                    {
+                      type: ComponentType.Separator,
+                    },
+                    {
+                      type: ComponentType.ActionRow,
+                      components: [
+                        {
+                          type: ComponentType.StringSelect,
+                          custom_id: 'debug-pages',
+                          options: [
+                            {
+                              label: 'About',
+                              value: 'about',
+                            },
+                            {
+                              label: 'Stats',
+                              value: 'stats',
+                            },
+                            {
+                              label: 'Usage',
+                              value: 'usage',
+                              default: true,
+                            },
+                            {
+                              label: 'Credits',
+                              value: 'credits',
+                            },
+                          ],
+                          disabled: true,
+                        },
+                      ],
+                    },
+                    {
+                      type: ComponentType.ActionRow,
+                      components: [
+                        {
+                          type: ComponentType.Button,
+                          label: 'Authorize',
+                          emoji: toComponentEmoji('Link'),
+                          url: INVITE,
+                          style: ButtonStyle.Link,
+                        },
+                        {
+                          type: ComponentType.Button,
+                          label: 'Support Server',
+                          emoji: toComponentEmoji('Discord'),
+                          url: SUPPORT,
+                          style: ButtonStyle.Link,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+              flags: MessageFlags.IsComponentsV2,
+            })
+            .catch(() => null);
 
           break;
         }
         case 'credits': {
-          await client.api.interactions.editReply(interaction.application_id, interaction.token, {
-            components: [
-              {
-                type: ComponentType.Container,
-                components: [
-                  {
-                    type: ComponentType.TextDisplay,
-                    content: `-# **Development:**\n> ${hyperlink('https://discord.com/users/782946852278501407', '@melotheunbound')} - Lead Developer\n> ${hyperlink('https://discord.com/users/775273108671430677', '@h0gtt')} - Website Developer & Contributor\n-# **Design:**\n> ${hyperlink('https://merpix.de/', 'Merpix')} - Responsible for the branding\n> ${hyperlink('https://discord.com/users/808606684837576714', '@mineturtle2.')} - Created the emojis\n-# **Additional:**\n> ${hyperlink('https://wispbyte.com', 'David Dobos')} - Hosting Provider`,
-                  },
-                  {
-                    type: ComponentType.Separator,
-                  },
-                  {
-                    type: ComponentType.ActionRow,
-                    components: [
-                      {
-                        type: ComponentType.StringSelect,
-                        custom_id: 'debug-pages',
-                        options: [
-                          {
-                            label: 'About',
-                            value: 'about',
-                          },
-                          {
-                            label: 'Stats',
-                            value: 'stats',
-                          },
-                          {
-                            label: 'Usage',
-                            value: 'usage',
-                          },
-                          {
-                            label: 'Credits',
-                            value: 'credits',
-                            default: true,
-                          },
-                        ],
-                        disabled: true,
-                      },
-                    ],
-                  },
-                  {
-                    type: ComponentType.ActionRow,
-                    components: [
-                      {
-                        type: ComponentType.Button,
-                        label: 'Authorize',
-                        emoji: toComponentEmoji('Link'),
-                        url: INVITE,
-                        style: ButtonStyle.Link,
-                      },
-                      {
-                        type: ComponentType.Button,
-                        label: 'Support Server',
-                        emoji: toComponentEmoji('Discord'),
-                        url: SUPPORT,
-                        style: ButtonStyle.Link,
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-            flags: MessageFlags.IsComponentsV2,
-          });
+          await client.api.interactions
+            .editReply(interaction.application_id, interaction.token, {
+              components: [
+                {
+                  type: ComponentType.Container,
+                  components: [
+                    {
+                      type: ComponentType.TextDisplay,
+                      content: `-# **Development:**\n> ${hyperlink('https://discord.com/users/782946852278501407', '@melotheunbound')} - Lead Developer\n> ${hyperlink('https://discord.com/users/775273108671430677', '@h0gtt')} - Website Developer & Contributor\n-# **Design:**\n> ${hyperlink('https://merpix.de/', 'Merpix')} - Responsible for the branding\n> ${hyperlink('https://discord.com/users/808606684837576714', '@mineturtle2.')} - Created the emojis\n-# **Additional:**\n> ${hyperlink('https://wispbyte.com', 'David Dobos')} - Hosting Provider`,
+                    },
+                    {
+                      type: ComponentType.Separator,
+                    },
+                    {
+                      type: ComponentType.ActionRow,
+                      components: [
+                        {
+                          type: ComponentType.StringSelect,
+                          custom_id: 'debug-pages',
+                          options: [
+                            {
+                              label: 'About',
+                              value: 'about',
+                            },
+                            {
+                              label: 'Stats',
+                              value: 'stats',
+                            },
+                            {
+                              label: 'Usage',
+                              value: 'usage',
+                            },
+                            {
+                              label: 'Credits',
+                              value: 'credits',
+                              default: true,
+                            },
+                          ],
+                          disabled: true,
+                        },
+                      ],
+                    },
+                    {
+                      type: ComponentType.ActionRow,
+                      components: [
+                        {
+                          type: ComponentType.Button,
+                          label: 'Authorize',
+                          emoji: toComponentEmoji('Link'),
+                          url: INVITE,
+                          style: ButtonStyle.Link,
+                        },
+                        {
+                          type: ComponentType.Button,
+                          label: 'Support Server',
+                          emoji: toComponentEmoji('Discord'),
+                          url: SUPPORT,
+                          style: ButtonStyle.Link,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+              flags: MessageFlags.IsComponentsV2,
+            })
+            .catch(() => null);
 
           break;
         }
