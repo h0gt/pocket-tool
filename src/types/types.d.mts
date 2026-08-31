@@ -10,3 +10,9 @@ declare module '@discordjs/core' {
     createCollector<Type>(options: CollectorOptions<Type>): Collector<Type>;
   }
 }
+
+declare module '@discordjs/rest' {
+  interface REST {
+    ping(): Promise<number>;
+  }
+}

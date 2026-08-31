@@ -8,6 +8,7 @@ import {
   GatewayDispatchEvents,
   GatewayIntentBits,
   PresenceUpdateStatus,
+  Routes,
   type GatewayDispatchPayload,
   type RESTPutAPIApplicationCommandsJSONBody,
   type RESTPutAPIApplicationGuildCommandsJSONBody,
@@ -44,6 +45,13 @@ const client = new Client({ rest, gateway });
 
 // some sort of workaround to have extra utilities
 client.gateway.shards = new Collection<number, GatewayShard>();
+
+client.rest.ping = async () => {
+  const start = performance.now();
+  await rest.get(Routes.gateway());
+  return Math.round(performance.now() - start);
+};
+
 client.api.interactions.createCollector = createCollector;
 
 client.on(GatewayDispatchEvents.Ready, async (payload) => {

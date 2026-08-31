@@ -209,7 +209,7 @@ createApplicationCommand({
                 components: [
                   {
                     type: ComponentType.TextDisplay,
-                    content: `-# **Statistics:**\n> Shards: **${totalShards}**\n> Installs: **${bot.approximate_user_install_count}**\n> Servers: **${bot.approximate_guild_count}**\n> Uptime: **${msToReadableTime(Temporal.Now.instant().epochMilliseconds - uptime)} (${timestamp(uptime, TimestampStyle.LongDateShortTime)})**\n> Latency: **${ping}ms**\n-# ${emoji('Exclamation')} Viewing statistics for shard **${shardId}**`,
+                    content: `-# **Statistics:**\n> Shards: **${totalShards}**\n> Installs: **${bot.approximate_user_install_count}**\n> Servers: **${bot.approximate_guild_count}**\n> Uptime: **${msToReadableTime(Temporal.Now.instant().epochMilliseconds - uptime)} (${timestamp(uptime, TimestampStyle.LongDateShortTime)})**\n> Latency: **${ping}ms**\n-# ${emoji('Exclamation')} Viewing statistics for shard **#${shardId}**`,
                   },
                   {
                     type: ComponentType.Separator,
