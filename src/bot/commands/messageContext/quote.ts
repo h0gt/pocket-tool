@@ -1831,15 +1831,12 @@ export async function resolveContent(message: APIMessage) {
 
   const resolvedStickers = await Promise.all(
     (message.sticker_items ?? []).map(async (sticker) => {
-      const url =
-        sticker.format_type === StickerFormatType.GIF
-          ? `https://media.discordapp.net/stickers/${sticker.id}.gif`
-          : cdn(
-              `/stickers/${sticker.id}`,
-              undefined,
-              sticker.format_type === StickerFormatType.Lottie ? 'json' : 'png',
-              false,
-            );
+      const url = cdn(
+        `/stickers/${sticker.id}`,
+        undefined,
+        sticker.format_type === StickerFormatType.Lottie ? 'json' : 'png',
+        false,
+      );
 
       try {
         let data = await makeRequest(url, {
