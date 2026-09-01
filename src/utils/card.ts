@@ -5,7 +5,7 @@ import emojiRegex from 'emoji-regex';
 import path from 'path';
 
 const FONTS = [
-  ['M PLUS Rounded 1c', 'MPLUSRounded1c_regular.ttf'],
+  ['M PLUS Rounded 1c', 'MPLUSRounded1c-Regular.ttf'],
   ['Dela Gothic One', 'DelaGothicOne-Regular.ttf'],
   ['DotGothic16', 'DotGothic16-Regular.ttf'],
   ['Hachi Maru Pop', 'HachiMaruPop-Regular.ttf'],
@@ -344,11 +344,18 @@ export type CardOptions = {
 export type RenderQuoteCardOptions = CardOptions & {
   avatar: Buffer;
   emojis?: Record<string, Buffer>;
+  stickers?: Buffer[];
 };
 
 type LoadedImage = Awaited<ReturnType<typeof loadImage>>;
 type RichSpan = { type: 'text'; value: string } | { type: 'emoji'; name: string; id?: string; unicode?: boolean };
 type RichLine = RichSpan[];
+
+type LineMetrics = {
+  ascent: number;
+  descent: number;
+  height: number;
+};
 
 type TextArea = {
   x: number;
@@ -367,20 +374,21 @@ export async function renderQuoteCard(options: RenderQuoteCardOptions): Promise<
   ctx.scale(SCALE, SCALE);
   const effects = new Set(options.effects.map((effect) => CARD_EFFECTS[effect].effect));
   const layout: Layout = options.effects.includes('full-bleed') ? 'full-bleed' : 'split';
-  const [avatar, emojis] = await Promise.all([
+  const [avatar, emojis, stickers] = await Promise.all([
     options.avatar ? loadImage(options.avatar) : undefined,
     Promise.all(
       Object.entries(options.emojis ?? {}).map(async ([id, data]) => [id, await loadImage(data)] as const),
     ).then((entries) =>
       Object.fromEntries(entries.filter((entry): entry is readonly [string, LoadedImage] => Boolean(entry[1]))),
     ),
+    Promise.all((options.stickers ?? []).map((sticker) => loadImage(sticker))),
   ]);
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
   const area = drawLayout(ctx, layout, effects, avatar);
-  await drawQuote(ctx, options, area, resolveTextColor(options.color), emojis);
+  await drawQuote(ctx, options, area, resolveTextColor(options.color), emojis, stickers);
 
   if (!effects.has('remove-watermark')) {
     drawBrandMark(ctx);
@@ -559,6 +567,7 @@ async function drawQuote(
   area: TextArea,
   color: string,
   emojiImages: Record<string, LoadedImage>,
+  stickerImages: LoadedImage[],
 ): Promise<void> {
   const selectedFont = CARD_FONTS[options.font];
 
@@ -566,7 +575,7 @@ async function drawQuote(
     typeof options.fontSize === 'number'
       ? options.fontSize
       : options.fontSize === 'auto'
-        ? findBestFontSize(ctx, options.quote, selectedFont, area)
+        ? findBestFontSize(ctx, options.quote, selectedFont, area, Boolean(options.credit), stickerImages.length)
         : FONT_SIZES[options.fontSize].pixels;
 
   const minFontSize = 20;
@@ -576,12 +585,14 @@ async function drawQuote(
 
   let lines = wrapRichText(ctx, options.quote, area.width, fontSize);
 
-  // Segurança caso um tamanho explícito não caiba.
+  
   let finalFontSize = fontSize;
 
   while (
     finalFontSize > minFontSize &&
-    (lines.length > maxLines || lines.length * finalFontSize * 1.16 > area.height - 62)
+    (lines.length > maxLines ||
+      measureQuoteContentHeight(ctx, lines.length, finalFontSize, area, Boolean(options.credit), stickerImages.length) >
+        area.height)
   ) {
     finalFontSize -= 2;
     ctx.font = resolveFont(selectedFont, finalFontSize);
@@ -593,11 +604,15 @@ async function drawQuote(
     appendText(lines[maxLines - 1]!, '…');
   }
 
-  const lineHeight = finalFontSize * 1.16;
+  ctx.font = resolveFont(selectedFont, finalFontSize);
+
+  const lineHeight = measureLineMetrics(ctx, finalFontSize).height;
   const creditSize = Math.max(15, Math.min(22, finalFontSize * 0.48));
   const handleSize = Math.max(13, Math.min(17, creditSize * 0.78));
-  const creditGap = options.credit ? 18 + creditSize + handleSize : 0;
-  const contentHeight = lines.length * lineHeight + creditGap;
+  const creditGap = getCreditBlockHeight(creditSize, handleSize, Boolean(options.credit));
+  const stickerSize = getStickerSize(area, stickerImages.length, lines.length > 0);
+  const stickerGap = stickerImages.length && lines.length ? 12 : 0;
+  const contentHeight = stickerSize + stickerGap + lines.length * lineHeight + creditGap;
 
   let startY = area.y;
 
@@ -611,29 +626,48 @@ async function drawQuote(
 
   const drawX = area.align === 'center' ? area.x + area.width / 2 : area.x;
 
-  ctx.textBaseline = 'top';
   ctx.fillStyle = color;
   ctx.font = resolveFont(selectedFont, finalFontSize);
 
-  for (const [index, line] of lines.entries()) {
-    await drawRichLine(ctx, line, drawX, startY + index * lineHeight, area.align, finalFontSize, emojiImages);
+  let contentY = startY;
+
+  if (stickerImages.length) {
+    drawStickerRow(ctx, stickerImages, drawX, contentY, area.align, stickerSize);
+    contentY += stickerSize + stickerGap;
   }
 
-  const creditY = startY + lines.length * lineHeight + 14;
+  for (const [index, line] of lines.entries()) {
+    await drawRichLine(ctx, line, drawX, contentY + index * lineHeight, area.align, finalFontSize, emojiImages);
+  }
+
+  const creditY = contentY + lines.length * lineHeight + 14;
 
   ctx.globalAlpha = 0.9;
   ctx.font = `400 ${creditSize}px "Exo 2", sans-serif`;
 
   const creditLine = parseRichWord(`– ${options.credit}`);
 
-  await drawRichLine(ctx, creditLine, drawX, creditY, area.align, creditSize, emojiImages);
+  const creditLineHeight = measureLineMetrics(ctx, creditSize).height;
+
+  await drawRichLine(ctx, creditLine, drawX, creditY, area.align, creditSize, emojiImages, creditLineHeight);
 
   ctx.globalAlpha = 0.58;
   ctx.font = `400 ${handleSize}px "Exo 2", sans-serif`;
 
   const mentionLine = parseRichWord(options.mention);
 
-  await drawRichLine(ctx, mentionLine, drawX, creditY + creditSize + 4, area.align, handleSize, emojiImages);
+  const handleLineHeight = measureLineMetrics(ctx, handleSize).height;
+
+  await drawRichLine(
+    ctx,
+    mentionLine,
+    drawX,
+    creditY + creditLineHeight + 4,
+    area.align,
+    handleSize,
+    emojiImages,
+    handleLineHeight,
+  );
 
   ctx.globalAlpha = 1;
 }
@@ -680,7 +714,7 @@ function wrapRichText(ctx: SKRSContext2D, input: string, maxWidth: number, fontS
     }
   }
 
-  return lines.length ? lines : [[]];
+  return lines;
 }
 
 function parseRichWord(word: string): RichLine {
@@ -768,6 +802,40 @@ function measureRichLine(ctx: SKRSContext2D, line: RichLine, fontSize: number): 
   }, 0);
 }
 
+function measureRichLineBounds(ctx: SKRSContext2D, line: RichLine, fontSize: number): { left: number; right: number } {
+  let cursor = 0;
+  let left = Number.POSITIVE_INFINITY;
+  let right = Number.NEGATIVE_INFINITY;
+
+  for (const span of line) {
+    if (span.type === 'emoji') {
+      left = Math.min(left, cursor);
+      right = Math.max(right, cursor + fontSize);
+      cursor += fontSize;
+      continue;
+    }
+
+    const metrics = ctx.measureText(span.value);
+    left = Math.min(left, cursor - metrics.actualBoundingBoxLeft);
+    right = Math.max(right, cursor + metrics.actualBoundingBoxRight);
+    cursor += metrics.width;
+  }
+
+  return Number.isFinite(left) ? { left, right } : { left: 0, right: 0 };
+}
+
+function measureLineMetrics(ctx: SKRSContext2D, fontSize: number): LineMetrics {
+  const metrics = ctx.measureText('MgÉÅjpqy');
+  const ascent = Math.max(metrics.actualBoundingBoxAscent, fontSize * 0.72);
+  const descent = Math.max(metrics.actualBoundingBoxDescent, fontSize * 0.2);
+
+  return {
+    ascent,
+    descent,
+    height: Math.max(fontSize * 1.16, ascent + descent + fontSize * 0.12),
+  };
+}
+
 async function drawRichLine(
   ctx: SKRSContext2D,
   line: RichLine,
@@ -776,15 +844,20 @@ async function drawRichLine(
   align: TextArea['align'],
   fontSize: number,
   emojis: Record<string, LoadedImage>,
+  lineHeight = measureLineMetrics(ctx, fontSize).height,
 ): Promise<void> {
-  const width = measureRichLine(ctx, line, fontSize);
-  let x = align === 'center' ? anchorX - width / 2 : anchorX;
+  const bounds = measureRichLineBounds(ctx, line, fontSize);
+  let x = align === 'center' ? anchorX - (bounds.left + bounds.right) / 2 : anchorX;
+  const metrics = measureLineMetrics(ctx, fontSize);
+  const baseline = y + (lineHeight + metrics.ascent - metrics.descent) / 2;
+  const emojiY = y + (lineHeight - fontSize) / 2;
 
   ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
 
   for (const span of line) {
     if (span.type === 'text') {
-      ctx.fillText(span.value, x, y);
+      ctx.fillText(span.value, x, baseline);
       x += ctx.measureText(span.value).width;
 
       continue;
@@ -793,7 +866,7 @@ async function drawRichLine(
     const emoji = span.id ? emojis[span.id] : undefined;
 
     if (emoji) {
-      ctx.drawImage(emoji, x, y, fontSize, fontSize);
+      ctx.drawImage(emoji, x, emojiY, fontSize, fontSize);
       x += fontSize;
 
       continue;
@@ -803,16 +876,67 @@ async function drawRichLine(
       try {
         const img = await loadImage(getTwemojiUrl(span.name));
 
-        ctx.drawImage(img, x, y, fontSize, fontSize);
+        ctx.drawImage(img, x, emojiY, fontSize, fontSize);
       } catch {}
 
       x += fontSize;
       continue;
     }
 
-    ctx.fillText(span.name, x, y);
+    ctx.fillText(span.name, x, baseline);
     x += ctx.measureText(span.name).width;
   }
+}
+
+function getCreditBlockHeight(creditSize: number, handleSize: number, hasCredit: boolean): number {
+  return hasCredit ? 18 + creditSize * 1.16 + handleSize * 1.16 : 0;
+}
+
+function getStickerSize(area: TextArea, stickerCount: number, hasText: boolean): number {
+  if (!stickerCount) {
+    return 0;
+  }
+
+  const gap = 8;
+  const maxByWidth = (area.width - gap * (stickerCount - 1)) / stickerCount;
+  const maxByHeight = hasText ? Math.min(116, area.height * 0.34) : area.height * 0.62;
+
+  return Math.max(40, Math.floor(Math.min(maxByWidth, maxByHeight)));
+}
+
+function drawStickerRow(
+  ctx: SKRSContext2D,
+  stickers: LoadedImage[],
+  anchorX: number,
+  y: number,
+  align: TextArea['align'],
+  size: number,
+): void {
+  const gap = 8;
+  const width = stickers.length * size + (stickers.length - 1) * gap;
+  let x = align === 'center' ? anchorX - width / 2 : anchorX;
+
+  for (const sticker of stickers) {
+    ctx.drawImage(sticker, x, y, size, size);
+    x += size + gap;
+  }
+}
+
+function measureQuoteContentHeight(
+  ctx: SKRSContext2D,
+  lineCount: number,
+  fontSize: number,
+  area: TextArea,
+  hasCredit: boolean,
+  stickerCount: number,
+): number {
+  const lineHeight = measureLineMetrics(ctx, fontSize).height;
+  const creditSize = Math.max(15, Math.min(22, fontSize * 0.48));
+  const handleSize = Math.max(13, Math.min(17, creditSize * 0.78));
+  const stickerSize = getStickerSize(area, stickerCount, lineCount > 0);
+  const stickerGap = stickerCount && lineCount ? 12 : 0;
+
+  return lineCount * lineHeight + stickerSize + stickerGap + getCreditBlockHeight(creditSize, handleSize, hasCredit);
 }
 
 function appendText(line: RichLine, value: string): void {
@@ -830,21 +954,21 @@ function findBestFontSize(
   quote: string,
   font: (typeof CARD_FONTS)[FontKey],
   area: TextArea,
+  hasCredit: boolean,
+  stickerCount: number,
 ): number {
   const minFontSize = 20;
   const maxFontSize = 72;
   const maxLines = 7;
-  const lineHeightMultiplier = 1.16;
-  const reservedHeight = 62;
 
   for (let fontSize = maxFontSize; fontSize >= minFontSize; fontSize -= 2) {
     ctx.font = resolveFont(font, fontSize);
 
     const lines = wrapRichText(ctx, quote, area.width, fontSize);
 
-    const contentHeight = lines.length * fontSize * lineHeightMultiplier;
+    const contentHeight = measureQuoteContentHeight(ctx, lines.length, fontSize, area, hasCredit, stickerCount);
 
-    if (lines.length <= maxLines && contentHeight <= area.height - reservedHeight) {
+    if (lines.length <= maxLines && contentHeight <= area.height) {
       return fontSize;
     }
   }
