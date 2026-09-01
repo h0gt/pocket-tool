@@ -381,7 +381,9 @@ export async function renderQuoteCard(options: RenderQuoteCardOptions): Promise<
     ).then((entries) =>
       Object.fromEntries(entries.filter((entry): entry is readonly [string, LoadedImage] => Boolean(entry[1]))),
     ),
-    Promise.all((options.stickers ?? []).map((sticker) => loadImage(sticker))),
+    Promise.allSettled((options.stickers ?? []).map((sticker) => loadImage(sticker))).then((results) =>
+      results.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : [])),
+    ),
   ]);
 
   ctx.imageSmoothingEnabled = true;
@@ -585,7 +587,6 @@ async function drawQuote(
 
   let lines = wrapRichText(ctx, options.quote, area.width, fontSize);
 
-  
   let finalFontSize = fontSize;
 
   while (

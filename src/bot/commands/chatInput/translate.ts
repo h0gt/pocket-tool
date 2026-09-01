@@ -72,7 +72,7 @@ createApplicationCommand({
       case 'to': {
         const choices = [
           {
-            name: 'Use M6y Locale',
+            name: 'Use My Locale',
             value: 'auto',
           },
           ...languages.map((language) => ({

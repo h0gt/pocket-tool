@@ -1,4 +1,6 @@
 import sharp, { type OverlayOptions } from 'sharp';
+import { makeRequest } from './request';
+import { RequestMethod, ResponseType } from '../types/types';
 
 const DEFAULT_PETPET_RESOLUTION = 128;
 const DEFAULT_PETPET_DELAY = 20;
@@ -117,16 +119,16 @@ export async function createPetpetGif(avatar: Buffer, options: PetpetOptions = {
 
 function loadDefaultPetpetHandFrames(): Promise<Buffer[]> {
   defaultPetpetHandFrames ??= Promise.all(
-    PETPET_HAND_FRAME_URLS.map(async (url) => {
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`Unable to load petpet hand frame (${response.status}).`);
-      }
-
-      return Buffer.from(await response.arrayBuffer());
-    }),
-  );
+    PETPET_HAND_FRAME_URLS.map((url) =>
+      makeRequest(url, {
+        method: RequestMethod.GET,
+        response: ResponseType.BUFFER,
+      }),
+    ),
+  ).catch((error) => {
+    defaultPetpetHandFrames = undefined;
+    throw error;
+  });
 
   return defaultPetpetHandFrames;
 }

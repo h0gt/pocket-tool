@@ -110,7 +110,7 @@ createApplicationCommand({
 
     const sessions = new Collection<string, Session>();
 
-    const quote = await resolveContent(message);
+    const quote = await resolveQuoteContent(message);
 
     sessions.set(interaction.token, {
       avatar,
@@ -1802,7 +1802,7 @@ createApplicationCommand({
   },
 });
 
-export async function resolveContent(message: APIMessage) {
+async function resolveQuoteContent(message: APIMessage) {
   const content = message.content.trim();
   const mentions = message.mentions;
 

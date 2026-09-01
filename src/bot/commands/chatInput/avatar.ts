@@ -15,7 +15,7 @@ import { cdn, emoji } from '../../../utils/markdown';
 createApplicationCommand({
   type: ApplicationCommandType.ChatInput,
   name: 'avatar',
-  description: "View an user's avatar",
+  description: "View a user's avatar",
   integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
   contexts: [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel],
   options: [
