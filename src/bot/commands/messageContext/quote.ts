@@ -5,6 +5,7 @@ import {
   ComponentType,
   InteractionContextType,
   MessageFlags,
+  StickerFormatType,
   TextInputStyle,
   type APIMessage,
   type APIMessageComponentButtonInteraction,
@@ -30,6 +31,7 @@ type Session = {
   effects: EffectKey[];
   content: string;
   emojis: Record<string, Buffer>;
+  stickers: Buffer[];
 };
 
 createApplicationCommand({
@@ -61,7 +63,7 @@ createApplicationCommand({
       return;
     }
 
-    if (!message || !message.content.trim()) {
+    if (!message || (!message.content.trim() && !message.sticker_items?.length)) {
       await client.api.interactions.editReply(interaction.application_id, interaction.token, {
         components: [
           {
@@ -69,7 +71,7 @@ createApplicationCommand({
             components: [
               {
                 type: ComponentType.TextDisplay,
-                content: `${emoji('Exclamation')} Please select a message containing text to quote.`,
+                content: `${emoji('Exclamation')} Please select a message containing text or stickers to quote.`,
               },
             ],
           },
@@ -118,6 +120,7 @@ createApplicationCommand({
       effects: [],
       content: quote.content,
       emojis: quote.emojis,
+      stickers: quote.stickers,
     });
 
     const session = sessions.get(interaction.token);
@@ -130,6 +133,7 @@ createApplicationCommand({
       avatar: session.avatar,
       quote: quote.content,
       emojis: quote.emojis,
+      stickers: quote.stickers,
       credit: message.author.global_name ?? message.author.username,
       mention: `@${message.author.username}`,
       font: session.font,
@@ -295,6 +299,7 @@ createApplicationCommand({
             avatar: session.avatar,
             quote: session.content,
             emojis: session.emojis,
+            stickers: session.stickers,
             credit: message.author.global_name ?? message.author.username,
             mention: `@${message.author.username}`,
             font: session.font,
@@ -493,6 +498,7 @@ createApplicationCommand({
               avatar: session.avatar,
               quote: session.content,
               emojis: session.emojis,
+              stickers: session.stickers,
               credit: message.author.global_name ?? message.author.username,
               mention: `@${message.author.username}`,
               font: session.font,
@@ -694,6 +700,7 @@ createApplicationCommand({
               avatar: session.avatar,
               quote: session.content,
               emojis: session.emojis,
+              stickers: session.stickers,
               credit: message.author.global_name ?? message.author.username,
               mention: `@${message.author.username}`,
               font: session.font,
@@ -874,6 +881,7 @@ createApplicationCommand({
             avatar: session.avatar,
             quote: session.content,
             emojis: session.emojis,
+            stickers: session.stickers,
             credit: message.author.global_name ?? message.author.username,
             mention: `@${message.author.username}`,
             font: session.font,
@@ -1049,6 +1057,7 @@ createApplicationCommand({
             avatar: session.avatar,
             quote: session.content,
             emojis: session.emojis,
+            stickers: session.stickers,
             credit: message.author.global_name ?? message.author.username,
             mention: `@${message.author.username}`,
             font: session.font,
@@ -1254,6 +1263,7 @@ createApplicationCommand({
             avatar: session.avatar,
             quote: session.content,
             emojis: session.emojis,
+            stickers: session.stickers,
             credit: message.author.global_name ?? message.author.username,
             mention: `@${message.author.username}`,
             font: session.font,
@@ -1456,6 +1466,7 @@ createApplicationCommand({
             avatar: session.avatar,
             quote: session.content,
             emojis: session.emojis,
+            stickers: session.stickers,
             credit: message.author.global_name ?? message.author.username,
             mention: `@${message.author.username}`,
             font: session.font,
@@ -1818,8 +1829,46 @@ export async function resolveContent(message: APIMessage) {
     return user ? `@${user.global_name ?? user.username}` : '@unknown';
   });
 
+  const resolvedStickers = await Promise.all(
+    (message.sticker_items ?? []).map(async (sticker) => {
+      const url =
+        sticker.format_type === StickerFormatType.GIF
+          ? `https://media.discordapp.net/stickers/${sticker.id}.gif`
+          : cdn(
+              `/stickers/${sticker.id}`,
+              undefined,
+              sticker.format_type === StickerFormatType.Lottie ? 'json' : 'png',
+              false,
+            );
+
+      try {
+        let data = await makeRequest(url, {
+          method: RequestMethod.GET,
+          response: ResponseType.BUFFER,
+        });
+
+        if (sticker.format_type === StickerFormatType.Lottie) {
+          const { createCanvas, LottieAnimation } = await import('@napi-rs/canvas');
+          const animation = LottieAnimation.loadFromData(data);
+          const canvas = createCanvas(320, 320);
+
+          animation.seekFrame(0);
+          animation.render(canvas.getContext('2d'), { x: 0, y: 0, width: 320, height: 320 });
+          data = await canvas.encode('png');
+        }
+
+        return { data };
+      } catch {
+        return { fallback: `[Sticker: ${sticker.name}]` };
+      }
+    }),
+  );
+
+  const stickerFallbacks = resolvedStickers.flatMap((sticker) => (sticker.fallback ? [sticker.fallback] : []));
+
   return {
-    content: parsedContent,
+    content: [parsedContent, ...stickerFallbacks].filter(Boolean).join('\n'),
     emojis,
+    stickers: resolvedStickers.flatMap((sticker) => (sticker.data ? [sticker.data] : [])),
   };
 }
