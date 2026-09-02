@@ -361,6 +361,7 @@ type LineMetrics = {
 
 const remoteImageCache = new Map<string, Promise<LoadedImage>>();
 const REMOTE_IMAGE_CACHE_LIMIT = 128;
+const TWEMOJI_VERSION = 'v17.0.3';
 
 type TextArea = {
   x: number;
@@ -1010,7 +1011,7 @@ function getTwemojiUrl(emoji: string): string {
     .filter((code) => code !== 'fe0f')
     .join('-');
 
-  return `https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/${code}.png`;
+  return `https://cdn.jsdelivr.net/gh/jdecked/twemoji@${TWEMOJI_VERSION}/assets/72x72/${code}.png`;
 }
 
 function loadRemoteImage(url: string): Promise<LoadedImage> {
