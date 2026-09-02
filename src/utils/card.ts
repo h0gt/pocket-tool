@@ -3,6 +3,8 @@ import { isHex, type Hexadecimal } from '@tolga1452/toolbox.js';
 import sharp from 'sharp';
 import emojiRegex from 'emoji-regex';
 import path from 'path';
+import { makeRequest } from './request';
+import { RequestMethod, ResponseType } from '../types/types';
 
 const FONTS = [
   ['M PLUS Rounded 1c', 'MPLUSRounded1c-Regular.ttf'],
@@ -356,6 +358,8 @@ type LineMetrics = {
   descent: number;
   height: number;
 };
+
+const remoteImageCache = new Map<string, Promise<LoadedImage>>();
 
 type TextArea = {
   x: number;
@@ -875,7 +879,7 @@ async function drawRichLine(
 
     if (span.unicode) {
       try {
-        const img = await loadImage(getTwemojiUrl(span.name));
+        const img = await loadRemoteImage(getTwemojiUrl(span.name));
 
         ctx.drawImage(img, x, emojiY, fontSize, fontSize);
       } catch {}
@@ -884,8 +888,10 @@ async function drawRichLine(
       continue;
     }
 
-    ctx.fillText(span.name, x, baseline);
-    x += ctx.measureText(span.name).width;
+    const fallbackWidth = ctx.measureText(span.name).width;
+
+    ctx.fillText(span.name, x + (fontSize - fallbackWidth) / 2, baseline);
+    x += fontSize;
   }
 }
 
@@ -1003,4 +1009,25 @@ function getTwemojiUrl(emoji: string): string {
     .join('-');
 
   return `https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/${code}.png`;
+}
+
+function loadRemoteImage(url: string): Promise<LoadedImage> {
+  let image = remoteImageCache.get(url);
+
+  if (!image) {
+    image = makeRequest(url, {
+      method: RequestMethod.GET,
+      response: ResponseType.BUFFER,
+      timeout: 10_000,
+    })
+      .then((data) => loadImage(data))
+      .catch((error) => {
+        remoteImageCache.delete(url);
+        throw error;
+      });
+
+    remoteImageCache.set(url, image);
+  }
+
+  return image;
 }
