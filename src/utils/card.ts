@@ -360,6 +360,7 @@ type LineMetrics = {
 };
 
 const remoteImageCache = new Map<string, Promise<LoadedImage>>();
+const REMOTE_IMAGE_CACHE_LIMIT = 128;
 
 type TextArea = {
   x: number;
@@ -888,9 +889,10 @@ async function drawRichLine(
       continue;
     }
 
-    const fallbackWidth = ctx.measureText(span.name).width;
-
-    ctx.fillText(span.name, x + (fontSize - fallbackWidth) / 2, baseline);
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.fillText('□', x + fontSize / 2, baseline, fontSize);
+    ctx.restore();
     x += fontSize;
   }
 }
@@ -1014,20 +1016,35 @@ function getTwemojiUrl(emoji: string): string {
 function loadRemoteImage(url: string): Promise<LoadedImage> {
   let image = remoteImageCache.get(url);
 
-  if (!image) {
-    image = makeRequest(url, {
-      method: RequestMethod.GET,
-      response: ResponseType.BUFFER,
-      timeout: 10_000,
-    })
-      .then((data) => loadImage(data))
-      .catch((error) => {
-        remoteImageCache.delete(url);
-        throw error;
-      });
-
+  if (image) {
+    remoteImageCache.delete(url);
     remoteImageCache.set(url, image);
+    return image;
   }
 
-  return image;
+  const request = makeRequest(url, {
+    method: RequestMethod.GET,
+    response: ResponseType.BUFFER,
+    timeout: 10_000,
+  })
+    .then((data) => loadImage(data))
+    .catch((error) => {
+      if (remoteImageCache.get(url) === request) {
+        remoteImageCache.delete(url);
+      }
+
+      throw error;
+    });
+
+  remoteImageCache.set(url, request);
+
+  if (remoteImageCache.size > REMOTE_IMAGE_CACHE_LIMIT) {
+    const oldestUrl = remoteImageCache.keys().next().value;
+
+    if (oldestUrl) {
+      remoteImageCache.delete(oldestUrl);
+    }
+  }
+
+  return request;
 }
